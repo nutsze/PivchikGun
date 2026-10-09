@@ -113,16 +113,17 @@ function updateAllies(dt){
   allies.forEach((a,i)=>{
     if(a.down>0){a.down-=dt;if(a.down<=0){a.hp=a.max;a.x=clamp(P.x+rand(-40,40),FENCE+30,WW-FENCE-30);a.y=clamp(P.y+rand(-40,40),FENCE+30,WH-FENCE-30);puff(a.x,a.y,'#ffffff',8,1);ftext(a.x,a.y-50,'Снова в бою!','#9cf27a',12);}return;}
     if(a.flash>0)a.flash-=dt;
-    if(a.regen&&S.t-a.lastHit>3)a.hp=Math.min(a.max,a.hp+a.regen*dt);
+    if(a.regen&&(a.cls==='medic'||S.t-a.lastHit>3))a.hp=Math.min(a.max,a.hp+a.regen*dt);
+    if(a.cls==='medic'){if(P.alive&&Math.hypot(P.x-a.x,P.y-a.y)<200)P.hp=Math.min(P.max,P.hp+3*dt);for(const b2 of allies)if(b2!==a&&b2.down<=0&&Math.hypot(b2.x-a.x,b2.y-a.y)<200)b2.hp=Math.min(b2.max,b2.hp+3*dt);}
     const oa=(i/Math.max(1,n))*TAU+Math.PI/2+S.t*.15, fx=P.x+Math.cos(oa)*62, fy=P.y+Math.sin(oa)*52;
     let vx=fx-a.x,vy=fy-a.y; const fd=Math.hypot(vx,vy)||1;
     if(fd>620){a.x=fx;a.y=fy;puff(a.x,a.y,'#ffffff',5,.8);return;}
-    let t=null,bd=S.night?220:330;
+    let t=null,bd=S.night?220:a.range;
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-a.x,e.y-a.y);if(d<bd&&(ETYPE[e.type].fly||los(a.x,a.y,e.x,e.y))){bd=d;t=e;}}
     a.cd-=dt;
     if(t){a.ang=Math.atan2(t.y-a.y,t.x-a.x);
       if(a.cd<=0){a.cd=a.rate*rand(.9,1.15);const sp=rand(-.06,.06);
-        bullets.push({x:a.x+Math.cos(a.ang)*20,y:a.y+Math.sin(a.ang)*20,vx:Math.cos(a.ang+sp)*620,vy:Math.sin(a.ang+sp)*620,r:4.2,dmg:a.dmg,from:'p',life:.7,max:.7,kind:'pistol',pierce:0,hits:null,ally:true});
+        bullets.push({x:a.x+Math.cos(a.ang)*20,y:a.y+Math.sin(a.ang)*20,vx:Math.cos(a.ang+sp)*(a.cls==='sniper'?900:620),vy:Math.sin(a.ang+sp)*(a.cls==='sniper'?900:620),r:4.2,dmg:a.dmg,from:'p',life:a.range/600,max:a.range/600,kind:a.gun,pierce:0,hits:null,ally:true});
         parts.push({k:'flash',x:a.x+Math.cos(a.ang)*26,y:a.y+Math.sin(a.ang)*26,z:19,t:0,max:.05,a:a.ang,s:.8});}}
     else if(fd>8)a.ang=Math.atan2(vy,vx);
     const ox=a.x,oy=a.y;
@@ -196,12 +197,12 @@ function shoot(){
     if(input.mouse&&input.firing){tx=camX+input.mx/SC;ty=camY+input.my/SC;}
     else if(t){tx=t.x;ty=t.y;} else{tx=P.x+Math.cos(ang)*260;ty=P.y+Math.sin(ang)*260;}
     const d=Math.hypot(tx-P.x,ty-P.y); if(d>380){tx=P.x+(tx-P.x)/d*380;ty=P.y+(ty-P.y)/d*380;}
-    bombs.push({x:clamp(tx,FENCE+10,WW-FENCE-10),y:clamp(ty,FENCE+10,WH-FENCE-10),t:.55,max:.55,r:72,dmg:W.dmg*P.dmgMul,from:'p',lob:true,sx:P.x,sy:P.y});
+    bombs.push({x:clamp(tx,FENCE+10,WW-FENCE-10),y:clamp(ty,FENCE+10,WH-FENCE-10),t:.55,max:.55,r:72,dmg:W.dmg*P.dmgMul,from:'p',heal:W.heal||0,lob:true,sx:P.x,sy:P.y});
   } else {
     const kind=W.special==='flame'?'flame':W.special==='ice'?'ice':P.w;
     for(let i=0;i<W.pellets;i++){
       const a=ang+(Math.random()-.5)*W.spread, sp=W.spd*(W.pellets>1||kind==='flame'?rand(.85,1.12):1);
-      pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,a,sp,W.dmg*P.dmgMul,kind==='flame'?7:W.pellets>1?3.5:(P.w==='sheriff'?5:4.5),W.life*(W.pellets>1||kind==='flame'?rand(.8,1.1):1),kind,kind==='flame'?99:(W.pierce||0));
+      pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,a,sp,W.dmg*P.dmgMul,kind==='flame'?7:W.pellets>1?3.5:(P.w==='sheriff'||P.w==='crossbow'||P.w==='cornrifle'?5:4.5),W.life*P.rangeMul*(W.pellets>1||kind==='flame'?rand(.8,1.1):1),kind,kind==='flame'?99:(W.pierce||0));
     }
   }
   if(W.special!=='flame'){const fl=(P.w==='shotgun'||P.w==='sawed'||P.w==='rail')?1.5:1;
@@ -241,13 +242,19 @@ function throwNade(){
   nades.push({x:P.x,y:P.y,z:24,vx:Math.cos(ang)*dist/tt,vy:Math.sin(ang)*dist/tt,vz:240,t:1.05,rot:0});
   updateHUD();
 }
-function blast(x,y,R,dmg,fromP,selfDmg){
+function healHit(v){
+  if(!P||!P.alive||!v)return; P.hp=Math.min(P.max,P.hp+v);
+  let best=null,bd=230;for(const a of allies){if(a.down>0||a.hp>=a.max)continue;const d=Math.hypot(a.x-P.x,a.y-P.y);if(d<bd){bd=d;best=a;}}
+  if(best)best.hp=Math.min(best.max,best.hp+v);
+  if(Math.random()<.25)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});
+}
+function blast(x,y,R,dmg,fromP,selfDmg,heal=0){
   S.shake+=R>100?16:9; SFX.boom(); buzz(40);
   const n=R>100?16:9;
   for(let i=0;i<n;i++){const a=rand(0,TAU),sp=rand(60,260)*R/130;parts.push({k:'shell',x,y,z:10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.6,vz:rand(120,300),rot:rand(0,TAU),vr:rand(-10,10),t:0,max:rand(.8,1.3)});}
   puff(x,y,'#fff7d6',R>100?18:10,R/60); puff(x,y,'#ffc93a',R>100?10:6,R/75);
   ring(x,y,fromP?'#fff6c8':'#ffb3a3',R,.35); splat(x,y,R/45);
-  if(fromP){for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<R+e.r*.5){hitEnemy(e,Math.round(dmg*(1-d/(R*1.35))),e.x-x,e.y-y);if(!ETYPE[e.type].boss){e.kx+=(e.x-x)/(d||1)*260;e.ky+=(e.y-y)/(d||1)*260;}}}}
+  if(fromP){for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<R+e.r*.5){hitEnemy(e,Math.round(dmg*(1-d/(R*1.35))),e.x-x,e.y-y);if(heal)healHit(heal);if(!ETYPE[e.type].boss){e.kx+=(e.x-x)/(d||1)*260;e.ky+=(e.y-y)/(d||1)*260;}}}}
   const dp=Math.hypot(P.x-x,P.y-y);
   if(!fromP&&dp<R+P.r*.5)hurtPlayer(dmg,'bomb');
   if(!fromP)for(const a of allies)if(a.down<=0&&Math.hypot(a.x-x,a.y-y)<R+a.r*.5)hurtAlly(a,dmg*.7);

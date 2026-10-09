@@ -1,7 +1,7 @@
 /* Сохранение прогресса и настроек в localStorage */
 /* ---------- save ---------- */
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],gun:'pistol',guns:['pistol'],best:{score:0,wave:0},story:{done:[]}};
+const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]}};
 function loadSave(){
   let s=null; try{s=JSON.parse(localStorage.getItem('kur_save')||'null');}catch(e){}
   const o=JSON.parse(JSON.stringify(DEF));
@@ -26,7 +26,11 @@ function loadSave(){
   if(!o.heroes[o.hero])o.hero='hen';
   if(!HATS[o.hat]||!o.hats.includes(o.hat))o.hat='bandana';
   if(!COLORS[o.color]||!o.colors.includes(o.color))o.color='native';
-  if(!PRIMARY.includes(o.gun)||!o.guns.includes(o.gun))o.gun='pistol';
+  CLASS_ORDER.forEach(k=>{const st=CLASSES[k].start;if(!o.guns.includes(st))o.guns.push(st);});
+  if(!o.loadout||typeof o.loadout!=='object')o.loadout={};
+  if(s&&s.gun&&WEAP[s.gun]&&WEAP[s.gun].cls&&o.guns.includes(s.gun)&&!o.loadout[WEAP[s.gun].cls])o.loadout[WEAP[s.gun].cls]=s.gun;
+  CLASS_ORDER.forEach(k=>{const g=o.loadout[k];if(!WEAP[g]||WEAP[g].cls!==k||!o.guns.includes(g))o.loadout[k]=CLASSES[k].start;});
+  delete o.gun;
   if(!o.story||!Array.isArray(o.story.done))o.story={done:[]};
   o.v=2; return o;
 }

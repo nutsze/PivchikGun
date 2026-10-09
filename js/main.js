@@ -1,5 +1,7 @@
 /* Запуск игры и главный цикл кадров */
 /* ---------- loop ---------- */
+document.querySelectorAll('[data-ver]').forEach(e=>e.textContent='v'+GAME_VERSION);
+document.querySelectorAll('[data-ver-long]').forEach(e=>e.textContent='Версия '+GAME_VERSION);
 buildWorld(); P=newPlayer(); toMenu();
 let last=performance.now();
 function frame(now){

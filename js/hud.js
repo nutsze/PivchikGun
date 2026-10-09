@@ -45,9 +45,14 @@ function refreshMenu(){
   $('menuCoins').textContent=fmt(SAVE.coins); $('menuTok').textContent=fmt(SAVE.tokens); $('menuBtok').textContent=SAVE.btokens; $('menuEggs').textContent=SAVE.eggs;
   const H=HEROES[SAVE.hero];
   const sq=squadIds().length;
-  $('heroLine').textContent='Боец: '+H.name+' · ур. '+heroLv(SAVE.hero)+' · '+WEAP[SAVE.gun].name+(sq?' · отряд: '+sq:'');
+  $('heroName').textContent=H.name;
+  $('heroLine').textContent='Ур. '+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name+(sq?' · отряд: '+sq:'');
+  const hb=$('heroBadges'); hb.innerHTML='';
+  [[RAR[H.rar].name,RAR[H.rar].c],[CLASSES[H.cls].name,CLASSES[H.cls].c]].forEach(([t,c])=>{const b=document.createElement('span');b.className='rar';b.textContent=t;b.style.setProperty('--c',c);hb.appendChild(b);});
   const done=SAVE.story.done.length;
-  $('bestText').textContent='Сюжет: '+done+'/'+STORY.length+(SAVE.best.score>0?' · Рекорд: '+fmt(SAVE.best.score)+' очк., волна '+SAVE.best.wave:'');
+  if(done>=STORY.length)$('storySub').textContent='Все 4 главы пройдены · можно переигрывать';
+  else{const L=STORY[done<STORY.length?STORY.findIndex(l=>!SAVE.story.done.includes(l.gid)):0];$('storySub').textContent='Глава '+(L.ch+1)+' «'+CHAPTERS[L.ch].name+'» · '+CHAPTERS[L.ch].levels.filter(l=>SAVE.story.done.includes(l.gid)).length+'/20';}
+  $('bestText').textContent=SAVE.best.score>0?'Рекорд: волна '+SAVE.best.wave+' · '+fmt(SAVE.best.score)+' очк.':'Рекорда пока нет — поставь первый';
   $('chestBadge').hidden=!(SAVE.tokens>=100||SAVE.btokens>=10);
   document.querySelectorAll('.purse').forEach(e=>e.innerHTML=purseHTML());
 }
@@ -55,7 +60,7 @@ function toMenu(){
   if(['play','paused','dying'].includes(S.mode))bankCoins();
   S.mode='menu'; S.night=false; $('hud').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
   P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];
-  demoEnemies(); refreshMenu();
+  refreshMenu();
 }
 function demoEnemies(){
   const add=(type,dx,dy,face)=>{const T=ETYPE[type];const e={type,x:P.x+dx,y:P.y+dy,r:T.r,hp:1,max:1,face,ang:face>0?0:Math.PI,phase:0,moving:false,flash:0,st:'walk',stun:0};

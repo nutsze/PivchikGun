@@ -1,4 +1,5 @@
 /* Базовые утилиты, холст, размер экрана, защита от зума на iOS */
+const GAME_VERSION='0.1'; // версия игры: показывается в меню, паузе и окне «Как играть»
 const TAU=Math.PI*2, INK='#2b1d14';
 const rand=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
