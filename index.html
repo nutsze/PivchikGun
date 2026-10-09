@@ -32,32 +32,53 @@
   <div class="hud-bottom"><div class="weapon"><span id="wName">Пугач</span><b id="wAmmo">∞</b></div></div>
 </div>
 
-<div class="ov" id="menu">
+<div class="lobby" id="menu">
+  <header class="lb-top">
+    <h1 class="lb-logo">Боевой Курятник</h1>
+    <div class="wallet lb-wallet" aria-label="Кошелёк">
+      <span class="pill" title="Зёрна"><i class="coin"></i><b id="menuCoins">0</b></span>
+      <span class="pill" title="Жетоны на обычный сундук"><i class="tok"></i><b id="menuTok">0</b><small>/100</small></span>
+      <span class="pill" title="Большие жетоны"><i class="btok"></i><b id="menuBtok">0</b><small>/10</small></span>
+      <span class="pill" title="Золотые яйца"><i class="gegg"></i><b id="menuEggs">0</b></span>
+    </div>
+  </header>
+
+  <section class="lb-hero" id="lbHero" aria-label="Твой боец">
+    <div class="lb-plate">
+      <div class="lb-badges" id="heroBadges"></div>
+      <b class="lb-name" id="heroName">Пеструшка</b>
+      <span class="lb-meta" id="heroLine">Штурмовик · ур. 1</span>
+      <button class="lb-chip" id="heroSwap">Сменить бойца</button>
+    </div>
+  </section>
+
+  <section class="lb-modes" aria-label="Режимы">
+    <button class="mode main" id="storyBtn"><span class="mt">Сюжет</span><span class="ms" id="storySub">Глава 1 · 0/20</span></button>
+    <button class="mode" id="endlessBtn"><span class="mt">Бесконечный бой</span><span class="ms" id="bestText">Рекорда пока нет</span></button>
+    <button class="mode locked" id="mpBtn" aria-disabled="true"><i class="lockic" aria-hidden="true"></i><span class="mt">Многопользовательская игра</span><span class="ms">Скоро</span></button>
+    <button class="mode locked" id="skBtn" aria-disabled="true"><i class="lockic" aria-hidden="true"></i><span class="mt">Режим Soul Knight</span><span class="ms">Скоро</span></button>
+    <p class="turn">Удобнее играть, повернув телефон горизонтально</p>
+  </section>
+
+  <nav class="lb-nav" aria-label="Разделы">
+    <button class="nav" id="heroesBtn"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 26c0-7 3-12 9-12 4 0 7 3 7 7v5z" fill="#fff4dc"/><circle cx="19" cy="10" r="5" fill="#fff4dc"/><path d="M16 5a2 2 0 0 1 3-1 2 2 0 0 1 3 1" fill="#e8322a"/><path d="M24 9l4 1.5-4 1.5z" fill="#f6a723"/><circle cx="20.5" cy="9.5" r="1.2" fill="#2b1d14"/></svg><span>Герои</span></button>
+    <button class="nav" id="chestBtn"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 15h20l-2 11H8z" fill="#d39a4f"/><path d="M5 12q11-8 22 0v4H5z" fill="#fff4dc"/><path d="M8 12h4v4H8zm8 0h4v4h-4zm8 0h3v4h-3" fill="#e8322a"/><path d="M8 4q8-6 16 0" fill="none" stroke="#c98a43" stroke-width="2.5"/></svg><span>Сундуки</span><i class="badge" id="chestBadge" hidden>!</i></button>
+    <button class="nav" id="shopBtn"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 11h18l-2 16H9z" fill="#ffc93a"/><path d="M11 11a5 5 0 0 1 10 0" fill="none" stroke="#fff4dc" stroke-width="2.5"/><circle cx="16" cy="19" r="3.5" fill="#fff4dc"/></svg><span>Магазин</span></button>
+    <button class="nav" id="helpBtn"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="#4cc3ff"/><path d="M12.5 13a3.5 3.5 0 1 1 5 3.2c-1 .5-1.5 1.2-1.5 2.3" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="16" cy="22.5" r="1.6" fill="#fff"/></svg><span>Как играть</span></button>
+  </nav>
+</div>
+
+<div class="ov top" id="helpOv" hidden>
   <div class="card">
-    <div class="mcol">
-      <h1 class="logo">Боевой Курятник</h1>
-      <p class="lead">Лисы, вороны, еноты и чужие несушки лезут во двор. Держи оборону!</p>
-      <div class="wallet"><span class="pill"><i class="coin"></i><b id="menuCoins">0</b></span><span class="pill"><i class="tok"></i><b id="menuTok">0</b>/100</span><span class="pill"><i class="btok"></i><b id="menuBtok">0</b>/10</span><span class="pill"><i class="gegg"></i><b id="menuEggs">0</b></span></div>
-      <button class="btn" id="storyBtn">Сюжет</button>
-      <div class="quad">
-        <button class="btn alt" id="endlessBtn">Бесконечный бой</button>
-        <button class="btn alt" id="heroesBtn">Герои</button>
-        <button class="btn gold" id="chestBtn">Сундуки<span class="badge" id="chestBadge" hidden>!</span></button>
-        <button class="btn alt" id="shopBtn">Магазин</button>
-      </div>
-    </div>
-    <div class="mcol">
-      <ul class="how">
-        <li><span class="ic l">◀</span>Левый палец — бежать</li>
-        <li><span class="ic r">●</span>Правый палец — целиться и стрелять. Держи на месте — бьёт по ближнему</li>
-        <li><span class="ic e"></span>«Бум» — яйцо-граната</li>
-        <li><span class="ic u">★</span>Ульта копится от урона по врагам</li>
-      </ul>
-      <p class="desk" id="deskLine">На компьютере: WASD — бег, автонаводка стреляет сама (T — вкл/выкл), зажатая мышь — ручная стрельба, Q — граната, R — ульта</p>
-      <p class="turn">Удобнее играть, повернув телефон горизонтально</p>
-      <p class="best" id="heroLine">Пеструшка</p>
-      <p class="best" id="bestText">Рекорд: пока нет</p>
-    </div>
+    <h2 class="logo">Как играть</h2>
+    <ul class="how">
+      <li><span class="ic l">◀</span>Левый палец — бежать</li>
+      <li><span class="ic r">●</span>Правый палец — целиться и стрелять. Держи на месте — бьёт по ближнему</li>
+      <li><span class="ic e"></span>«Бум» — яйцо-граната</li>
+      <li><span class="ic u">★</span>Ульта копится от урона по врагам</li>
+    </ul>
+    <p class="desk">На компьютере: WASD — бег, автонаводка стреляет сама (T — вкл/выкл), зажатая мышь — ручная стрельба, Q — граната, R — ульта</p>
+    <button class="btn" id="helpClose">Понятно</button>
   </div>
 </div>
 

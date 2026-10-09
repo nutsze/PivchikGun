@@ -473,7 +473,8 @@ function render(){
   const c=ctx;
   c.setTransform(DPR,0,0,DPR,0,0);
   c.fillStyle='#5f9e3c'; c.fillRect(0,0,VW,VH);
-  c.save(); c.scale(SC,SC);
+  const Z=S.mode==='menu'?SC*MENU_ZOOM:SC;
+  c.save(); c.scale(Z,Z);
   let sx=0,sy=0; if(S.shake>0&&!REDUCED){sx=(Math.random()-.5)*S.shake;sy=(Math.random()-.5)*S.shake;}
   c.translate(-camX+sx,-camY+sy);
   c.drawImage(ground,0,0);
@@ -519,7 +520,7 @@ function render(){
     const g=c.createRadialGradient(px,py,70*SC*fl,px,py,NIGHT_R*SC*fl);g.addColorStop(0,'rgba(8,10,30,0)');g.addColorStop(.55,'rgba(8,10,30,.55)');g.addColorStop(1,'rgba(8,10,30,.97)');
     c.fillStyle=g;c.fillRect(0,0,VW,VH);
   }
-  c.save();c.scale(SC,SC);c.translate(-camX+sx,-camY+sy);drawWarnings(c);c.restore();
+  c.save();c.scale(Z,Z);c.translate(-camX+sx,-camY+sy);drawWarnings(c);c.restore();
   if(S.mode==='play'){
     if(!S.night)for(const e of enemies){const sx2=(e.x-camX)*SC,sy2=(e.y-20-camY)*SC;if(sx2>-10&&sx2<VW+10&&sy2>-10&&sy2<VH+10)continue;
       const cx=VW/2,cy=VH/2,a=Math.atan2(sy2-cy,sx2-cx),m=26;const px=clamp(sx2,m,VW-m),py=clamp(sy2,m+60,VH-m-60);

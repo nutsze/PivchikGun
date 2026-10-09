@@ -320,6 +320,11 @@ function closePanels(){PANELS.forEach(p=>$(p).hidden=true);}
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{closePanels();refreshMenu();}));
 document.querySelectorAll('#shop .tab').forEach(t=>t.addEventListener('click',()=>{shopTab=t.dataset.tab;$('shopBody').scrollTop=0;renderShop();}));
 $('shopBtn').addEventListener('click',()=>openPanel('shop'));
+$('heroSwap').addEventListener('click',()=>openPanel('heroes'));
+$('helpBtn').addEventListener('click',()=>{initAudio();$('helpOv').hidden=false;});
+$('helpClose').addEventListener('click',()=>{$('helpOv').hidden=true;});
+$('mpBtn').addEventListener('click',()=>{toast('Многопользовательская игра появится в одном из следующих обновлений');});
+$('skBtn').addEventListener('click',()=>{toast('Режим Soul Knight пока в разработке — следи за обновлениями');});
 $('heroesBtn').addEventListener('click',()=>openPanel('heroes'));
 $('chestBtn').addEventListener('click',()=>openPanel('chestP'));
 $('storyBtn').addEventListener('click',()=>openPanel('storyP'));

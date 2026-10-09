@@ -22,6 +22,7 @@ function makeAllies(){
     const a=(i/Math.max(1,ids.length))*TAU+Math.PI/2;
     return {id,cls:C,isAlly:true,x:P.x+Math.cos(a)*60,y:P.y+Math.sin(a)*60,r:H.r,hp:max,max,spd,dmg,rate,range,armor,regen:H.regen+(C==='medic'?2:0),
       look:lookFor(id,'helmet','native'),gun:gunOf(id),cd:rand(0,.4),ang:0,face:1,phase:rand(0,6),moving:false,flash:0,down:0,lastHit:-9,vx:0,vy:0};});
+  if(S.mode==='menu')allies.forEach((a,i)=>{const side=i%2?1:-1,k=Math.floor(i/2)+1;a.x=P.x+side*(30+k*34);a.y=P.y-4-k*10;a.ang=side>0?0:Math.PI;a.face=side;});
 }
 function newPlayer(){
   const id=SAVE.hero, H=HEROES[id], L=heroLv(id);

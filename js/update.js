@@ -1,5 +1,13 @@
 /* Игровой цикл: поток уровня, игрок, отряд, ИИ врагов и боссов, пули */
 /* ---------- update ---------- */
+const MENU_ZOOM=1.55;
+let anchorT=0,anchorV={x:0,y:0};
+function menuAnchor(){
+  const now=performance.now(); if(now-anchorT<250)return anchorV; anchorT=now;
+  const el=document.getElementById('lbHero'), pl=document.querySelector('.lb-plate'); const r=el&&el.getBoundingClientRect(), q=pl&&pl.getBoundingClientRect();
+  anchorV=r&&r.width?{x:r.left+r.width/2,y:Math.max(r.top+60,(q?q.top:r.bottom)-14)}:{x:VW/2,y:VH*.45};
+  return anchorV;
+}
 function update(dt){
   S.t+=dt;
   if(S.mode==='play'||S.mode==='dying'||S.mode==='won'){
@@ -13,8 +21,12 @@ function update(dt){
   }
   updateParts(dt);
   S.shake*=Math.pow(.004,dt); if(S.shake<.1)S.shake=0;
+  if(S.mode==='menu'){ // showcase: hero stands on the lobby stage
+    const Z=SC*MENU_ZOOM, a=menuAnchor();
+    camX=P.x-a.x/Z; camY=P.y-a.y/Z; return;
+  }
   const vw=VW/SC,vh=VH/SC, tx=P.x-vw/2, ty=P.y-28-vh/2;
-  const k=S.mode==='menu'?1:Math.min(1,dt*7);
+  const k=Math.min(1,dt*7);
   camX+=(tx-camX)*k; camY+=(ty-camY)*k;
   camX=vw<WW+80?clamp(camX,-40,WW-vw+40):(WW-vw)/2;
   camY=vh<WH+80?clamp(camY,-60,WH-vh+40):(WH-vh)/2;
