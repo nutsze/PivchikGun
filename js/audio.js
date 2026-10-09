@@ -14,6 +14,7 @@ const SFX={
   shotgun(){noise(.22,.38,1500);tone(140,.12,'square',.06,60);},
   smg(){const n=performance.now(); if(n-lastSmg<60)return; lastSmg=n; noise(.05,.14,3800);},
   pop(){tone(900,.05,'square',.05,300);noise(.05,.12,2400);},
+  meow(){tone(700,.09,'triangle',.06,1100);tone(1100,.16,'triangle',.05,520,.08);},
   egg(){tone(520,.08,'triangle',.05,260);},
   hit(){tone(880,.04,'square',.035,520);},
   cluck(){tone(620,.06,'square',.06,980);tone(760,.08,'square',.05,1150,.08);},

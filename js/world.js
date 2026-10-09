@@ -22,6 +22,7 @@ const MAPS={
     river:{axis:'h',base:1010,amp:110,freq:.0045,phase:3.3,hw:36,bridges:[[240,1],[560,0],[900,1],[1230,0]]}}
 };
 const MAP_OF_CH=['farm','forest','factory','mountain'];
+const menuMap=()=>MAPS[SAVE.menuBg]?SAVE.menuBg:'yard'; // фон главного меню выбирает игрок
 function seeded(s){return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
 function rand2(R,a,b){return a+R()*(b-a);}
 

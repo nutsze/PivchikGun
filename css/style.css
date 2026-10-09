@@ -14,7 +14,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--grass);color:var
 #cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none}
 button{font-family:var(--body);touch-action:manipulation;-webkit-user-select:none;user-select:none}
 
-.coin,.tok,.btok,.gegg{display:inline-block;width:.95em;height:.95em;box-sizing:border-box;vertical-align:-.12em;margin-right:.32em;border:2px solid var(--ink);flex:none}
+.coin,.tok,.btok,.gegg,.sch{display:inline-block;width:.95em;height:.95em;box-sizing:border-box;vertical-align:-.12em;margin-right:.32em;border:2px solid var(--ink);flex:none}
 .coin{border-radius:50%;background:var(--yolk);background-image:radial-gradient(circle at 35% 35%,#fff3b8 0 22%,transparent 24%)}
 .tok{border-radius:3px;transform:rotate(45deg) scale(.82);background:var(--tok);background-image:radial-gradient(circle at 50% 50%,#e3f7ff 0 22%,transparent 25%)}
 .btok{border-radius:3px;transform:rotate(45deg) scale(.9);background:var(--btok);background-image:radial-gradient(circle at 50% 50%,#ffe9a8 0 26%,transparent 29%)}
@@ -333,3 +333,25 @@ button.lb-ver{padding:5px 9px;font-size:12px}
 .grid.sq .brow{grid-template-columns:1fr}
 .pbtn{white-space:normal;line-height:1.15;overflow-wrap:anywhere}
 .pbtn.thin{min-height:38px;padding:7px 8px;font-size:13.5px;box-shadow:0 2px 0 var(--ink)}
+
+/* v0.3: сверхбольшой сундук, редкость и прокачка оружия, фон меню */
+.sch{width:.8em;height:1em;border-radius:50% 50% 46% 46%/58% 58% 42% 42%;background:radial-gradient(circle at 35% 30%,#fbefff 0 14%,#b46cff 40%,#5a2aa8 85%)}
+.item .pv.amet{background:radial-gradient(circle at 50% 60%,#f3e2ff,#b88ae8 60%,#6a3fb5)}
+.item.chest.t2{border-color:#6a3fb5;box-shadow:0 4px 0 #6a3fb5}
+.item .badges{display:flex;gap:5px;flex-wrap:wrap}
+.item.gun .pv{border-color:var(--rc,var(--ink))}
+.item .meta.up{font-weight:800}
+.rw.wcard{border-left:6px solid var(--c)}
+.rw.wcard canvas{background:linear-gradient(#fff4dc,#f0dcae)}
+.lb-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.lb-chip.alt{background:var(--paper)}
+.bgcard{width:min(520px,100%)}
+.bggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.bgopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border:3px solid var(--ink);border-radius:14px;background:var(--straw);cursor:pointer;font:800 13px/1.1 var(--body);color:var(--ink);box-shadow:0 3px 0 var(--ink)}
+.bgopt canvas{border-radius:9px;border:2px solid var(--ink);max-width:100%;height:auto!important}
+.bgopt.on{background:var(--yolk)}
+.bgopt:active{transform:translateY(2px);box-shadow:none}
+.bgopt:focus-visible{outline:3px solid var(--barn);outline-offset:2px}
+@media (orientation:landscape) and (max-height:500px){.bggrid{grid-template-columns:repeat(5,1fr)}.bgcard{width:min(760px,100%)}}
+.phead h2{flex:1 0 auto}
+.item.gun .brow{grid-template-columns:1fr}

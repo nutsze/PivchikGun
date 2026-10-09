@@ -2,7 +2,7 @@
 /* ---------- loop ---------- */
 document.querySelectorAll('[data-ver]').forEach(e=>e.textContent='v'+GAME_VERSION+(GAME_TAG?' '+GAME_TAG:''));
 document.querySelectorAll('[data-ver-long]').forEach(e=>e.textContent='Версия '+GAME_VERSION+(GAME_TAG?' ('+GAME_TAG+')':''));
-buildWorld('yard'); P=newPlayer(); toMenu();
+buildWorld(menuMap()); P=newPlayer(); toMenu();
 let last=performance.now();
 function frame(now){
   let dt=(now-last)/1000; last=now; if(dt>.05)dt=.05; if(dt<0)dt=0;

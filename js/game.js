@@ -37,6 +37,7 @@ function bankCoins(){ if(S.banked)return; S.banked=true; SAVE.coins+=S.coins; SA
 function startWave(){
   S.wave++;
   if(holesOn()&&Math.random()<.6)spawnHole();
+  if(S.kind==='endless'&&S.wave===25&&!SAVE.eggMs.sup25){SAVE.eggMs.sup25=1;SAVE.schests++;persist();setTimeout(()=>toast('Волна 25! Сверхбольшой сундук ждёт в меню'),1600);}
   if(S.kind==='endless'){const ms={10:5,15:10,20:15}[S.wave];if(ms&&!SAVE.eggMs['w'+S.wave]){SAVE.eggMs['w'+S.wave]=1;SAVE.eggs+=ms;persist();const w=S.wave;setTimeout(()=>toast('Волна '+w+' впервые! +'+ms+' золотых яиц'),900);}}
   if(S.kind==='endless')S.diff=S.wave;
   S.toSpawn=S.kind==='endless'?Math.min(4+S.wave*2,40):Math.min(Math.round(4+S.diff+S.wave*2),28); S.spawnT=.6;
@@ -189,7 +190,7 @@ function killEnemy(e,force){
   else{feathers(e.x,e.y,featherCol(e),T.boss?50:tp==='turkey'?26:18,T.boss?1.8:1.2);puff(e.x,e.y,'#ffffff',8,1.1);
     (tp==='crow'||tp==='eagle'||tp==='eagleboss'||tp==='emperor')?SFX.caw():tp==='owl'?SFX.hoot():(tp==='turkey'||tp==='gturkey')?SFX.gobble():SFX.cluck();}
   if(T.boss){S.shake+=18;SFX.boom();ring(e.x,e.y,'#fff6c8',200,.6);}
-  const r=Math.random(), cornCh=.08*(P.hid==='hen'&&hasP(10)?1.5:1);
+  const r=Math.random(), cornCh=.06*(P.hid==='hen'&&hasP(10)?1.5:1);
   if((e.type!=='rat'||Math.random()<.3)&&!nearWater(e.x,e.y,12)){
     if(r<cornCh)pickups.push({x:e.x,y:e.y,kind:'corn',t:12,ph:0});
     else if(r<cornCh+.05)pickups.push({x:e.x,y:e.y,kind:Math.random()<.5?'shotgun':'smg',t:12,ph:0});
@@ -208,24 +209,27 @@ function aimAssist(ang){
     const a=Math.atan2(dy,dx);let df=Math.abs(((a-ang+Math.PI*3)%TAU)-Math.PI);if(df<bd&&(ETYPE[e.type].fly||los(P.x,P.y,e.x,e.y))){bd=df;bestA=a;}}
   return bestA;
 }
-function pBullet(x,y,a,sp,dmg,r,life,kind,pierce=0){bullets.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r,dmg,from:'p',life,max:life,kind,pierce,hits:pierce?[]:null});}
+function pBullet(x,y,a,sp,dmg,r,life,kind,pierce=0,ex){const b={x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r,dmg,from:'p',life,max:life,kind,pierce,hits:pierce?[]:null};if(ex)Object.assign(b,ex);bullets.push(b);return b;}
 function shoot(){
   const W=WEAP[P.w]; const rm=P.rateMul*(P.buff==='turbo'?2:1);
   let rate=W.rate; if(W.special==='mini'){P.spin=Math.min(1,(P.spin||0)+.09);rate=.22-(.22-W.rate)*P.spin;}
   P.cd=rate/rm;
   let ang=input.mouse?P.ang:aimAssist(P.ang); P.ang=ang;
+  const wm=P.w===P.prim?wMul(P.w):1;
   if(W.special==='rail'){fireRail(ang);}
   else if(W.special==='mortar'){
     let tx,ty; const t=nearestTarget();
     if(input.mouse&&input.firing){tx=camX+input.mx/SC;ty=camY+input.my/SC;}
     else if(t){tx=t.x;ty=t.y;} else{tx=P.x+Math.cos(ang)*260;ty=P.y+Math.sin(ang)*260;}
     const d=Math.hypot(tx-P.x,ty-P.y); if(d>380){tx=P.x+(tx-P.x)/d*380;ty=P.y+(ty-P.y)/d*380;}
-    bombs.push({x:clamp(tx,FENCE+10,WW-FENCE-10),y:clamp(ty,FENCE+10,WH-FENCE-10),t:.55,max:.55,r:72,dmg:W.dmg*P.dmgMul,from:'p',heal:W.heal||0,lob:true,sx:P.x,sy:P.y});
+    bombs.push({x:clamp(tx,FENCE+10,WW-FENCE-10),y:clamp(ty,FENCE+10,WH-FENCE-10),t:.55,max:.55,r:72,dmg:W.dmg*P.dmgMul*wm,from:'p',heal:W.heal||0,lob:true,sx:P.x,sy:P.y});
+  } else if(W.special==='cat'&&(P.catN=(P.catN||0)+1)%6===0){
+    pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,ang,W.spd*.8,W.dmg*3*P.dmgMul*wm,8,W.life*1.3*P.rangeMul,'yarn',2,{spin:0});SFX.meow();
   } else {
     const kind=W.special==='flame'?'flame':W.special==='ice'?'ice':P.w;
     for(let i=0;i<W.pellets;i++){
       const a=ang+(Math.random()-.5)*W.spread, sp=W.spd*(W.pellets>1||kind==='flame'?rand(.85,1.12):1);
-      pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,a,sp,W.dmg*P.dmgMul,kind==='flame'?7:W.pellets>1?3.5:(P.w==='sheriff'||P.w==='crossbow'||P.w==='cornrifle'?5:4.5),W.life*P.rangeMul*(W.pellets>1||kind==='flame'?rand(.8,1.1):1),kind,kind==='flame'?99:(W.pierce||0));
+      pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,a,sp,W.dmg*P.dmgMul*wm,kind==='flame'?7:W.pellets>1?3.5:(P.w==='sheriff'||P.w==='crossbow'||P.w==='cornrifle'?5:4.5),W.life*P.rangeMul*(W.pellets>1||kind==='flame'?rand(.8,1.1):1),kind,kind==='flame'?99:(W.pierce||0),W.bounce?{bounce:W.bounce,shape:i%4}:null);
     }
   }
   if(W.special!=='flame'){const fl=(P.w==='shotgun'||P.w==='sawed'||P.w==='rail')?1.5:1;
@@ -234,7 +238,7 @@ function shoot(){
   if(P.ammo!==Infinity){P.ammo--; if(P.ammo<=0){P.w=P.prim;P.ammo=Infinity;ftext(P.x,P.y-50,'Патроны кончились','#ffc93a',13);}}
   updateHUD();
 }
-function fireRail(ang){fireBeam(P.x,P.y,ang,WEAP.rail.dmg*P.dmgMul,true);}
+function fireRail(ang){fireBeam(P.x,P.y,ang,WEAP.rail.dmg*P.dmgMul*wMul('rail'),true);}
 function fireBeam(sx,sy,ang,dmg,fromP,owner){
   const ca=Math.cos(ang),sa=Math.sin(ang),x0=sx+ca*22,y0=sy+sa*22;
   let L=1000;
@@ -355,13 +359,15 @@ function allyFire(a,ang,t){
   const W=WEAP[a.gun]||WEAP.pistol, turbo=a.buff==='turbo'?2:1;
   let rate=W.rate; if(W.special==='mini')rate=.09;
   a.cd=rate*1.25/(a.rateMul*turbo)*rand(.9,1.1);
-  const dmg=W.dmg*a.dmgMul*.75;
+  const dmg=W.dmg*a.dmgMul*.75*wMul(a.gun);
   if(W.special==='rail'){fireBeam(a.x,a.y,ang,dmg,false,a);return;}
   if(W.special==='mortar'){let tx=t?t.x:a.x+Math.cos(ang)*260,ty=t?t.y:a.y+Math.sin(ang)*260;bombs.push({x:clamp(tx,FENCE+10,WW-FENCE-10),y:clamp(ty,FENCE+10,WH-FENCE-10),t:.55,max:.55,r:66,dmg,from:'p',lob:true,sx:a.x,sy:a.y,heal:W.heal||0});SFX.throw();return;}
+  if(W.special==='cat'&&(a.catN=(a.catN||0)+1)%6===0){const sp=W.spd*.8,life=W.life*1.3;
+    bullets.push({x:a.x+Math.cos(ang)*20,y:a.y+Math.sin(ang)*20,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,r:8,dmg:dmg*3,from:'p',life,max:life,kind:'yarn',pierce:2,hits:[],ally:true,owner:a,spin:0});return;}
   const kind=W.special==='flame'?'flame':W.special==='ice'?'ice':a.gun, multi=W.pellets>1||kind==='flame';
   for(let i=0;i<W.pellets;i++){const a2=ang+(Math.random()-.5)*W.spread,sp=W.spd*(multi?rand(.85,1.12):1),life=W.life*(a.cls==='sniper'?1.35:1)*(multi?rand(.8,1.1):1);
     bullets.push({x:a.x+Math.cos(ang)*20,y:a.y+Math.sin(ang)*20,vx:Math.cos(a2)*sp,vy:Math.sin(a2)*sp,r:kind==='flame'?7:W.pellets>1?3.5:4.2,dmg,from:'p',life,max:life,kind,
-      pierce:kind==='flame'?99:(W.pierce||0),hits:(kind==='flame'||W.pierce)?[]:null,ally:true,owner:a});}
+      pierce:kind==='flame'?99:(W.pierce||0),hits:(kind==='flame'||W.pierce)?[]:null,ally:true,owner:a,bounce:W.bounce||0,shape:i%4});}
   if(kind!=='flame')parts.push({k:'flash',x:a.x+Math.cos(ang)*26,y:a.y+Math.sin(ang)*26,z:19,t:0,max:.05,a:ang,s:.8});
 }
 function allyUlt(a){

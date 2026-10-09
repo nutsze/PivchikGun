@@ -1,10 +1,10 @@
 /* Каталог: редкости, герои, шапки, окрасы, оружие, враги, главы сюжета */
 /* ---------- catalog ---------- */
 const RAR={
-  common:{name:'Обычный',c:'#8f9ba6',w:1,card:1,need:1,cost:1,chance:[12,30]},
-  rare:{name:'Редкий',c:'#2f95d0',w:.75,card:.7,need:.7,cost:1.25,chance:[10,25]},
-  epic:{name:'Эпический',c:'#8b4fd8',w:.5,card:.45,need:.5,cost:1.5,chance:[3,9]},
-  legendary:{name:'Легендарный',c:'#f08c00',w:.35,card:.3,need:.35,cost:2,chance:[.6,3]}
+  common:{name:'Обычный',c:'#8f9ba6',w:1,card:1,need:1,cost:1,chance:[12,30,60]},
+  rare:{name:'Редкий',c:'#2f95d0',w:.75,card:.7,need:.7,cost:1.25,chance:[10,25,45]},
+  epic:{name:'Эпический',c:'#8b4fd8',w:.5,card:.45,need:.5,cost:1.5,chance:[3,9,22]},
+  legendary:{name:'Легендарный',c:'#f08c00',w:.35,card:.3,need:.35,cost:2,chance:[.6,3,10]}
 };
 const RAR_ORDER=['legendary','epic','rare','common'];
 const HEROES={
@@ -69,21 +69,23 @@ const COLORS={
   gold:{name:'Золотое перо',price:800,body:'#f6cd4c',wing:'#d9a21c'}, platinum:{name:'Платиновый',eggs:70,body:'#e3e9f0',wing:'#a9b6c6'}
 };
 const WEAP={
-  pistol:{cls:'assault',name:'Пугач',price:0,rate:.26,dmg:24,spd:640,spread:.05,pellets:1,life:.75,ammo:Infinity,sfx:'shot',kick:2,desc:'Надёжный стартовый ствол'},
-  sheriff:{cls:'sniper',name:'Шериф',price:250,rate:.42,dmg:48,spd:820,spread:.02,pellets:1,life:.8,ammo:Infinity,sfx:'shot',kick:3.5,desc:'Медленный, но бьёт вдвое сильнее'},
-  millet:{cls:'assault',name:'Пшеномёт',price:450,rate:.11,dmg:14,spd:680,spread:.15,pellets:1,life:.6,ammo:Infinity,sfx:'smg',kick:1.2,desc:'Поливает двор очередями'},
-  sawed:{cls:'tank',name:'Обрез',price:650,rate:.6,dmg:14,spd:540,spread:.42,pellets:5,life:.38,ammo:Infinity,sfx:'shotgun',kick:5,desc:'Разносит всё вблизи'},
-  popcorn:{cls:'assault',name:'Попкорн-бластер',price:1000,rate:.2,dmg:22,spd:620,spread:.05,pellets:1,life:.8,ammo:Infinity,sfx:'pop',kick:2,pierce:2,desc:'Зерно прошивает сразу трёх врагов'},
-  freeze:{cls:'tank',name:'Морозилка',price:1200,rate:.1,dmg:10,spd:720,spread:.06,pellets:1,life:.6,ammo:Infinity,sfx:'ice',kick:.8,special:'ice',desc:'Ледяные иглы замедляют врагов вдвое',meta:'Урон 10 · 10 выстр/с · замедление 50%'},
-  flame:{cls:'tank',name:'Огнемёт «Жар-птица»',price:1400,rate:.05,dmg:5,spd:450,spread:.34,pellets:1,life:.6,ammo:Infinity,sfx:'flame',kick:.3,special:'flame',desc:'Струя огня поджигает всех врагов перед тобой',meta:'Урон 5 × 20/с + горение 9/с · дальность средняя'},
-  minigun:{cls:'assault',name:'Миниган «Молотилка»',price:1800,rate:.045,dmg:11,spd:760,spread:.17,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,special:'mini',desc:'Раскручивается до бешеного темпа, но на бегу тормозит',meta:'Урон 11 · до 22 выстр/с после раскрутки'},
-  mortar:{cls:'medic',name:'Яйцемёт',price:2000,rate:.85,dmg:65,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'throw',kick:3,special:'mortar',heal:2,desc:'Навесом кидает взрывные яйца, каждый задетый враг лечит своих',meta:'Взрыв 65 по площади · +2 здоровья за врага'},
-  granny:{cls:'tank',name:'Бабушкин дробовик',price:0,rate:.75,dmg:13,spd:540,spread:.4,pellets:4,life:.42,ammo:Infinity,sfx:'shotgun',kick:4,desc:'Старый, но надёжный дробовик танка'},
-  cornrifle:{cls:'sniper',name:'Кукурузная винтовка',price:0,rate:.75,dmg:58,spd:980,spread:.01,pellets:1,life:.9,ammo:Infinity,sfx:'shot',kick:3,pierce:1,desc:'Меткий дальний выстрел, прошивает двоих'},
-  crossbow:{cls:'sniper',name:'Арбалет «Клюв»',price:900,rate:.85,dmg:85,spd:1000,spread:.01,pellets:1,life:1,ammo:Infinity,sfx:'shot',kick:2.5,pierce:3,desc:'Тяжёлый болт пробивает четверых подряд'},
-  syringe:{cls:'medic',name:'Шприцемёт',price:0,rate:.24,dmg:17,spd:700,spread:.04,pellets:1,life:.7,ammo:Infinity,sfx:'pop',kick:1,heal:1,desc:'Каждое попадание лечит тебя и бойца рядом',meta:'Урон 17 · 4 выстр/с · +1 здоровья за попадание'},
-  vitamin:{cls:'medic',name:'Витаминный пулемёт',price:800,rate:.1,dmg:10,spd:720,spread:.12,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,heal:.5,desc:'Очереди витаминок: бьют врагов и лечат своих',meta:'Урон 10 · 10 выстр/с · +0,5 здоровья за попадание'},
-  rail:{cls:'sniper',name:'Рельсотрон',eggs:120,rate:1.05,dmg:130,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'rail',kick:7,special:'rail',desc:'Луч прошивает всех врагов и даже укрытия на линии',meta:'Урон 130 всем на линии · раз в секунду'},
+  pistol:{cls:'assault',rar:'common',name:'Пугач',price:0,rate:.26,dmg:24,spd:640,spread:.05,pellets:1,life:.75,ammo:Infinity,sfx:'shot',kick:2,desc:'Надёжный стартовый ствол'},
+  sheriff:{cls:'sniper',rar:'common',name:'Шериф',price:250,rate:.42,dmg:48,spd:820,spread:.02,pellets:1,life:.8,ammo:Infinity,sfx:'shot',kick:3.5,desc:'Медленный, но бьёт вдвое сильнее'},
+  millet:{cls:'assault',rar:'common',name:'Пшеномёт',price:450,rate:.11,dmg:14,spd:680,spread:.15,pellets:1,life:.6,ammo:Infinity,sfx:'smg',kick:1.2,desc:'Поливает двор очередями'},
+  sawed:{cls:'tank',rar:'common',name:'Обрез',price:650,rate:.6,dmg:14,spd:540,spread:.42,pellets:5,life:.38,ammo:Infinity,sfx:'shotgun',kick:5,desc:'Разносит всё вблизи'},
+  popcorn:{cls:'assault',rar:'rare',name:'Попкорн-бластер',price:1000,rate:.2,dmg:22,spd:620,spread:.05,pellets:1,life:.8,ammo:Infinity,sfx:'pop',kick:2,pierce:2,desc:'Зерно прошивает сразу трёх врагов'},
+  freeze:{cls:'tank',rar:'rare',name:'Морозилка',price:1200,rate:.1,dmg:10,spd:720,spread:.06,pellets:1,life:.6,ammo:Infinity,sfx:'ice',kick:.8,special:'ice',desc:'Ледяные иглы замедляют врагов вдвое',meta:'Урон 10 · 10 выстр/с · замедление 50%'},
+  flame:{cls:'tank',rar:'legendary',name:'Огнемёт «Жар-птица»',price:1400,rate:.05,dmg:5,spd:450,spread:.34,pellets:1,life:.6,ammo:Infinity,sfx:'flame',kick:.3,special:'flame',desc:'Струя огня поджигает всех врагов перед тобой',meta:'Урон 5 × 20/с + горение 9/с · дальность средняя'},
+  minigun:{cls:'assault',rar:'legendary',name:'Миниган «Молотилка»',price:1800,rate:.045,dmg:11,spd:760,spread:.17,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,special:'mini',desc:'Раскручивается до бешеного темпа, но на бегу тормозит',meta:'Урон 11 · до 22 выстр/с после раскрутки'},
+  mortar:{cls:'medic',rar:'legendary',name:'Яйцемёт',price:2000,rate:.85,dmg:65,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'throw',kick:3,special:'mortar',heal:2,desc:'Навесом кидает взрывные яйца, каждый задетый враг лечит своих',meta:'Взрыв 65 по площади · +2 здоровья за врага'},
+  granny:{cls:'tank',rar:'common',name:'Бабушкин дробовик',price:0,rate:.75,dmg:13,spd:540,spread:.4,pellets:4,life:.42,ammo:Infinity,sfx:'shotgun',kick:4,desc:'Старый, но надёжный дробовик танка'},
+  cornrifle:{cls:'sniper',rar:'common',name:'Кукурузная винтовка',price:0,rate:.75,dmg:58,spd:980,spread:.01,pellets:1,life:.9,ammo:Infinity,sfx:'shot',kick:3,pierce:1,desc:'Меткий дальний выстрел, прошивает двоих'},
+  crossbow:{cls:'sniper',rar:'rare',name:'Арбалет «Клюв»',price:900,rate:.85,dmg:85,spd:1000,spread:.01,pellets:1,life:1,ammo:Infinity,sfx:'shot',kick:2.5,pierce:3,desc:'Тяжёлый болт пробивает четверых подряд'},
+  syringe:{cls:'medic',rar:'common',name:'Шприцемёт',price:0,rate:.24,dmg:17,spd:700,spread:.04,pellets:1,life:.7,ammo:Infinity,sfx:'pop',kick:1,heal:1,desc:'Каждое попадание лечит тебя и бойца рядом',meta:'Урон 17 · 4 выстр/с · +1 здоровья за попадание'},
+  vitamin:{cls:'medic',rar:'rare',name:'Витаминный пулемёт',price:800,rate:.1,dmg:10,spd:720,spread:.12,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,heal:.5,desc:'Очереди витаминок: бьют врагов и лечат своих',meta:'Урон 10 · 10 выстр/с · +0,5 здоровья за попадание'},
+  rail:{cls:'sniper',rar:'legendary',name:'Рельсотрон',eggs:120,rate:1.05,dmg:130,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'rail',kick:7,special:'rail',desc:'Луч прошивает всех врагов и даже укрытия на линии',meta:'Урон 130 всем на линии · раз в секунду'},
+  turbocat:{cls:'assault',rar:'legendary',name:'Пулемёт Турбокота',price:2400,rate:.07,dmg:12,spd:760,spread:.11,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.9,special:'cat',desc:'Мурчит очередями, а каждый 6-й выстрел — турбо-клубок',meta:'Урон 12 · 14 выстр/с · каждый 6-й — клубок ×3, пробивает двоих'},
+  figure:{cls:'tank',rar:'rare',name:'Дробовик Фигурки',price:1100,rate:.72,dmg:13,spd:560,spread:.46,pellets:6,life:.5,ammo:Infinity,sfx:'shotgun',kick:4.5,special:'fig',bounce:1,desc:'Стреляет звёздочками, сердечками и кубиками — они отскакивают от укрытий',meta:'Урон 13×6 · дробинки-фигурки рикошетят один раз'},
   shotgun:{name:'Дробовик',rate:.68,dmg:15,spd:560,spread:.36,pellets:6,life:.42,ammo:14,sfx:'shotgun',kick:6},
   smg:{name:'Тарахтелка',rate:.085,dmg:13,spd:720,spread:.13,pellets:1,life:.62,ammo:80,sfx:'smg',kick:1.2}
 };
@@ -94,8 +96,20 @@ const CLASSES={
   medic:{name:'Медик',c:'#4fae36',desc:'Лечится на 1,2 в секунду, лечит всех своих рядом и вдвое быстрее поднимает выбитых бойцов',start:'syringe'}
 };
 const CLASS_ORDER=['assault','tank','sniper','medic'];
-const PRIMARY=['pistol','millet','popcorn','minigun','granny','sawed','freeze','flame','cornrifle','sheriff','crossbow','rail','syringe','vitamin','mortar'];
+const PRIMARY=['pistol','millet','popcorn','minigun','turbocat','granny','sawed','figure','freeze','flame','cornrifle','sheriff','crossbow','rail','syringe','vitamin','mortar'];
 const clsOf=heroId=>HEROES[heroId].cls;
+/* Редкость оружия и прокачка картами: +6% урона за уровень, максимум 10 */
+const WRAR={
+  common:{name:'Обычное',c:'#8f9ba6',w:1,card:1,need:1,cost:1},
+  rare:{name:'Редкое',c:'#2f95d0',w:.7,card:.65,need:.7,cost:1.3},
+  legendary:{name:'Легендарное',c:'#f08c00',w:.4,card:.35,need:.4,cost:1.8}
+};
+const WRAR_ORDER=['common','rare','legendary'];
+const WNEED=[0,3,5,8,12,16,22,30,40,52];
+const WCOST=[0,30,50,80,120,170,230,300,390,500];
+const wNeed=(id,l)=>Math.ceil(WNEED[l]*WRAR[WEAP[id].rar].need);
+const wCost=(id,l)=>Math.round(WCOST[l]*WRAR[WEAP[id].rar].cost/5)*5;
+const W_STEP=.06;
 const NIGHT_R=250;
 const ETYPE={
   hen:{name:'Несушка',hp:45,r:15,spd:95,score:100,coin:3,tok:1,cd:[1.3,2.3],dmg:8,bspd:290,range:440,keep:220,cols:[['#a8632f','#7d4520'],['#4b4744','#2e2b29'],['#dba948','#b8862c']]},
@@ -242,7 +256,14 @@ const PATCH_NOTES=[
     'Карточки отряда: кнопки «Сменить оружие» и «Убрать» больше не вылезают за край',
     'Баланс: враги бьют сильнее (×1,3 и +7% за ступень сложности), лечение медиков, кукуруза и лечение за волну слабее, предметы падают реже',
     'Баланс: камикадзе редкие (5%, не больше одного за раз и не чаще раза в 12 секунд), кроты больше не мешают появляться остальным врагам',
-    'Враги реже переключаются на бойцов отряда — основной удар снова по герою']},
+    'Враги реже переключаются на бойцов отряда — основной удар снова по герою',
+    'Фон главного меню можно выбрать: кнопка «Фон» под бойцом, на выбор все 5 карт',
+    'Кукуруза-лечилка падает на четверть реже',
+    'Новое оружие: Пулемёт Турбокота (штурмовик, каждый 6-й выстрел — пробивающий клубок ×3) и Дробовик Фигурки (танк, звёздочки и сердечки рикошетят от укрытий)',
+    'Редкость оружия: Обычное, Редкое, Легендарное',
+    'Карты оружия падают из сундуков: улучшай купленные стволы в магазине до 10 уровня, +6% урона за уровень (и у бойцов отряда тоже)',
+    'Новая система сундуков: Обычный, Большой и Сверхбольшой. Внутри — новые герои или карты к ним, карты оружия, зёрна и золотые яйца. Герои выпадают только из сундуков',
+    'Сверхбольшой сундук: гарантированный новый герой, пока есть закрытые. Даётся за финального босса каждой главы и за 25-ю волну бесконечного боя, или за 200 золотых яиц']},
   {v:'0.2',items:[
     'Реки на всех картах: по воде ходить нельзя, переходи по мостам. Гнилые мосты скрипят и рушатся после второго прохода',
     '5 карт со своей рекой: Двор (бесконечный бой), Ферма, Тёмный лес, Птицефабрика и Горы — по одной на главу',

@@ -255,6 +255,15 @@ function bossAI(e,T,dt,d){
 function updateBullets(dt){
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; if(!b)continue; b.x+=b.vx*dt; b.y+=b.vy*dt; b.life-=dt;
+    if(b.bounce>0&&b.life>0){ // фигурки рикошетят от забора и укрытий
+      let hit=false;
+      if(b.x<FENCE||b.x>WW-FENCE){b.vx*=-1;b.x=clamp(b.x,FENCE+1,WW-FENCE-1);hit=true;}
+      if(b.y<FENCE||b.y>WH-FENCE){b.vy*=-1;b.y=clamp(b.y,FENCE+1,WH-FENCE-1);hit=true;}
+      if(!hit)for(const o of OBS){const dx=b.x-o.x,dy=b.y-o.y,d2=dx*dx+dy*dy;if(d2<o.r*o.r){const d=Math.sqrt(d2)||1,nx=dx/d,ny=dy/d,dot=b.vx*nx+b.vy*ny;
+        if(dot<0){b.vx-=2*dot*nx;b.vy-=2*dot*ny;}b.x=o.x+nx*(o.r+1);b.y=o.y+ny*(o.r+1);hit=true;break;}}
+      if(hit){b.bounce--;b.life=Math.max(b.life,.22);puff(b.x,b.y,'#ffe066',3,.5);}
+    }
+    if(b.kind==='yarn')b.spin=(b.spin||0)+dt*14;
     let dead=b.life<=0||b.x<FENCE||b.x>WW-FENCE||b.y<FENCE||b.y>WH-FENCE;
     if(!dead)for(const o of OBS){if((b.x-o.x)**2+(b.y-o.y)**2<o.r*o.r){dead=true;
       if(b.from==='e'){splat(b.x,b.y,.7);}else puff(b.x,b.y,o.type==='hay'?'#f3d36e':o.type==='bush'?'#5f9e35':o.type==='rock'?'#b8b2a6':'#a87547',3,.6);break;}}

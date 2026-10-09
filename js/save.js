@@ -1,7 +1,7 @@
 /* Сохранение прогресса и настроек в localStorage */
 /* ---------- save ---------- */
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],squadGun:{},bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]}};
+const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],squadGun:{},bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]},wlv:{},schests:0,menuBg:'yard'};
 function loadSave(){
   let s=null; try{s=JSON.parse(localStorage.getItem('kur_save')||'null');}catch(e){}
   const o=JSON.parse(JSON.stringify(DEF));
@@ -33,6 +33,9 @@ function loadSave(){
   CLASS_ORDER.forEach(k=>{const g=o.loadout[k];if(!WEAP[g]||WEAP[g].cls!==k||!o.guns.includes(g))o.loadout[k]=CLASSES[k].start;});
   delete o.gun;
   if(!o.story||!Array.isArray(o.story.done))o.story={done:[]};
+  if(!o.wlv||typeof o.wlv!=='object'||Array.isArray(o.wlv))o.wlv={};
+  for(const id in o.wlv){const w=o.wlv[id];if(!WEAP[id]||!WEAP[id].rar||!w||typeof w!=='object')delete o.wlv[id];else{w.lv=clamp(w.lv|0||1,1,10);w.cards=Math.max(0,w.cards|0);}}
+  o.schests=Math.max(0,o.schests|0); if(typeof o.menuBg!=='string')o.menuBg='yard';
   o.v=2; return o;
 }
 let SAVE=loadSave();
@@ -41,3 +44,6 @@ persist();
 let muted=false; try{muted=localStorage.getItem('kur_mute')==='1';}catch(e){}
 let autoAim=true; try{autoAim=localStorage.getItem('kur_auto')!=='0';}catch(e){}
 const pcAuto=()=>autoAim&&!COARSE;
+function wRec(id){return SAVE.wlv[id]||(SAVE.wlv[id]={lv:1,cards:0});}
+const wLv=id=>(SAVE.wlv[id]&&SAVE.wlv[id].lv)||1;
+const wMul=id=>WEAP[id]&&WEAP[id].rar?1+W_STEP*(wLv(id)-1):1;

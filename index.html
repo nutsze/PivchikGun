@@ -48,7 +48,7 @@
       <div class="lb-badges" id="heroBadges"></div>
       <b class="lb-name" id="heroName">Пеструшка</b>
       <span class="lb-meta" id="heroLine">Штурмовик · ур. 1</span>
-      <button class="lb-chip" id="heroSwap">Сменить бойца</button>
+      <div class="lb-chips"><button class="lb-chip" id="heroSwap">Сменить бойца</button><button class="lb-chip alt" id="bgBtn" aria-label="Выбрать фон меню">Фон</button></div>
     </div>
   </section>
 
@@ -77,6 +77,15 @@
     <section class="info-sec"><h3>Создатели</h3><ul class="credits" id="creditsList"></ul></section>
     <section class="info-sec"><h3>Патчноуты</h3><div class="notes" id="patchNotes"></div></section>
     <button class="btn" id="infoClose">Закрыть</button>
+  </div>
+</div>
+
+<div class="ov top" id="bgOv" hidden>
+  <div class="card bgcard">
+    <p class="eyebrow">Главное меню</p>
+    <h2 class="logo">Фон меню</h2>
+    <div class="bggrid" id="bgGrid"></div>
+    <button class="btn" id="bgClose">Готово</button>
   </div>
 </div>
 

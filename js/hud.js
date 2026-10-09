@@ -53,13 +53,13 @@ function refreshMenu(){
   if(done>=STORY.length)$('storySub').textContent='Все 4 главы пройдены · можно переигрывать';
   else{const L=STORY[done<STORY.length?STORY.findIndex(l=>!SAVE.story.done.includes(l.gid)):0];$('storySub').textContent='Глава '+(L.ch+1)+' «'+CHAPTERS[L.ch].name+'» · '+CHAPTERS[L.ch].levels.filter(l=>SAVE.story.done.includes(l.gid)).length+'/20';}
   $('bestText').textContent=SAVE.best.score>0?'Рекорд: волна '+SAVE.best.wave+' · '+fmt(SAVE.best.score)+' очк.':'Рекорда пока нет — поставь первый';
-  $('chestBadge').hidden=!(SAVE.tokens>=100||SAVE.btokens>=10);
+  $('chestBadge').hidden=!(SAVE.tokens>=100||SAVE.btokens>=10||SAVE.schests>0);
   document.querySelectorAll('.purse').forEach(e=>e.innerHTML=purseHTML());
 }
 function toMenu(){
   if(['play','paused','dying'].includes(S.mode))bankCoins();
   S.mode='menu'; S.night=false; $('hud').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
-  if(MAP!=='yard')buildWorld('yard');
+  if(MAP!==menuMap())buildWorld(menuMap());
   P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];holes=[];zones=[];
   refreshMenu();
 }
@@ -96,6 +96,7 @@ function showWin(){
   bankCoins();
   SAVE.coins+=lc; SAVE.tokens+=lt; const le=first?L.eggs:0; SAVE.eggs+=le;
   let big=false; if(SAVE.bigDay!==today()){SAVE.bigDay=today();SAVE.btokens+=1;big=true;}
+  const sup=first&&L.i===19; if(sup)SAVE.schests++;
   if(first)SAVE.story.done.push(i);
   persist();
   $('winEyebrow').textContent='Глава '+(L.ch+1)+' · уровень '+(L.i+1)+' из 20';
@@ -105,6 +106,7 @@ function showWin(){
   row('<i class="coin"></i>+'+(lc+S.coins)+' зёрен',first?'награда за первое прохождение':'повторное прохождение',0);
   row('<i class="tok"></i>+'+(lt+S.tokens)+' жетонов','на обычный сундук: '+Math.min(SAVE.tokens,100)+'/100',.12);
   if(le)row('<i class="gegg"></i>+'+le+' золотых яиц','только за первое прохождение',.18);
+  if(sup)row('<i class="sch"></i>Сверхбольшой сундук!','за финального босса главы · открой в «Сундуках»',.21);
   if(big)row('<i class="btok"></i>+1 большой жетон','на большой сундук: '+SAVE.btokens+'/10 · следующий завтра',.24);
   else row('<i class="btok"></i>Большой жетон уже получен сегодня','завтра пройди уровень ещё раз',.24);
   $('nextBtn').hidden=i>=STORY.length-1; $('nextBtn').textContent=L.i===19?'Глава '+(L.ch+2):'Уровень '+(L.i+2);

@@ -59,21 +59,43 @@ function renderShop(){
       const C=CLASSES[ck];
       const sec=mk('div','sect',C.name+(ck===myC?' · твой класс':'')+' — '+C.desc);body.appendChild(sec);
       g=mk('div','grid');
-      for(const id of PRIMARY.filter(w=>WEAP[w].cls===ck)){const W=WEAP[id],owned=SAVE.guns.includes(id),eq=SAVE.loadout[ck]===id;
-        const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');
-        pv.appendChild(preview(140,90,(c,w,h)=>{c.translate(w/2-32,h/2+2);c.scale(2.1,2.1);drawGun(c,id);}));card.appendChild(pv);
-        card.appendChild(clsBadge(ck));
+      const ids=PRIMARY.filter(w=>WEAP[w].cls===ck).sort((a,b)=>WRAR_ORDER.indexOf(WEAP[a].rar)-WRAR_ORDER.indexOf(WEAP[b].rar)||((WEAP[a].eggs||0)*30+WEAP[a].price)-((WEAP[b].eggs||0)*30+WEAP[b].price));
+      for(const id of ids){const W=WEAP[id],owned=SAVE.guns.includes(id),eq=SAVE.loadout[ck]===id,WR=WRAR[W.rar],lv=wLv(id);
+        const card=mk('div','item gun'+(eq?' sel':''));card.style.setProperty('--rc',WR.c);const pv=mk('div','pv');
+        pv.appendChild(preview(140,90,(c,w,h)=>{c.translate(w/2-32,h/2+2);c.scale(2.1,2.1);drawGun(c,id);}));
+        if(owned)pv.appendChild(mk('span','lvl','Ур. '+lv));card.appendChild(pv);
+        const bd=mk('div','badges');bd.appendChild(clsBadge(ck));const rb=mk('span','rar',WR.name);rb.style.setProperty('--c',WR.c);bd.appendChild(rb);card.appendChild(bd);
         card.appendChild(mk('h4','',W.name));card.appendChild(mk('p','',W.desc));
         const dps=Math.round(W.dmg*W.pellets/W.rate);
         card.appendChild(mk('div','meta',W.meta||('Урон '+W.dmg+(W.pellets>1?'×'+W.pellets:'')+' · '+(1/W.rate).toFixed(1)+' выстр/с · ≈'+dps+' в сек')));
+        if(owned){
+          card.appendChild(mk('div','meta up','Уровень '+lv+' из 10'+(lv>1?' · урон +'+Math.round(W_STEP*(lv-1)*100)+'%':'')));
+          if(lv<10){const nc=wNeed(id,lv),co=wCost(id,lv),have=wRec(id).cards;
+            const pr=mk('div','');pr.innerHTML='<div class="progt"><span>Карты оружия</span><span>'+have+' / '+nc+'</span></div>';
+            const bar=mk('div','prog');bar.style.setProperty('--c',have>=nc?'#5fcf3f':WR.c);const f=mk('i');f.style.width=Math.min(100,have/nc*100)+'%';bar.appendChild(f);pr.appendChild(bar);card.appendChild(pr);}
+        }
         card.appendChild(mk('div','grow'));
-        card.appendChild(actBtn(owned,eq,W.eggs||W.price,()=>{SAVE.guns.push(id);SAVE.loadout[ck]=id;},()=>equip(()=>{SAVE.loadout[ck]=id;},C.name+': '+W.name),W.eggs?'eggs':'coins'));
+        const sel=actBtn(owned,eq,W.eggs||W.price,()=>{SAVE.guns.push(id);SAVE.loadout[ck]=id;},()=>equip(()=>{SAVE.loadout[ck]=id;},C.name+': '+W.name),W.eggs?'eggs':'coins');
+        if(owned&&lv<10){const nc=wNeed(id,lv),co=wCost(id,lv),ok=wRec(id).cards>=nc&&SAVE.coins>=co;
+          const row=mk('div','brow');row.appendChild(sel);
+          const ub=mk('button','pbtn '+(ok?'go':'poor'),'Улучшить · '+coinTag(co));ub.onclick=()=>upgradeGun(id);row.appendChild(ub);card.appendChild(row);}
+        else card.appendChild(sel);
         g.appendChild(card);}
       if(oi<order.length-1)body.appendChild(g);
     });
     body.appendChild(g);
   }
   body.scrollTop=st;
+}
+function upgradeGun(id){
+  const lv=wLv(id); if(lv>=10||!SAVE.guns.includes(id))return;
+  const r=wRec(id), nc=wNeed(id,lv), co=wCost(id,lv);
+  initAudio();
+  if(r.cards<nc){toast('Нужно ещё '+(nc-r.cards)+' карт оружия — они падают из сундуков');SFX.hurt();return;}
+  if(SAVE.coins<co){toast('Не хватает '+fmt(co-SAVE.coins)+' зёрен');SFX.hurt();return;}
+  r.cards-=nc; SAVE.coins-=co; r.lv=lv+1; persist(); SFX.buy();
+  toast(WEAP[id].name+': уровень '+r.lv+' · урон +'+Math.round(W_STEP*(r.lv-1)*100)+'%');
+  afterChange();
 }
 function upgradeHero(id){
   const h=SAVE.heroes[id]; if(!h||h.lv>=10)return;
@@ -219,91 +241,121 @@ $('briefGo').addEventListener('click',()=>{initAudio();$('brief').hidden=true;st
 $('briefBack').addEventListener('click',()=>{$('brief').hidden=true;});
 
 /* ---------- chests ---------- */
-function rollChest(big){
-  const res={coins:Math.round(big?rand(150,250):rand(25,50)),cards:{},hero:null};
+// Три сундука: 0 обычный (корзинка), 1 большой (золотое яйцо), 2 сверхбольшой (аметистовое яйцо)
+const CHESTS=[
+  {name:'Обычный сундук',sub:'корзинка несушки',coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3]},
+  {name:'Большой сундук',sub:'золотое яйцо',coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5]},
+  {name:'Сверхбольшой сундук',sub:'аметистовое яйцо',coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true}
+];
+const EGG_PRICE=80, SUPER_PRICE=200;
+function pickW(pool,wf){let tot=0;pool.forEach(x=>tot+=wf(x));let r=Math.random()*tot;for(const x of pool){r-=wf(x);if(r<=0)return x;}return pool[pool.length-1];}
+function rollChest(tier){
+  const C=CHESTS[tier], res={tier,coins:Math.round(rand(C.coins[0],C.coins[1])),cards:{},wcards:{},hero:null};
   for(const rk of RAR_ORDER){
     const pool=HERO_IDS.filter(id=>!SAVE.heroes[id]&&HEROES[id].chance&&HEROES[id].rar===rk);
-    if(pool.length&&Math.random()*100<RAR[rk].chance[big?1:0]){res.hero=pool[Math.floor(Math.random()*pool.length)];break;}
+    if(pool.length&&Math.random()*100<RAR[rk].chance[tier]){res.hero=pool[Math.floor(Math.random()*pool.length)];break;}
   }
-  res.eggs=Math.random()<(big?.3:.08)?Math.round(big?rand(2,5):rand(1,3)):0;
-  const rolls=big?4:2;
-  for(let i=0;i<rolls;i++){
+  if(!res.hero&&C.sure){const pool=HERO_IDS.filter(id=>!SAVE.heroes[id]&&HEROES[id].chance);if(pool.length)res.hero=pickW(pool,id=>RAR[HEROES[id].rar].w);}
+  res.eggs=Math.random()<C.egg[0]?Math.round(rand(C.egg[1],C.egg[2])):0;
+  for(let i=0;i<C.hpacks;i++){
     const pool=Object.keys(SAVE.heroes).filter(id=>SAVE.heroes[id].lv<10);
-    if(!pool.length){res.coins+=big?40:10;continue;}
-    let tot=0;pool.forEach(id=>tot+=RAR[HEROES[id].rar].w);let r=Math.random()*tot,pick=pool[0];
-    for(const id of pool){r-=RAR[HEROES[id].rar].w;if(r<=0){pick=id;break;}}
-    const amt=Math.max(1,Math.round((big?rand(8,14):rand(3,6))*RAR[HEROES[pick].rar].card));
-    res.cards[pick]=(res.cards[pick]||0)+amt;
+    if(!pool.length){res.coins+=10*(tier+1);continue;}
+    const pick=pickW(pool,id=>RAR[HEROES[id].rar].w);
+    res.cards[pick]=(res.cards[pick]||0)+Math.max(1,Math.round(rand(C.hcard[0],C.hcard[1])*RAR[HEROES[pick].rar].card));
+  }
+  for(let i=0;i<C.wpacks;i++){
+    const pool=PRIMARY.filter(id=>SAVE.guns.includes(id)&&wLv(id)<10);
+    if(!pool.length){res.coins+=10*(tier+1);continue;}
+    const pick=pickW(pool,id=>WRAR[WEAP[id].rar].w);
+    res.wcards[pick]=(res.wcards[pick]||0)+Math.max(1,Math.round(rand(C.wcard[0],C.wcard[1])*WRAR[WEAP[pick].rar].card));
   }
   SAVE.coins+=res.coins; SAVE.eggs+=res.eggs;
   for(const id in res.cards)SAVE.heroes[id].cards+=res.cards[id];
+  for(const id in res.wcards)wRec(id).cards+=res.wcards[id];
   if(res.hero)SAVE.heroes[res.hero]={lv:1,cards:0};
   persist(); return res;
 }
 const pct=v=>String(v).replace('.',',')+'%';
+function chestCard(tier){
+  const C=CHESTS[tier], card=mk('div','item chest t'+tier);
+  const pv=mk('div','pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(220,150,(c,w,h)=>{c.translate(w/2,h-12);c.scale(.9,.9);drawChest(c,tier,0,0);}));card.appendChild(pv);
+  card.appendChild(mk('h4','',C.name));
+  const eggTxt=C.egg[0]>=1?C.egg[1]+'–'+C.egg[2]+' золотых яиц':'шанс золотых яиц';
+  card.appendChild(mk('p','',C.coins[0]+'–'+C.coins[1]+' зёрен · '+C.hpacks+' пачки карт героев · '+C.wpacks+(C.wpacks>1?' пачки':' пачка')+' карт оружия · '+eggTxt+(C.sure?' · <b>гарантированный новый герой</b>, пока есть закрытые':'')));
+  const bar=(have,need,ic,label,col)=>{const pr=mk('div','');pr.innerHTML='<div class="progt"><span>'+ic+label+'</span><span>'+Math.min(have,need)+' / '+need+'</span></div>';
+    const b=mk('div','prog');b.style.setProperty('--c',col);const f=mk('i');f.style.width=Math.min(100,have/need*100)+'%';b.appendChild(f);pr.appendChild(b);return pr;};
+  if(tier===0){
+    const ok=SAVE.tokens>=100;
+    card.appendChild(bar(SAVE.tokens,100,'<i class="tok"></i>','Жетоны','var(--tok)'));
+    card.appendChild(mk('div','meta','Жетоны дают за врагов, волны и уровни сюжета.'));card.appendChild(mk('div','grow'));
+    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?'Открыть':'<i class="tok"></i>ещё '+(100-SAVE.tokens));
+    b.onclick=()=>{if(!ok){toast('Нужно ещё '+(100-SAVE.tokens)+' жетонов');return;}openChest(0);};card.appendChild(b);
+  } else if(tier===1){
+    const ok=SAVE.btokens>=10;
+    card.appendChild(bar(SAVE.btokens,10,'<i class="btok"></i>','Большие жетоны','var(--btok)'));
+    card.appendChild(mk('div','meta',SAVE.bigDay===today()?'Большой жетон сегодня уже получен, следующий — завтра.':'Пройди уровень сюжета сегодня — получишь большой жетон.'));card.appendChild(mk('div','grow'));
+    const row=mk('div','brow');
+    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?'Открыть':'<i class="btok"></i>ещё '+(10-SAVE.btokens));
+    b.onclick=()=>{if(!ok){toast('Большие жетоны: 1 в день за пройденный уровень сюжета');return;}openChest(1);};row.appendChild(b);
+    const eggOk=SAVE.eggs>=EGG_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),'Купить · <i class="gegg"></i>'+EGG_PRICE);
+    b2.onclick=()=>{if(!eggOk){toast('Нужно ещё '+(EGG_PRICE-SAVE.eggs)+' золотых яиц');SFX.hurt();return;}openChest(1,'eggs');};row.appendChild(b2);card.appendChild(row);
+  } else {
+    const n=SAVE.schests;
+    card.appendChild(mk('div','meta','<b>Есть: '+n+'</b> · по одному за каждого финального босса главы (20-й уровень, первое прохождение) и за 25-ю волну в бесконечном бою.'));card.appendChild(mk('div','grow'));
+    const row=mk('div','brow');
+    const b=mk('button','pbtn '+(n>0?'go':'poor'),n>0?'Открыть':'Нет в запасе');
+    b.onclick=()=>{if(n<=0){toast('Победи финального босса главы — получишь сверхбольшой сундук');return;}openChest(2,'free');};row.appendChild(b);
+    const eggOk=SAVE.eggs>=SUPER_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),'Купить · <i class="gegg"></i>'+SUPER_PRICE);
+    b2.onclick=()=>{if(!eggOk){toast('Нужно ещё '+(SUPER_PRICE-SAVE.eggs)+' золотых яиц');SFX.hurt();return;}openChest(2,'eggs');};row.appendChild(b2);card.appendChild(row);
+  }
+  return card;
+}
 function renderChests(){
   const body=$('chestBody'), st=body.scrollTop; body.innerHTML='';
-  const g=mk('div','grid wide');
-  const chest=(big)=>{
-    const have=big?SAVE.btokens:SAVE.tokens, need=big?10:100, ok=have>=need;
-    const card=mk('div','item');
-    const pv=mk('div','pv '+(big?'gold':'nest'));pv.appendChild(preview(220,140,(c,w,h)=>{c.translate(w/2,h-14);c.scale(.92,.92);drawChest(c,big,0,0);}));card.appendChild(pv);
-    card.appendChild(mk('h4','',big?'Большой сундук':'Обычный сундук'));
-    card.appendChild(mk('p','',big?'Золотое яйцо в гнезде: 150–250 зёрен, 4 пачки карт героев, высокий шанс нового героя и шанс золотых яиц':'Плетёная корзинка несушки: 25–50 зёрен, 2 пачки карт героев и шанс нового героя'));
-    const pr=mk('div','');pr.innerHTML='<div class="progt"><span>'+(big?'<i class="btok"></i>Большие жетоны':'<i class="tok"></i>Жетоны')+'</span><span>'+Math.min(have,need)+' / '+need+'</span></div>';
-    const bar=mk('div','prog');bar.style.setProperty('--c',big?'var(--btok)':'var(--tok)');const f=mk('i');f.style.width=Math.min(100,have/need*100)+'%';bar.appendChild(f);pr.appendChild(bar);card.appendChild(pr);
-    card.appendChild(mk('div','meta',big?(SAVE.bigDay===today()?'Большой жетон сегодня уже получен, следующий — завтра. Или купи сундук за золотые яйца.':'Пройди уровень сюжета сегодня — получишь большой жетон.'):'Жетоны дают за врагов, волны и уровни сюжета.'));
-    card.appendChild(mk('div','grow'));
-    const open=mk('button','pbtn '+(ok?'go':'poor'),ok?'Открыть':(big?'<i class="btok"></i>':'<i class="tok"></i>')+'ещё '+(need-have));
-    open.onclick=()=>{if(!ok){toast(big?'Большие жетоны: 1 в день за пройденный уровень сюжета':'Нужно ещё '+(need-have)+' жетонов');return;}openChest(big);};
-    if(big){
-      const row=mk('div','brow');row.appendChild(open);
-      const eggOk=SAVE.eggs>=EGG_PRICE;
-      const b2=mk('button','pbtn '+(eggOk?'buy':'poor'),'Купить · <i class="gegg"></i>'+EGG_PRICE);
-      b2.onclick=()=>{if(!eggOk){toast('Нужно ещё '+(EGG_PRICE-SAVE.eggs)+' золотых яиц');SFX.hurt();return;}openChest(true,'eggs');};
-      row.appendChild(b2);card.appendChild(row);
-    } else card.appendChild(open);
-    return card;
-  };
-  g.appendChild(chest(false)); g.appendChild(chest(true));
+  const g=mk('div','grid wide chests');
+  [0,1,2].forEach(t=>g.appendChild(chestCard(t)));
   body.appendChild(g);
   body.appendChild(mk('div','sect','Шансы выпадения героя'));
   const wrap=mk('div','tblwrap');const t=mk('table','tbl');
-  t.innerHTML='<thead><tr><th>Редкость</th><th class="n">Обычный</th><th class="n">Большой</th><th class="n">Открыто</th></tr></thead>';
+  t.innerHTML='<thead><tr><th>Редкость</th><th class="n">Обычный</th><th class="n">Большой</th><th class="n">Сверхбольшой</th><th class="n">Открыто</th></tr></thead>';
   const tb=mk('tbody');
   ['common','rare','epic','legendary'].forEach(rk=>{const R=RAR[rk];
     const all=HERO_IDS.filter(id=>HEROES[id].rar===rk&&HEROES[id].chance), got=all.filter(id=>SAVE.heroes[id]).length;
-    const tr=mk('tr');tr.innerHTML='<td><span class="rar" style="--c:'+R.c+'">'+R.name+'</span></td><td class="n">'+pct(R.chance[0])+'</td><td class="n">'+pct(R.chance[1])+'</td><td class="n">'+got+' / '+all.length+'</td>';tb.appendChild(tr);});
+    const tr=mk('tr');tr.innerHTML='<td><span class="rar" style="--c:'+R.c+'">'+R.name+'</span></td><td class="n">'+pct(R.chance[0])+'</td><td class="n">'+pct(R.chance[1])+'</td><td class="n">'+pct(R.chance[2])+'</td><td class="n">'+got+' / '+all.length+'</td>';tb.appendChild(tr);});
   t.appendChild(tb);wrap.appendChild(t);body.appendChild(wrap);
-  body.appendChild(mk('p','note','Сначала проверяется самая высокая редкость. Если все герои этой редкости уже открыты, она не выпадает. Карты падают только для открытых героев: чем выше редкость, тем меньше карт в пачке.'));
+  body.appendChild(mk('p','note','Герои выпадают только из сундуков. Сначала проверяется самая высокая редкость; если все герои этой редкости уже открыты, она не выпадает. В сверхбольшом сундуке новый герой будет всегда, пока есть закрытые. Карты героев падают только для открытых героев, карты оружия — только для купленных стволов: чем выше редкость, тем меньше карт в пачке.'));
   body.appendChild(mk('div','sect','Золотые яйца'));
-  body.appendChild(mk('p','note','Редкая валюта: у тебя <b>'+SAVE.eggs+'</b>. Большой сундук стоит '+EGG_PRICE+'. Где взять: первое прохождение уровней сюжета (3–15 за уровень), волны 10, 15 и 20 в бесконечном бою (один раз), 5-й и 10-й уровень героя, иногда — внутри сундуков. Ещё за яйца продаются Нимб и Платиновый окрас.'));
+  body.appendChild(mk('p','note','Редкая валюта: у тебя <b>'+SAVE.eggs+'</b>. Большой сундук стоит '+EGG_PRICE+', сверхбольшой — '+SUPER_PRICE+'. Где взять: первое прохождение уровней сюжета (3–15 за уровень), волны 10, 15 и 20 в бесконечном бою (один раз), 5-й и 10-й уровень героя, сундуки. Ещё за яйца продаются Нимб, Платиновый окрас и Рельсотрон.'));
   body.scrollTop=st;
 }
 let chestAnim=null;
-const EGG_PRICE=80;
-function openChest(big,pay){
+function openChest(tier,pay){
   initAudio();
-  if(pay==='eggs'){if(SAVE.eggs<EGG_PRICE)return;SAVE.eggs-=EGG_PRICE;}
-  else if(big){if(SAVE.btokens<10)return;SAVE.btokens-=10;}else{if(SAVE.tokens<100)return;SAVE.tokens-=100;}
-  const res=rollChest(big);
-  chestAnim={big,res,t:0,state:'shake'};
-  $('chestTitle').textContent=big?'Большой сундук · золотое яйцо':'Обычный сундук · корзинка несушки';
+  if(pay==='eggs'){const pr=tier===2?SUPER_PRICE:EGG_PRICE;if(SAVE.eggs<pr)return;SAVE.eggs-=pr;}
+  else if(pay==='free'){if(SAVE.schests<1)return;SAVE.schests--;}
+  else if(tier===1){if(SAVE.btokens<10)return;SAVE.btokens-=10;}else{if(SAVE.tokens<100)return;SAVE.tokens-=100;}
+  const res=rollChest(tier);
+  chestAnim={tier,res,t:0,state:'shake'};
+  $('chestTitle').textContent=CHESTS[tier].name+' · '+CHESTS[tier].sub;
   $('chestRewards').innerHTML=''; $('chestTake').textContent='Открыть'; $('chestOv').hidden=false;
   refreshMenu(); SFX.chest();
 }
+function gunPv(id,w=56,h=46,k=1.15){return preview(w,h,(c,W,H)=>{c.translate(W/2-14*k,H/2+2);c.scale(k,k);drawGun(c,id);});}
 function revealChest(){
   if(!chestAnim||chestAnim.state!=='shake')return;
   chestAnim.state='open'; chestAnim.t=0; SFX.boom(); SFX.win();
   const res=chestAnim.res, R=$('chestRewards'); R.innerHTML=''; let d=0;
-  const add=(el)=>{el.style.animationDelay=d+'s';d+=.14;R.appendChild(el);};
+  const add=(el)=>{el.style.animationDelay=d+'s';d+=.12;R.appendChild(el);};
   if(res.hero){const H=HEROES[res.hero],Rr=RAR[H.rar];const r=mk('div','rw new');r.style.setProperty('--c',Rr.c);
     r.appendChild(mk('span','t','Новый герой · '+Rr.name));r.appendChild(heroPv(res.hero,150,96,1.6));r.appendChild(mk('span','n',H.name));add(r);}
   add(mk('div','rw','<i class="coin"></i>+'+res.coins+' зёрен'));
-  if(res.eggs)add(mk('div','rw','<i class="gegg"></i>+'+res.eggs+' золотых яиц<small>редкая находка!</small>'));
+  if(res.eggs)add(mk('div','rw','<i class="gegg"></i>+'+res.eggs+' золотых яиц'+(res.tier<2?'<small>редкая находка!</small>':'')));
   for(const id in res.cards){const H=HEROES[id],h=SAVE.heroes[id];const r=mk('div','rw');r.appendChild(heroPv(id,56,46,.9));
     const nc=h.lv<10?needCards(id,h.lv):0;
     r.appendChild(mk('div','','+'+res.cards[id]+' карт · '+H.name+'<small>'+(h.lv<10?h.cards+' / '+nc+' до ур. '+(h.lv+1):'макс. уровень')+'</small>'));add(r);}
+  for(const id in res.wcards){const W=WEAP[id],lv=wLv(id),wr=wRec(id);const r=mk('div','rw wcard');r.style.setProperty('--c',WRAR[W.rar].c);r.appendChild(gunPv(id));
+    const nc=lv<10?wNeed(id,lv):0;
+    r.appendChild(mk('div','','+'+res.wcards[id]+' карт оружия · '+W.name+'<small>'+(lv<10?wr.cards+' / '+nc+' до ур. '+(lv+1)+' · улучшай в магазине':'макс. уровень')+'</small>'));add(r);}
   if(!res.hero){const lockedLeft=HERO_IDS.filter(id=>!SAVE.heroes[id]).length;if(lockedLeft)add(mk('div','rw','<small>Героя в этот раз нет. Ещё не открыто: '+lockedLeft+'</small>'));}
   $('chestTake').textContent='Забрать';
 }
@@ -314,8 +366,8 @@ function drawChestAnim(dt){
   const cvs=$('chestCv'),d=Math.min(2,devicePixelRatio||1);if(cvs.width!==240*d){cvs.width=240*d;cvs.height=170*d;}
   const c=cvs.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,240,170);
   c.translate(120,150);
-  if(chestAnim.state==='shake'){const k=Math.min(1,chestAnim.t/1.2);const sh=Math.sin(chestAnim.t*40)*.07*k;drawChest(c,chestAnim.big,0,sh,k);if(chestAnim.t>1.3)revealChest();}
-  else drawChest(c,chestAnim.big,Math.min(1,chestAnim.t/.35),0);
+  if(chestAnim.state==='shake'){const k=Math.min(1,chestAnim.t/1.2);const sh=Math.sin(chestAnim.t*40)*.07*k;drawChest(c,chestAnim.tier,0,sh,k);if(chestAnim.t>1.3)revealChest();}
+  else drawChest(c,chestAnim.tier,Math.min(1,chestAnim.t/.35),0);
 }
 
 /* ---------- panels ---------- */
@@ -328,6 +380,30 @@ document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',
 document.querySelectorAll('#shop .tab').forEach(t=>t.addEventListener('click',()=>{shopTab=t.dataset.tab;$('shopBody').scrollTop=0;renderShop();}));
 $('shopBtn').addEventListener('click',()=>openPanel('shop'));
 $('heroSwap').addEventListener('click',()=>openPanel('heroes'));
+/* ---------- фон главного меню ---------- */
+function mapPv(key,w,h){return preview(w,h,(c)=>{
+  const M=MAPS[key],R=seeded(M.seed);c.fillStyle=M.grass;c.fillRect(0,0,w,h);
+  for(let i=0;i<5;i++){c.fillStyle=M.patch;c.beginPath();c.ellipse(R()*w,R()*h,10+R()*18,6+R()*10,R()*3,0,TAU);c.fill();}
+  for(let i=0;i<40;i++){c.fillStyle=M.tuft[i%2];c.fillRect(R()*w,R()*h,2,3);}
+  const vert=M.river.axis==='v', L=vert?h:w, base=vert?w*.68:h*.38;
+  const pt=t=>{const v=base+Math.sin(t/L*TAU*1.2+M.river.phase)*(vert?w:h)*.07;return vert?[v,t]:[t,v];};
+  const path=()=>{c.beginPath();for(let t=-4;t<=L+4;t+=4){const [x,y]=pt(t);t<0?c.moveTo(x,y):c.lineTo(x,y);}};
+  c.lineCap='round';path();c.strokeStyle=M.bank;c.lineWidth=20;c.stroke();path();c.strokeStyle=M.water;c.lineWidth=13;c.stroke();path();c.strokeStyle=M.deep;c.lineWidth=5;c.stroke();
+  const [bx,by]=pt(L*.42);c.save();c.translate(bx,by);if(!vert)c.rotate(Math.PI/2);c.fillStyle='#a8743d';c.strokeStyle=INK;c.lineWidth=1.5;rr(c,-14,-6,28,12,2);c.fill();c.stroke();
+  c.strokeStyle='rgba(43,29,20,.5)';c.lineWidth=1;for(let x=-10;x<=10;x+=5)seg(c,x,-6,x,6);c.restore();
+  const spots=vert?[[w*.2,h*.3],[w*.38,h*.75],[w*.9,h*.2]]:[[w*.2,h*.78],[w*.62,h*.72],[w*.86,h*.12]];
+  spots.forEach(([x,y],i)=>{c.save();c.translate(x,y);c.scale(.42,.42);drawObstacle(c,{x:0,y:0,r:30,type:M.obs[i*2%M.obs.length]});c.restore();});
+});}
+function renderBg(){
+  const g=$('bgGrid'); g.innerHTML='';
+  for(const key in MAPS){const M=MAPS[key],on=menuMap()===key;
+    const b=mk('button','bgopt'+(on?' on':''));b.setAttribute('aria-pressed',String(on));
+    b.appendChild(mapPv(key,132,78));b.appendChild(mk('span','',M.name+(on?' ✓':'')));
+    b.onclick=()=>{SAVE.menuBg=key;persist();initAudio();SFX.pick();if(MAP!==key){buildWorld(key);const x=P.x,y=P.y;P=newPlayer();P.x=x;P.y=y;makeAllies();}renderBg();};
+    g.appendChild(b);}
+}
+$('bgBtn').addEventListener('click',()=>{initAudio();renderBg();$('bgOv').hidden=false;});
+$('bgClose').addEventListener('click',()=>{$('bgOv').hidden=true;toast('Фон меню: '+MAPS[menuMap()].name);});
 $('helpBtn').addEventListener('click',()=>{initAudio();$('helpOv').hidden=false;});
 function openInfo(){
   initAudio();
