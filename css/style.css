@@ -278,3 +278,5 @@ button{font-family:var(--body);touch-action:manipulation;-webkit-user-select:non
 @media (min-width:900px) and (min-height:560px){
   .lobby{padding-left:max(32px,calc((100vw - 1180px)/2));padding-right:max(32px,calc((100vw - 1180px)/2))}
 }
+.lb-brand{display:flex;align-items:center;gap:8px;min-width:0}
+.lb-ver{background:var(--ink);color:var(--yolk);border:2px solid var(--yolk);border-radius:8px;padding:3px 7px;font:900 11px/1 var(--body);letter-spacing:.04em;font-variant-numeric:tabular-nums;white-space:nowrap}
