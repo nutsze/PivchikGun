@@ -387,7 +387,7 @@ const EN={
 '<i class=\"btok\"></i>Большой жетон — за первое прохождение':"<i class=\"btok\"></i>Big tokens — for first clears",
 'или каждые 10 волн в бесконечном бою':"or every 10 waves in Endless",
 'Скины теперь у каждого героя свои — вернули за покупки: ':"Every hero now has their own skin — refunded for your purchases: ",
-'Наборы золотых яиц за реальные деньги появятся позже — пока кнопки закрыты.':"Golden egg packs for real money are coming later — the buttons are locked for now.",
+'Наборы золотых яиц появятся позже — пока кнопки закрыты.':"Golden egg packs are coming later — the buttons are locked for now.",
 'Донат пока закрыт — скоро откроем':"Purchases are locked for now — coming soon",
 'Зёрна за золотые яйца':"Grain for golden eggs",
 'Обменяй золотые яйца на зёрна: чем больше набор, тем выгоднее.':"Trade golden eggs for grain: the bigger the pack, the better the deal.",
@@ -419,7 +419,7 @@ const EN={
 'Места в отряде продаются только за золотые яйца: 50, 100 и 250':"Squad slots are sold only for golden eggs: 50, 100 and 250",
 'Сундуки можно открывать сразу по 3 и по 10':"Chests can be opened 3 or 10 at a time",
 'У каждого героя свой фирменный образ; скины из магазина убраны, потраченное на них вернули':"Every hero has a signature look; skins are gone from the shop and what you spent on them was refunded",
-'Магазин: раздел «Золотые яйца» с наборами (пока закрыты) и обменом яиц на зёрна':"Shop: a “Golden eggs” section with egg packs (locked for now) and an eggs-for-grain exchange",
+'Магазин: раздел «Золотые яйца» с наборами на 39, 79, 179, 309, 749 и 1999 яиц (пока закрыты) и обменом яиц на зёрна':"Shop: a “Golden eggs” section with packs of 39, 79, 179, 309, 749 and 1999 eggs (locked for now) and an eggs-for-grain exchange",
 'Режимы':'Modes','Разделы':'Sections','Пауза':'Pause'
 };
 /* Перевод на лету: при первом вызове запоминаем русские оригиналы данных и страницы,

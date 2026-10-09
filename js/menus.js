@@ -74,8 +74,8 @@ function renderShop(){
 }
 /* ---------- донат и обмен: золотые яйца за деньги (пока закрыто) и зёрна за яйца ---------- */
 const GEM_PACKS=[
-  {name:'Горстка яиц',eggs:25,price:39},{name:'Корзинка яиц',eggs:55,price:79},{name:'Лукошко яиц',eggs:130,price:179},
-  {name:'Ящик яиц',eggs:240,price:309},{name:'Телега яиц',eggs:600,price:749,tag:'Хит'},{name:'Золотой курятник',eggs:1700,price:1999,tag:'Выгодно'}];
+  {name:'Горстка яиц',eggs:39},{name:'Корзинка яиц',eggs:79},{name:'Лукошко яиц',eggs:179},
+  {name:'Ящик яиц',eggs:309},{name:'Телега яиц',eggs:749,tag:'Хит'},{name:'Золотой курятник',eggs:1999,tag:'Выгодно'}];
 const GRAIN_PACKS=[{name:'Мешочек зерна',eggs:10,coins:500},{name:'Мешок зерна',eggs:50,coins:2750},{name:'Амбар зерна',eggs:150,coins:9000}];
 function drawEggPile(c,n){
   const pos=[[0,0],[-14,2],[14,2],[-7,-12],[7,-12],[-24,6],[24,6],[0,-24],[-20,-8],[20,-8],[-30,-2],[30,-2]];
@@ -92,16 +92,14 @@ function drawSack(c,k){
 }
 function renderGems(body){
   body.appendChild(mk('div','sect',_t('Золотые яйца')));
-  body.appendChild(mk('p','note',_t('Наборы золотых яиц за реальные деньги появятся позже — пока кнопки закрыты.')));
+  body.appendChild(mk('p','note',_t('Наборы золотых яиц появятся позже — пока кнопки закрыты.')));
   const g=mk('div','grid gems');
-  const base=GEM_PACKS[0].eggs/GEM_PACKS[0].price;
   GEM_PACKS.forEach((p,i)=>{const card=mk('div','item gem');
     const pv=mk('div','pv gold');pv.appendChild(preview(140,86,(c,w,h)=>{c.translate(w/2,h-24);drawEggPile(c,[1,2,3,5,8,12][i]);}));
     if(p.tag)pv.appendChild(mk('span','lvl',_t(p.tag)));
-    const bonus=Math.round((p.eggs/p.price/base-1)*100); if(bonus>0)pv.appendChild(mk('span','bonus','+'+bonus+'%'));
     card.appendChild(pv); card.appendChild(mk('h4','','<i class="gegg"></i>'+fmt(p.eggs)));card.appendChild(mk('p','',p.name));
     card.appendChild(mk('div','grow'));
-    const b=mk('button','pbtn poor locked','<i class="lockic" aria-hidden="true"></i>'+p.price+' ₽');b.setAttribute('aria-disabled','true');
+    const b=mk('button','pbtn poor locked','<i class="lockic" aria-hidden="true"></i>'+_t('Скоро'));b.setAttribute('aria-disabled','true');
     b.onclick=()=>{toast(_t('Донат пока закрыт — скоро откроем'));};card.appendChild(b);g.appendChild(card);});
   body.appendChild(g);
   body.appendChild(mk('div','sect',_t('Зёрна за золотые яйца')));
