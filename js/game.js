@@ -27,9 +27,9 @@ function startGame(kind='endless',idx=0){
   const L=kind==='story'?STORY[idx]:null;
   Object.assign(S,{mode:'play',kind,lvIdx:idx,L,diff:L?L.diff:1,night:!!(L&&L.night),t:0,score:0,wave:0,toSpawn:0,spawnT:0,between:1.2,running:false,kills:0,goalKills:0,
     survT:L&&L.goal.type==='survive'?L.goal.t:0,boss:null,shake:0,combo:0,comboT:0,deadT:0,winT:0,coins:0,tokens:0,banked:false});
-  sticks.move=sticks.aim=null;
-  closePanels(); ['menu','over','pause','win','brief','chestOv'].forEach(i=>$(i).hidden=true); $('hud').hidden=false; $('bossBar').hidden=true;
-  if(L)showBanner('Глава '+(L.ch+1)+' · '+(L.i+1)+'/20',L.name);
+  sticks.move=sticks.aim=null; clearBanner(); toastClear(); music('battle'); musicDuck(1); // старый баннер «Волна N» не всплывает после перезапуска
+  closePanels(); ['menu','over','pause','win','brief','chestOv','setOv'].forEach(i=>$(i).hidden=true); $('hud').hidden=false; $('bossBar').hidden=true;
+  if(L)showBanner(_t('Глава ')+(L.ch+1)+' · '+(L.i+1)+'/20',L.name);
   updateHUD();
 }
 const isWaves=()=>S.kind==='endless'||S.L.goal.type==='waves';
@@ -37,14 +37,14 @@ function bankCoins(){ if(S.banked)return; S.banked=true; SAVE.coins+=S.coins; SA
 function startWave(){
   S.wave++;
   if(holesOn()&&Math.random()<.6)spawnHole();
-  if(S.kind==='endless'&&S.wave===25&&!SAVE.eggMs.sup25){SAVE.eggMs.sup25=1;SAVE.schests++;persist();setTimeout(()=>toast('Волна 25! Сверхбольшой сундук ждёт в меню'),1600);}
-  if(S.kind==='endless'){const ms={10:5,15:10,20:15}[S.wave];if(ms&&!SAVE.eggMs['w'+S.wave]){SAVE.eggMs['w'+S.wave]=1;SAVE.eggs+=ms;persist();const w=S.wave;setTimeout(()=>toast('Волна '+w+' впервые! +'+ms+' золотых яиц'),900);}}
+  if(S.kind==='endless'&&S.wave===25&&!SAVE.eggMs.sup25){SAVE.eggMs.sup25=1;SAVE.schests++;persist();setTimeout(()=>toast(_t('Волна 25! Сверхбольшой сундук ждёт в меню')),1600);}
+  if(S.kind==='endless'){const ms={10:5,15:10,20:15}[S.wave];if(ms&&!SAVE.eggMs['w'+S.wave]){SAVE.eggMs['w'+S.wave]=1;SAVE.eggs+=ms;persist();const w=S.wave;setTimeout(()=>toast(_t('Волна ')+w+_t(' впервые! +')+ms+_t(' золотых яиц')),900);}}
   if(S.kind==='endless')S.diff=S.wave;
   S.toSpawn=S.kind==='endless'?Math.min(4+S.wave*2,40):Math.min(Math.round(4+S.diff+S.wave*2),28); S.spawnT=.6;
-  const sub=S.kind==='story'?'Волна '+S.wave+' из '+S.L.goal.n:(S.wave===1?'Защити курятник!':S.wave===2?'Лисы почуяли запах':S.wave===3?'Пришли индюки':S.wave===4?'Вороны в небе!':S.wave===5?'Еноты вышли на охоту':'Врагов всё больше');
-  showBanner(S.kind==='story'?S.L.name:'Волна '+S.wave, sub);
+  const sub=S.kind==='story'?_t('Волна ')+S.wave+_t(' из ')+S.L.goal.n:(S.wave===1?_t('Защити курятник!'):S.wave===2?_t('Лисы почуяли запах'):S.wave===3?_t('Пришли индюки'):S.wave===4?_t('Вороны в небе!'):S.wave===5?_t('Еноты вышли на охоту'):_t('Врагов всё больше'));
+  showBanner(S.kind==='story'?S.L.name:_t('Волна ')+S.wave, sub);
   SFX.wave();
-  if(S.wave>1){spawnPickupNear(['shotgun','smg','nade'][S.wave%3]); if(P.hid==='hen'&&hasP(5)){P.nades=Math.min(6,P.nades+1);ftext(P.x,P.y-50,'+1 яйцо','#ffc93a',14);}}
+  if(S.wave>1){spawnPickupNear(['shotgun','smg','nade'][S.wave%3]); if(P.hid==='hen'&&hasP(5)){P.nades=Math.min(6,P.nades+1);ftext(P.x,P.y-50,_t('+1 яйцо'),'#ffc93a',14);}}
   updateHUD();
 }
 function spawnPickupNear(kind){
@@ -86,21 +86,21 @@ function spawnEnemy(type){
 }
 function spawnBoss(type){
   const [x,y]=dryPoint(P.x<WW/2?WW-FENCE-180:FENCE+180, P.y<WH/2?WH-FENCE-180:FENCE+180);
-  S.boss=makeEnemy(type,x,y); S.boss.atkT=2;
+  S.boss=makeEnemy(type,x,y); S.boss.atkT=2; music('boss');
   $('bossName').textContent=ETYPE[type].name; $('bossBar').hidden=false; updateBoss();
-  showBanner(ETYPE[type].name,'Босс вышел на поле!'); SFX.gobble(); S.shake+=10;
+  showBanner(ETYPE[type].name,_t('Босс вышел на поле!')); SFX.gobble(); S.shake+=10;
 }
 function updateBoss(){ if(!S.boss)return; $('bossFill').style.width=Math.max(0,S.boss.hp/S.boss.max*100)+'%'; }
 function hurtPlayer(d,src){
   if(!P.alive||P.inv>0||S.mode!=='play')return;
-  if(P.buff==='fort'){ftext(P.x,P.y-50,'Блок','#cfe8ff',13);return;}
-  if(src==='egg'&&P.hid==='chick'&&hasP(5)&&Math.random()<.15){ftext(P.x,P.y-50,'Мимо!','#ffe27a',14);return;}
-  if(P.hid==='guinea'&&hasP(5)&&src!=='self'&&Math.random()<.1){ftext(P.x,P.y-50,'Уклон!','#cfe8ff',14);return;}
+  if(P.buff==='fort'){ftext(P.x,P.y-50,_t('Блок'),'#cfe8ff',13);return;}
+  if(src==='egg'&&P.hid==='chick'&&hasP(5)&&Math.random()<.15){ftext(P.x,P.y-50,_t('Мимо!'),'#ffe27a',14);return;}
+  if(P.hid==='guinea'&&hasP(5)&&src!=='self'&&Math.random()<.1){ftext(P.x,P.y-50,_t('Уклон!'),'#cfe8ff',14);return;}
   d*=1-P.armor;
   P.hp-=d; P.inv=.3; P.flash=.15; P.lastHit=S.t; S.shake+=7; SFX.hurt(); buzz(25);
   feathers(P.x,P.y,P.look.body,3,.8);
   if(P.hp<=0){
-    if(P.revive){P.revive=false;P.hp=P.max*.5;P.inv=1.5;ring(P.x,P.y,'#9cf27a',140,.5);showBanner('Второе дыхание!','Утка снова в строю');SFX.ult();updateHUD();return;}
+    if(P.revive){P.revive=false;P.hp=P.max*.5;P.inv=1.5;ring(P.x,P.y,'#9cf27a',140,.5);showBanner(_t('Второе дыхание!'),_t('Утка снова в строю'));SFX.ult();updateHUD();return;}
     P.hp=0;P.alive=false;S.mode='dying';S.deadT=1.3;feathers(P.x,P.y,P.look.body,30,1.4);puff(P.x,P.y,'#ffffff',12,1.6);SFX.dead();buzz(120);sticks.move=sticks.aim=null;input.firing=false;P.buff=null;
   }
   updateHUD();
@@ -109,7 +109,7 @@ function hurtAlly(a,d){
   if(a.down>0||S.mode!=='play')return;
   if(a.buff==='fort')return;
   d*=1-a.armor; a.hp-=d; a.flash=.12; a.lastHit=S.t; feathers(a.x,a.y,a.look.body,2,.7);
-  if(a.hp<=0){a.hp=0;a.down=P.hid==='nurse'&&hasP(5)?9:18;a.buff=null;feathers(a.x,a.y,a.look.body,16,1.1);puff(a.x,a.y,'#ffffff',8,1.1);ftext(a.x,a.y-50,HEROES[a.id].name.split(' ')[0]+' выбит','#ffb3a3',12);SFX.hurt();}
+  if(a.hp<=0){a.hp=0;a.down=P.hid==='nurse'&&hasP(5)?9:18;a.buff=null;feathers(a.x,a.y,a.look.body,16,1.1);puff(a.x,a.y,'#ffffff',8,1.1);ftext(a.x,a.y-50,HEROES[a.id].name.split(' ')[0]+_t(' выбит'),'#ffb3a3',12);SFX.hurt();}
 }
 function hitTarget(tg,d,e){
   if(!tg||tg===P){hurtPlayer(d,'melee');if(P.hid==='rooster'&&hasP(5)&&P.alive&&e)hitEnemy(e,20,e.x-P.x,e.y-P.y);}
@@ -118,7 +118,7 @@ function hitTarget(tg,d,e){
 function updateAllies(dt){
   const n=allies.length;
   allies.forEach((a,i)=>{
-    if(a.down>0){a.down-=dt*((P.medic&&P.alive)||allies.some(b=>b!==a&&b.cls==='medic'&&b.down<=0)?2:1);if(a.down<=0){a.hp=a.max;a.x=clamp(P.x+rand(-40,40),FENCE+30,WW-FENCE-30);a.y=clamp(P.y+rand(-40,40),FENCE+30,WH-FENCE-30);puff(a.x,a.y,'#ffffff',8,1);ftext(a.x,a.y-50,'Снова в бою!','#9cf27a',12);}return;}
+    if(a.down>0){a.down-=dt*((P.medic&&P.alive)||allies.some(b=>b!==a&&b.cls==='medic'&&b.down<=0)?2:1);if(a.down<=0){a.hp=a.max;a.x=clamp(P.x+rand(-40,40),FENCE+30,WW-FENCE-30);a.y=clamp(P.y+rand(-40,40),FENCE+30,WH-FENCE-30);puff(a.x,a.y,'#ffffff',8,1);ftext(a.x,a.y-50,_t('Снова в бою!'),'#9cf27a',12);}return;}
     if(a.flash>0)a.flash-=dt;
     if(a.regen&&(a.cls==='medic'||S.t-a.lastHit>3))a.hp=Math.min(a.max,a.hp+a.regen*dt);
     if(a.cls==='medic'){const hm=a.id==='nurse'&&a.lv>=10?2:1;healTeam(a.x,a.y,2.5*hm*dt,240,true);}
@@ -159,14 +159,14 @@ function hitEnemy(e,d,vx,vy,fromP=true,kbMul=1,quiet=false){
   if(fromP&&P.hid==='adren'&&hasP(5)&&P.hp<P.max*.5)d*=1.3;
   if(fromP&&P.hid==='quail'&&hasP(5)&&Math.hypot(e.x-P.x,e.y-P.y)>250)d*=1.25;
   e.hp-=d; e.flash=.09; const l=Math.hypot(vx,vy)||1, kb=(ETYPE[e.type].boss?8:90)*kbMul; e.kx+=vx/l*kb; e.ky+=vy/l*kb;
-  if(!quiet||crit){ftext(e.x,e.y-44*(e.s||1),crit?'КРИТ '+Math.round(d):Math.round(d),crit?'#ffc93a':'#fff',crit?16:13); SFX.hit();}
+  if(!quiet||crit){ftext(e.x,e.y-44*(e.s||1),crit?_t('КРИТ ')+Math.round(d):Math.round(d),crit?'#ffc93a':'#fff',crit?16:13); SFX.hit();}
   if(fromP)addUlt(d*.16);
   if(!quiet&&Math.random()<.4)feathers(e.x,e.y,featherCol(e),1,.6);
   if(e===S.boss)updateBoss();
   if(e.hp<=0){if(e.kami){e.dead=true;kamiBoom(e,false);killEnemy(e,true);}else killEnemy(e);return;}
   // камикадзе: мелкий шанс, что раненый враг пойдёт на таран
   if(!quiet&&!e.kami&&!e.kamiRolled&&e.hp<e.max*.3){e.kamiRolled=true;const T=ETYPE[e.type];
-    if(!T.boss&&!T.fly&&!e.emerge&&S.t>(S.kamiNext||0)&&!enemies.some(f=>f.kami&&!f.dead)&&Math.random()<.05){S.kamiNext=S.t+12;e.kami=true;e.kamiT=4.5;e.st='walk';e.burst=0;ftext(e.x,e.y-60*(e.s||1),'КАМИКАДЗЕ!','#ff5a3c',14);SFX.fuse();}}
+    if(!T.boss&&!T.fly&&!e.emerge&&S.t>(S.kamiNext||0)&&!enemies.some(f=>f.kami&&!f.dead)&&Math.random()<.05){S.kamiNext=S.t+12;e.kami=true;e.kamiT=4.5;e.st='walk';e.burst=0;ftext(e.x,e.y-60*(e.s||1),_t('КАМИКАДЗЕ!'),'#ff5a3c',14);SFX.fuse();}}
 }
 function featherCol(e){return {hen:e.body,fox:'#e8742a',turkey:'#6b4428',gturkey:'#6b4428',ataman:'#e8742a',crow:'#2e2a33',raccoon:'#8b8f98',rat:'#a8a097',bigrat:'#5b4f47',wolf:'#7f8794',wolfboss:'#5d6470',owl:'#8a6a45',ferret:'#d8b48a',drferret:'#d8b48a',robohen:'#9aa3ad',steelturkey:'#9aa3ad',eagle:'#6b4a2b',eagleboss:'#5a3a1e',emperor:'#2a2238',badger:'#8d8f94',mole:'#6b5a52'}[e.type]||'#fff';}
 function kamiBoom(e,contact){
@@ -236,7 +236,7 @@ function shoot(){
   if(W.special!=='flame'){const fl=(P.w==='shotgun'||P.w==='sawed'||P.w==='rail')?1.5:1;
     parts.push({k:'flash',x:P.x+Math.cos(ang)*28*fl,y:P.y+Math.sin(ang)*28*fl,z:19,t:0,max:.06,a:ang,s:fl});}
   SFX[W.sfx](); S.shake+=W.kick*.5; P.x-=Math.cos(ang)*W.kick*.6; P.y-=Math.sin(ang)*W.kick*.6;
-  if(P.ammo!==Infinity){P.ammo--; if(P.ammo<=0){P.w=P.prim;P.ammo=Infinity;ftext(P.x,P.y-50,'Патроны кончились','#ffc93a',13);}}
+  if(P.ammo!==Infinity){P.ammo--; if(P.ammo<=0){P.w=P.prim;P.ammo=Infinity;ftext(P.x,P.y-50,_t('Патроны кончились'),'#ffc93a',13);}}
   updateHUD();
 }
 function fireRail(ang){fireBeam(P.x,P.y,ang,WEAP.rail.dmg*P.dmgMul*wMul('rail'),true);}
@@ -293,8 +293,8 @@ function blast(x,y,R,dmg,fromP,selfDmg,heal=0){
 }
 function collect(p){
   SFX.pick();
-  if(p.kind==='corn'){const heal=P.hid==='hen'&&hasP(10)?40:20;const h=Math.min(heal,P.max-P.hp);P.hp=Math.min(P.max,P.hp+heal);ftext(P.x,P.y-50,'+'+Math.max(Math.round(h),0)+' здоровья','#7df05a',14);}
-  else if(p.kind==='nade'){P.nades=Math.min(6,P.nades+1);ftext(P.x,P.y-50,'+1 яйцо','#ffc93a',14);}
+  if(p.kind==='corn'){const heal=P.hid==='hen'&&hasP(10)?40:20;const h=Math.min(heal,P.max-P.hp);P.hp=Math.min(P.max,P.hp+heal);ftext(P.x,P.y-50,'+'+Math.max(Math.round(h),0)+_t(' здоровья'),'#7df05a',14);}
+  else if(p.kind==='nade'){P.nades=Math.min(6,P.nades+1);ftext(P.x,P.y-50,_t('+1 яйцо'),'#ffc93a',14);}
   else{const W=WEAP[p.kind]; if(P.w===p.kind)P.ammo+=W.ammo; else{P.w=p.kind;P.ammo=W.ammo;} ftext(P.x,P.y-50,W.name,'#ffc93a',15);}
   updateHUD();
 }
@@ -310,7 +310,7 @@ function useUlt(){
     eggStrike(cx,cy,8,70*P.dmgMul,72);
   } else if(id==='chick'){P.buff='turbo';P.buffT=4;ring(P.x,P.y,'#ffe066',120,.4);}
   else if(id==='rooster'){
-    showBanner('КУКАРЕКУ!',''); SFX.crow(); S.shake+=10;
+    showBanner(_t('КУКАРЕКУ!'),''); SFX.crow(); S.shake+=10;
     ring(P.x,P.y,'#ff6b4a',280,.5); ring(P.x,P.y,'#ffc93a',200,.4);
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<280){hitEnemy(e,45*P.dmgMul,e.x-P.x,e.y-P.y);e.stun=ETYPE[e.type].boss?.8:2.5;if(!ETYPE[e.type].boss){e.kx+=(e.x-P.x)/(d||1)*300;e.ky+=(e.y-P.y)/(d||1)*300;}}}
   } else if(id==='duck'){
@@ -365,7 +365,7 @@ function updateZones(dt){
     const heal=25*dt*(P.medMul||1);
     if(P.alive&&Math.hypot(P.x-z.x,P.y-z.y)<z.r)P.hp=Math.min(P.max,P.hp+heal);
     for(const a of allies){if(Math.hypot(a.x-z.x,a.y-z.y)>z.r+400&&a.down<=0)continue;
-      if(a.down>0){a.down=0;a.hp=a.max*.6;a.x=clamp(z.x+rand(-30,30),FENCE+30,WW-FENCE-30);a.y=clamp(z.y+rand(-20,20),FENCE+30,WH-FENCE-30);ftext(a.x,a.y-50,'Поднят!','#9cf27a',12);puff(a.x,a.y,'#9cf27a',6,1);}
+      if(a.down>0){a.down=0;a.hp=a.max*.6;a.x=clamp(z.x+rand(-30,30),FENCE+30,WW-FENCE-30);a.y=clamp(z.y+rand(-20,20),FENCE+30,WH-FENCE-30);ftext(a.x,a.y-50,_t('Поднят!'),'#9cf27a',12);puff(a.x,a.y,'#9cf27a',6,1);}
       else if(Math.hypot(a.x-z.x,a.y-z.y)<z.r)a.hp=Math.min(a.max,a.hp+heal);}
     if(z.t<=0)zones.splice(i,1);}
 }

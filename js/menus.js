@@ -11,19 +11,19 @@ function rarBadge(id){const r=RAR[HEROES[id].rar];const b=mk('span','rar',r.name
 function priceTag(n,cur){return (cur==='eggs'?'<i class="gegg"></i>':'<i class="coin"></i>')+fmt(n);}
 function actBtn(owned,equipped,price,onBuy,onEquip,cur='coins'){
   const b=mk('button','pbtn');
-  if(equipped){b.textContent='Выбрано';b.classList.add('on');b.disabled=true;}
-  else if(owned){b.textContent='Выбрать';b.classList.add('eq');b.onclick=onEquip;}
+  if(equipped){b.textContent=_t('Выбрано');b.classList.add('on');b.disabled=true;}
+  else if(owned){b.textContent=_t('Выбрать');b.classList.add('eq');b.onclick=onEquip;}
   else{b.innerHTML=priceTag(price,cur);b.classList.add('buy');if((cur==='eggs'?SAVE.eggs:SAVE.coins)<price)b.classList.add('poor');b.onclick=()=>buy(price,onBuy,cur);}
   return b;
 }
 function buy(price,fn,cur='coins'){
   initAudio();
   const have=cur==='eggs'?SAVE.eggs:SAVE.coins;
-  if(have<price){toast(cur==='eggs'?'Не хватает '+(price-have)+' золотых яиц':'Не хватает '+fmt(price-have)+' зёрен');SFX.hurt();return;}
+  if(have<price){toast(cur==='eggs'?_t('Не хватает ')+(price-have)+_t(' золотых яиц'):_t('Не хватает ')+fmt(price-have)+_t(' зёрен'));SFX.hurt();return;}
   if(cur==='eggs')SAVE.eggs-=price; else SAVE.coins-=price;
-  fn(); persist(); SFX.buy(); toast('Куплено!'); afterChange();
+  fn(); persist(); SFX.buy(); toast(_t('Куплено!')); afterChange();
 }
-function equip(fn,msg){fn();persist();initAudio();SFX.pick();toast(msg||'Выбрано');afterChange();}
+function equip(fn,msg){fn();persist();initAudio();SFX.pick();toast(msg||_t('Выбрано'));afterChange();}
 function afterChange(){
   refreshMenu();
   if(S.mode==='menu'){const x=P.x,y=P.y;P=newPlayer();P.x=x;P.y=y;makeAllies();}
@@ -34,51 +34,51 @@ function renderShop(){
   const body=$('shopBody'), st=body.scrollTop; body.innerHTML='';
   document.querySelectorAll('#shop .tab').forEach(t=>{t.classList.toggle('on',t.dataset.tab===shopTab);t.setAttribute('aria-selected',String(t.dataset.tab===shopTab));});
   if(shopTab==='skins'){
-    body.appendChild(mk('div','sect','Шапки'));
+    body.appendChild(mk('div','sect',_t('Шапки')));
     const g1=mk('div','grid');
     for(const id in HATS){const it=HATS[id],owned=SAVE.hats.includes(id),eq=SAVE.hat===id;
       const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,id,SAVE.color),gunOf(SAVE.hero)));card.appendChild(pv);
       card.appendChild(mk('h4','',it.name));card.appendChild(mk('div','grow'));
-      card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.hats.push(id);SAVE.hat=id;},()=>equip(()=>{SAVE.hat=id;},'Надето: '+it.name),it.eggs?'eggs':'coins'));
+      card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.hats.push(id);SAVE.hat=id;},()=>equip(()=>{SAVE.hat=id;},_t('Надето: ')+it.name),it.eggs?'eggs':'coins'));
       g1.appendChild(card);}
     body.appendChild(g1);
-    body.appendChild(mk('div','sect','Окрас'));
+    body.appendChild(mk('div','sect',_t('Окрас')));
     const g2=mk('div','grid');
     for(const id in COLORS){const it=COLORS[id],owned=SAVE.colors.includes(id),eq=SAVE.color===id;
       const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,SAVE.hat,id),gunOf(SAVE.hero)));card.appendChild(pv);
       card.appendChild(mk('h4','',it.name));card.appendChild(mk('div','grow'));
-      card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.colors.push(id);SAVE.color=id;},()=>equip(()=>{SAVE.color=id;},'Окрас: '+it.name),it.eggs?'eggs':'coins'));
+      card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.colors.push(id);SAVE.color=id;},()=>equip(()=>{SAVE.color=id;},_t('Окрас: ')+it.name),it.eggs?'eggs':'coins'));
       g2.appendChild(card);}
     body.appendChild(g2);
   } else {
     const myC=clsOf(SAVE.hero);
-    body.appendChild(mk('p','note','У каждого класса своё оружие: герой берёт в бой только стволы своего класса. Сейчас в бою '+HEROES[SAVE.hero].name+' — класс «'+CLASSES[myC].name+'». Патроны у основного ствола бесконечные.'));
+    body.appendChild(mk('p','note',_t('У каждого класса своё оружие: герой берёт в бой только стволы своего класса. Сейчас в бою ')+HEROES[SAVE.hero].name+_t(' — класс «')+CLASSES[myC].name+_t('». Патроны у основного ствола бесконечные.')));
     const order=[myC].concat(CLASS_ORDER.filter(k=>k!==myC));
     let g;
     order.forEach((ck,oi)=>{
       const C=CLASSES[ck];
-      const sec=mk('div','sect',C.name+(ck===myC?' · твой класс':'')+' — '+C.desc);body.appendChild(sec);
+      const sec=mk('div','sect',C.name+(ck===myC?_t(' · твой класс'):'')+' — '+C.desc);body.appendChild(sec);
       g=mk('div','grid');
       const ids=PRIMARY.filter(w=>WEAP[w].cls===ck).sort((a,b)=>WRAR_ORDER.indexOf(WEAP[a].rar)-WRAR_ORDER.indexOf(WEAP[b].rar)||((WEAP[a].eggs||0)*30+WEAP[a].price)-((WEAP[b].eggs||0)*30+WEAP[b].price));
       for(const id of ids){const W=WEAP[id],owned=SAVE.guns.includes(id),eq=SAVE.loadout[ck]===id,WR=WRAR[W.rar],lv=wLv(id);
         const card=mk('div','item gun'+(eq?' sel':''));card.style.setProperty('--rc',WR.c);const pv=mk('div','pv');
         pv.appendChild(preview(140,90,(c,w,h)=>{c.translate(w/2-32,h/2+2);c.scale(2.1,2.1);drawGun(c,id);}));
-        if(owned)pv.appendChild(mk('span','lvl','Ур. '+lv));card.appendChild(pv);
+        if(owned)pv.appendChild(mk('span','lvl',_t('Ур. ')+lv));card.appendChild(pv);
         const bd=mk('div','badges');bd.appendChild(clsBadge(ck));const rb=mk('span','rar',WR.name);rb.style.setProperty('--c',WR.c);bd.appendChild(rb);card.appendChild(bd);
         card.appendChild(mk('h4','',W.name));card.appendChild(mk('p','',W.desc));
         const dps=Math.round(W.dmg*W.pellets/W.rate);
-        card.appendChild(mk('div','meta',W.meta||('Урон '+W.dmg+(W.pellets>1?'×'+W.pellets:'')+' · '+(1/W.rate).toFixed(1)+' выстр/с · ≈'+dps+' в сек')));
+        card.appendChild(mk('div','meta',W.meta||(_t('Урон ')+W.dmg+(W.pellets>1?'×'+W.pellets:'')+' · '+(1/W.rate).toFixed(1)+_t(' выстр/с · ≈')+dps+_t(' в сек'))));
         if(owned){
-          card.appendChild(mk('div','meta up','Уровень '+lv+' из 10'+(lv>1?' · урон +'+Math.round(W_STEP*(lv-1)*100)+'%':'')));
+          card.appendChild(mk('div','meta up',_t('Уровень ')+lv+_t(' из 10')+(lv>1?_t(' · урон +')+Math.round(W_STEP*(lv-1)*100)+'%':'')));
           if(lv<10){const nc=wNeed(id,lv),co=wCost(id,lv),have=wRec(id).cards;
-            const pr=mk('div','');pr.innerHTML='<div class="progt"><span>Карты оружия</span><span>'+have+' / '+nc+'</span></div>';
+            const pr=mk('div','');pr.innerHTML=_t('<div class="progt"><span>Карты оружия</span><span>')+have+' / '+nc+'</span></div>';
             const bar=mk('div','prog');bar.style.setProperty('--c',have>=nc?'#5fcf3f':WR.c);const f=mk('i');f.style.width=Math.min(100,have/nc*100)+'%';bar.appendChild(f);pr.appendChild(bar);card.appendChild(pr);}
         }
         card.appendChild(mk('div','grow'));
         const sel=actBtn(owned,eq,W.eggs||W.price,()=>{SAVE.guns.push(id);SAVE.loadout[ck]=id;},()=>equip(()=>{SAVE.loadout[ck]=id;},C.name+': '+W.name),W.eggs?'eggs':'coins');
         if(owned&&lv<10){const nc=wNeed(id,lv),co=wCost(id,lv),ok=wRec(id).cards>=nc&&SAVE.coins>=co;
           const row=mk('div','brow');row.appendChild(sel);
-          const ub=mk('button','pbtn '+(ok?'go':'poor'),'Улучшить · '+coinTag(co));ub.onclick=()=>upgradeGun(id);row.appendChild(ub);card.appendChild(row);}
+          const ub=mk('button','pbtn '+(ok?'go':'poor'),_t('Улучшить · ')+coinTag(co));ub.onclick=()=>upgradeGun(id);row.appendChild(ub);card.appendChild(row);}
         else card.appendChild(sel);
         g.appendChild(card);}
       if(oi<order.length-1)body.appendChild(g);
@@ -91,103 +91,103 @@ function upgradeGun(id){
   const lv=wLv(id); if(lv>=10||!SAVE.guns.includes(id))return;
   const r=wRec(id), nc=wNeed(id,lv), co=wCost(id,lv);
   initAudio();
-  if(r.cards<nc){toast('Нужно ещё '+(nc-r.cards)+' карт оружия — они падают из сундуков');SFX.hurt();return;}
-  if(SAVE.coins<co){toast('Не хватает '+fmt(co-SAVE.coins)+' зёрен');SFX.hurt();return;}
+  if(r.cards<nc){toast(_t('Нужно ещё ')+(nc-r.cards)+_t(' карт оружия — они падают из сундуков'));SFX.hurt();return;}
+  if(SAVE.coins<co){toast(_t('Не хватает ')+fmt(co-SAVE.coins)+_t(' зёрен'));SFX.hurt();return;}
   r.cards-=nc; SAVE.coins-=co; r.lv=lv+1; persist(); SFX.buy();
-  toast(WEAP[id].name+': уровень '+r.lv+' · урон +'+Math.round(W_STEP*(r.lv-1)*100)+'%');
+  toast(WEAP[id].name+_t(': уровень ')+r.lv+_t(' · урон +')+Math.round(W_STEP*(r.lv-1)*100)+'%');
   afterChange();
 }
 function upgradeHero(id){
   const h=SAVE.heroes[id]; if(!h||h.lv>=10)return;
   const nc=needCards(id,h.lv), co=needCoins(id,h.lv);
   initAudio();
-  if(h.cards<nc){toast('Нужно ещё '+(nc-h.cards)+' карт — открывай сундуки');SFX.hurt();return;}
-  if(SAVE.coins<co){toast('Не хватает '+fmt(co-SAVE.coins)+' зёрен');SFX.hurt();return;}
+  if(h.cards<nc){toast(_t('Нужно ещё ')+(nc-h.cards)+_t(' карт — открывай сундуки'));SFX.hurt();return;}
+  if(SAVE.coins<co){toast(_t('Не хватает ')+fmt(co-SAVE.coins)+_t(' зёрен'));SFX.hurt();return;}
   h.cards-=nc; SAVE.coins-=co; h.lv++; const eg=h.lv===5?3:h.lv===10?10:0; SAVE.eggs+=eg; persist(); SFX.buy();
   const H=HEROES[id];
-  toast(h.lv===5?'Уровень 5! Пассивка «'+H.p5[0]+'» и +3 золотых яйца':h.lv===10?'Уровень 10! Пассивка «'+H.p10[0]+'» и +10 золотых яиц':H.name+': уровень '+h.lv);
+  toast(h.lv===5?_t('Уровень 5! Пассивка «')+H.p5[0]+_t('» и +3 золотых яйца'):h.lv===10?_t('Уровень 10! Пассивка «')+H.p10[0]+_t('» и +10 золотых яиц'):H.name+_t(': уровень ')+h.lv);
   afterChange();
 }
 function renderHeroes(){
   const body=$('heroBody'), st=body.scrollTop; body.innerHTML='';
-  body.appendChild(mk('p','note','Новых героев выбивают из сундуков. Карты героя из сундуков вместе с зёрнами повышают его уровень: +6% здоровья и +5% урона за уровень. На 5-м уровне открывается первая пассивка, на 10-м вторая.'));
-  body.appendChild(mk('div','sect','Отряд'));
-  body.appendChild(mk('p','note','Бойцы отряда в армейских касках идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается, а рядом с живым медиком — вдвое быстрее. Сила зависит от уровня героя.'));
+  body.appendChild(mk('p','note',_t('Новых героев выбивают из сундуков. Карты героя из сундуков вместе с зёрнами повышают его уровень: +6% здоровья и +5% урона за уровень. На 5-м уровне открывается первая пассивка, на 10-м вторая.')));
+  body.appendChild(mk('div','sect',_t('Отряд')));
+  body.appendChild(mk('p','note',_t('Бойцы отряда в армейских касках идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается, а рядом с живым медиком — вдвое быстрее. Сила зависит от уровня героя.')));
   const sg=mk('div','grid sq');
   for(let k=0;k<3;k++){
     const card=mk('div','item');
     if(k<SAVE.slots){
       const id=SAVE.squad[k];
       if(id&&SAVE.heroes[id]&&id!==SAVE.hero){
-        const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(id,'helmet','native'),gunForAlly(id),140,92,1.45));pv.appendChild(mk('span','lvl','Ур. '+heroLv(id)));card.appendChild(pv);
-        card.appendChild(mk('h4','',HEROES[id].name));card.appendChild(mk('p','','Место '+(k+1)+' · '+CLASSES[clsOf(id)].name+' · ульта: '+HEROES[id].ult[0]));
+        const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(id,'helmet','native'),gunForAlly(id),140,92,1.45));pv.appendChild(mk('span','lvl',_t('Ур. ')+heroLv(id)));card.appendChild(pv);
+        card.appendChild(mk('h4','',HEROES[id].name));card.appendChild(mk('p','',_t('Место ')+(k+1)+' · '+CLASSES[clsOf(id)].name+_t(' · ульта: ')+HEROES[id].ult[0]));
         const g0=gunForAlly(id), opts=PRIMARY.filter(w=>WEAP[w].cls===clsOf(id)&&SAVE.guns.includes(w));
-        card.appendChild(mk('div','meta','Оружие: <b>'+WEAP[g0].name+'</b>'+(opts.length>1?'':' · купи ещё стволы класса в магазине')));
+        card.appendChild(mk('div','meta',_t('Оружие: <b>')+WEAP[g0].name+'</b>'+(opts.length>1?'':_t(' · купи ещё стволы класса в магазине'))));
         card.appendChild(mk('div','grow'));
         const row=mk('div','brow');
-        const wb=mk('button','pbtn '+(opts.length>1?'go':'poor'),'Сменить оружие');
-        wb.onclick=()=>{if(opts.length<2){toast('У класса «'+CLASSES[clsOf(id)].name+'» пока один ствол — купи ещё в магазине');return;}const nx=opts[(opts.indexOf(g0)+1)%opts.length];equip(()=>{SAVE.squadGun[id]=nx;},HEROES[id].name+': '+WEAP[nx].name);};
+        const wb=mk('button','pbtn '+(opts.length>1?'go':'poor'),_t('Сменить оружие'));
+        wb.onclick=()=>{if(opts.length<2){toast(_t('У класса «')+CLASSES[clsOf(id)].name+_t('» пока один ствол — купи ещё в магазине'));return;}const nx=opts[(opts.indexOf(g0)+1)%opts.length];equip(()=>{SAVE.squadGun[id]=nx;},HEROES[id].name+': '+WEAP[nx].name);};
         row.appendChild(wb);
-        const b=mk('button','pbtn eq thin','Убрать из отряда');b.onclick=()=>equip(()=>{SAVE.squad.splice(k,1);},'Боец ушёл из отряда');row.appendChild(b);card.appendChild(row);
+        const b=mk('button','pbtn eq thin',_t('Убрать из отряда'));b.onclick=()=>equip(()=>{SAVE.squad.splice(k,1);},_t('Боец ушёл из отряда'));row.appendChild(b);card.appendChild(row);
       } else {
-        const pv=mk('div','pv');pv.style.height='92px';pv.appendChild(mk('span','meta','Свободно'));card.appendChild(pv);
-        card.appendChild(mk('h4','','Место '+(k+1)));card.appendChild(mk('p','','Нажми «В отряд» у героя ниже'));
+        const pv=mk('div','pv');pv.style.height='92px';pv.appendChild(mk('span','meta',_t('Свободно')));card.appendChild(pv);
+        card.appendChild(mk('h4','',_t('Место ')+(k+1)));card.appendChild(mk('p','',_t('Нажми «В отряд» у героя ниже')));
       }
     } else {
-      const pv=mk('div','pv dark');pv.style.height='92px';pv.appendChild(mk('span','lock','Закрыто'));card.appendChild(pv);
-      card.appendChild(mk('h4','','Место '+(k+1)));
+      const pv=mk('div','pv dark');pv.style.height='92px';pv.appendChild(mk('span','lock',_t('Закрыто')));card.appendChild(pv);
+      card.appendChild(mk('h4','',_t('Место ')+(k+1)));
       card.appendChild(mk('div','grow'));
-      if(k===SAVE.slots){const price=SLOT_PRICE[k];const b=mk('button','pbtn '+(SAVE.coins>=price?'buy':'buy poor'),'Открыть · '+coinTag(price));b.onclick=()=>buy(price,()=>{SAVE.slots=k+1;});card.appendChild(b);}
-      else card.appendChild(mk('div','meta','Сначала открой место '+k));
+      if(k===SAVE.slots){const price=SLOT_PRICE[k];const b=mk('button','pbtn '+(SAVE.coins>=price?'buy':'buy poor'),_t('Открыть · ')+coinTag(price));b.onclick=()=>buy(price,()=>{SAVE.slots=k+1;});card.appendChild(b);}
+      else card.appendChild(mk('div','meta',_t('Сначала открой место ')+k));
     }
     sg.appendChild(card);
   }
   body.appendChild(sg);
-  body.appendChild(mk('div','sect','Герои'));
+  body.appendChild(mk('div','sect',_t('Герои')));
   const g=mk('div','grid wide');
   const ids=HERO_IDS.slice().sort((a,b)=>(SAVE.heroes[b]?1:0)-(SAVE.heroes[a]?1:0));
   for(const id of ids){
     const H=HEROES[id],own=SAVE.heroes[id],eq=SAVE.hero===id,R=RAR[H.rar];
     const card=mk('div','item'+(eq?' sel':''));
     const pv=mk('div','pv'+(own?'':' dark'));pv.appendChild(heroPv(id,200,120,1.85));
-    if(own)pv.appendChild(mk('span','lvl','Ур. '+own.lv));else pv.appendChild(mk('span','lock','Не открыт'));
+    if(own)pv.appendChild(mk('span','lvl',_t('Ур. ')+own.lv));else pv.appendChild(mk('span','lock',_t('Не открыт')));
     card.appendChild(pv);
     {const bw=mk('div','');bw.style.display='flex';bw.style.gap='6px';bw.style.flexWrap='wrap';bw.appendChild(rarBadge(id));bw.appendChild(clsBadge(H.cls));card.appendChild(bw);}
     card.appendChild(mk('h4','',H.name));
-    card.appendChild(mk('p','',H.perk+' · '+H.hp+' здоровья'));
-    card.appendChild(mk('div','ab','<span class="k">'+CLASSES[H.cls].name.toUpperCase()+'</span>'+CLASSES[H.cls].desc+'. Оружие: <b>'+WEAP[gunOf(id)].name+'</b>'));
+    card.appendChild(mk('p','',H.perk+' · '+H.hp+_t(' здоровья')));
+    card.appendChild(mk('div','ab','<span class="k">'+CLASSES[H.cls].name.toUpperCase()+'</span>'+CLASSES[H.cls].desc+_t('. Оружие: <b>')+WEAP[gunOf(id)].name+'</b>'));
     const ab=mk('div','abil');
-    ab.appendChild(mk('div','ab ul','<span class="k">УЛЬТА</span><b>'+H.ult[0]+'.</b> '+H.ult[1]));
+    ab.appendChild(mk('div','ab ul',_t('<span class="k">УЛЬТА</span><b>')+H.ult[0]+'.</b> '+H.ult[1]));
     const lv=own?own.lv:0;
-    ab.appendChild(mk('div','ab'+(lv>=5?'':' off'),'<span class="k">УР. 5</span><b>'+H.p5[0]+'.</b> '+H.p5[1]));
-    ab.appendChild(mk('div','ab'+(lv>=10?'':' off'),'<span class="k">УР. 10</span><b>'+H.p10[0]+'.</b> '+H.p10[1]));
+    ab.appendChild(mk('div','ab'+(lv>=5?'':' off'),_t('<span class="k">УР. 5</span><b>')+H.p5[0]+'.</b> '+H.p5[1]));
+    ab.appendChild(mk('div','ab'+(lv>=10?'':' off'),_t('<span class="k">УР. 10</span><b>')+H.p10[0]+'.</b> '+H.p10[1]));
     card.appendChild(ab);
     if(own){
       if(own.lv<10){
         const nc=needCards(id,own.lv),co=needCoins(id,own.lv);
-        const pr=mk('div','');pr.innerHTML='<div class="progt"><span>Карты до ур. '+(own.lv+1)+'</span><span>'+own.cards+' / '+nc+'</span></div>';
+        const pr=mk('div','');pr.innerHTML=_t('<div class="progt"><span>Карты до ур. ')+(own.lv+1)+'</span><span>'+own.cards+' / '+nc+'</span></div>';
         const bar=mk('div','prog');bar.style.setProperty('--c',R.c);const fill=mk('i');fill.style.width=Math.min(100,own.cards/nc*100)+'%';bar.appendChild(fill);pr.appendChild(bar);card.appendChild(pr);
-      } else card.appendChild(mk('div','meta','Максимальный уровень · карт в запасе: '+own.cards));
+      } else card.appendChild(mk('div','meta',_t('Максимальный уровень · карт в запасе: ')+own.cards));
       card.appendChild(mk('div','grow'));
       const row=mk('div','brow');
-      const sel=mk('button','pbtn '+(eq?'on':'eq'),eq?'Выбрано':'Выбрать'); if(eq)sel.disabled=true; else sel.onclick=()=>equip(()=>{SAVE.hero=id;SAVE.squad=SAVE.squad.filter(x=>x!==id);},'В бой идёт '+H.name);
+      const sel=mk('button','pbtn '+(eq?'on':'eq'),eq?_t('Выбрано'):_t('Выбрать')); if(eq)sel.disabled=true; else sel.onclick=()=>equip(()=>{SAVE.hero=id;SAVE.squad=SAVE.squad.filter(x=>x!==id);},_t('В бой идёт ')+H.name);
       row.appendChild(sel);
       if(own.lv<10){const nc=needCards(id,own.lv),co=needCoins(id,own.lv),ok=own.cards>=nc&&SAVE.coins>=co;
-        const up=mk('button','pbtn '+(ok?'go':'poor'),'Ур. '+(own.lv+1)+' · '+coinTag(co));up.onclick=()=>upgradeHero(id);row.appendChild(up);}
-      else{const m=mk('button','pbtn max','Максимум');m.disabled=true;row.appendChild(m);}
+        const up=mk('button','pbtn '+(ok?'go':'poor'),_t('Ур. ')+(own.lv+1)+' · '+coinTag(co));up.onclick=()=>upgradeHero(id);row.appendChild(up);}
+      else{const m=mk('button','pbtn max',_t('Максимум'));m.disabled=true;row.appendChild(m);}
       card.appendChild(row);
       if(!eq&&SAVE.slots>0){
         const inSq=SAVE.squad.includes(id), free=SAVE.squad.filter(x=>SAVE.heroes[x]&&x!==SAVE.hero).length<SAVE.slots;
-        const sb=mk('button','pbtn '+(inSq?'eq':free?'go':'poor'),inSq?'Убрать из отряда':free?'В отряд':'В отряде нет мест');
-        sb.onclick=()=>{if(inSq)equip(()=>{SAVE.squad=SAVE.squad.filter(x=>x!==id);},'Боец ушёл из отряда');
-          else if(free)equip(()=>{SAVE.squad=SAVE.squad.filter(x=>SAVE.heroes[x]&&x!==SAVE.hero);SAVE.squad.push(id);},H.name+' в отряде!');
-          else toast('Купи ещё место для отряда');};
+        const sb=mk('button','pbtn '+(inSq?'eq':free?'go':'poor'),inSq?_t('Убрать из отряда'):free?_t('В отряд'):_t('В отряде нет мест'));
+        sb.onclick=()=>{if(inSq)equip(()=>{SAVE.squad=SAVE.squad.filter(x=>x!==id);},_t('Боец ушёл из отряда'));
+          else if(free)equip(()=>{SAVE.squad=SAVE.squad.filter(x=>SAVE.heroes[x]&&x!==SAVE.hero);SAVE.squad.push(id);},H.name+_t(' в отряде!'));
+          else toast(_t('Купи ещё место для отряда'));};
         card.appendChild(sb);
       }
     } else {
       card.appendChild(mk('div','grow'));
-      card.appendChild(mk('div','meta','Выпадает как «'+RAR[H.rar].name.toLowerCase()+'» герой: '+pct(RAR[H.rar].chance[0])+' в обычном сундуке, '+pct(RAR[H.rar].chance[1])+' в большом'));
-      const b=mk('button','pbtn go','К сундукам');b.onclick=()=>openPanel('chestP');card.appendChild(b);
+      card.appendChild(mk('div','meta',_t('Выпадает как «')+RAR[H.rar].name.toLowerCase()+_t('» герой: ')+pct(RAR[H.rar].chance[0])+_t(' в обычном сундуке, ')+pct(RAR[H.rar].chance[1])+_t(' в большом')));
+      const b=mk('button','pbtn go',_t('К сундукам'));b.onclick=()=>openPanel('chestP');card.appendChild(b);
     }
     g.appendChild(card);
   }
@@ -200,41 +200,41 @@ function renderStory(){
   const body=$('storyBody'), st=body.scrollTop; body.innerHTML='';
   if(storyCh<0){storyCh=0;for(let k=0;k<CHAPTERS.length;k++)if(chapterOpen(k))storyCh=k;}
   const tabs=mk('div','tabs');
-  CHAPTERS.forEach((C,k)=>{const b=mk('button','tab'+(k===storyCh?' on':''),'Глава '+(k+1));if(!chapterOpen(k))b.style.opacity='.55';b.onclick=()=>{storyCh=k;$('storyBody').scrollTop=0;renderStory();};tabs.appendChild(b);});
+  CHAPTERS.forEach((C,k)=>{const b=mk('button','tab'+(k===storyCh?' on':''),_t('Глава ')+(k+1));if(!chapterOpen(k))b.style.opacity='.55';b.onclick=()=>{storyCh=k;$('storyBody').scrollTop=0;renderStory();};tabs.appendChild(b);});
   body.appendChild(tabs);
   const C=CHAPTERS[storyCh], open=chapterOpen(storyCh), doneN=C.levels.filter(L=>SAVE.story.done.includes(L.gid)).length;
   const head=mk('div','item');head.style.marginBottom='14px';
-  head.appendChild(mk('p','eyebrow','Глава '+(storyCh+1)+' из '+CHAPTERS.length+' · пройдено '+doneN+'/20'));
+  head.appendChild(mk('p','eyebrow',_t('Глава ')+(storyCh+1)+_t(' из ')+CHAPTERS.length+_t(' · пройдено ')+doneN+'/20'));
   head.appendChild(mk('h4','',C.name));
   head.appendChild(mk('p','',C.intro));
   const bar=mk('div','prog');const f=mk('i');f.style.width=(doneN/20*100)+'%';bar.appendChild(f);head.appendChild(bar);
-  if(doneN===20)head.appendChild(mk('div','ab ul','<span class="k">ФИНАЛ ГЛАВЫ</span>'+C.outro));
-  if(!open)head.appendChild(mk('div','ab off','Глава откроется после победы над финальным боссом главы '+storyCh+'.'));
+  if(doneN===20)head.appendChild(mk('div','ab ul',_t('<span class="k">ФИНАЛ ГЛАВЫ</span>')+C.outro));
+  if(!open)head.appendChild(mk('div','ab off',_t('Глава откроется после победы над финальным боссом главы ')+storyCh+'.'));
   body.appendChild(head);
   const g=mk('div','grid wide');
   C.levels.forEach(L=>{
     const done=SAVE.story.done.includes(L.gid), lopen=L.gid===0||SAVE.story.done.includes(L.gid-1)||done, boss=L.goal.type==='boss';
     const b=mk('button','item lvcard'+(done?' done':'')+(boss?' boss':'')+(lopen?'':' locked'));
-    b.innerHTML='<div class="top"><span class="num">'+(L.i+1)+'</span><div><h4>'+L.name+'</h4><span class="st">'+(done?'Пройден':lopen?(boss?'Босс':'Доступен'):'Закрыт')+(L.night?' · ночь':'')+'</span></div></div>'+
-      '<p>'+goalText(L)+'</p><div class="meta"><i class="coin"></i>'+L.coins+' · <i class="tok"></i>'+L.tokens+(done?' · повтор: меньше':' · <i class="gegg"></i>'+L.eggs)+'</div>';
+    b.innerHTML='<div class="top"><span class="num">'+(L.i+1)+'</span><div><h4>'+L.name+'</h4><span class="st">'+(done?_t('Пройден'):lopen?(boss?_t('Босс'):_t('Доступен')):_t('Закрыт'))+(L.night?_t(' · ночь'):'')+'</span></div></div>'+
+      '<p>'+goalText(L)+'</p><div class="meta"><i class="coin"></i>'+L.coins+' · <i class="tok"></i>'+L.tokens+(done?_t(' · повтор: меньше'):' · <i class="gegg"></i>'+L.eggs)+'</div>';
     if(lopen)b.onclick=()=>openBrief(L.gid); else b.disabled=true;
     g.appendChild(b);
   });
   body.appendChild(g); body.scrollTop=st;
 }
 function goalText(L){const g=L.goal;
-  if(g.type==='waves')return 'Пройди '+g.n+' волн'+(g.n<5?'ы':'');
-  if(g.type==='kill')return 'Победи: '+(g.what==='any'?'любых врагов':(KILLN[g.what]||ETYPE[g.what].name).toLowerCase())+' ×'+g.n;
-  if(g.type==='survive')return 'Продержись '+g.t+' секунд';
-  return 'Победи босса: '+ETYPE[g.boss].name;
+  if(g.type==='waves')return LANG==='en'?'Clear '+g.n+' waves':'Пройди '+g.n+' волн'+(g.n<5?'ы':'');
+  if(g.type==='kill')return _t('Победи: ')+(g.what==='any'?_t('любых врагов'):(KILLN[g.what]||ETYPE[g.what].name).toLowerCase())+' ×'+g.n;
+  if(g.type==='survive')return _t('Продержись ')+g.t+_t(' секунд');
+  return _t('Победи босса: ')+ETYPE[g.boss].name;
 }
 let briefIdx=0;
 function openBrief(i){
   briefIdx=i; const L=STORY[i];
-  $('briefNum').textContent='Глава '+(L.ch+1)+' · уровень '+(L.i+1)+' из 20'; $('briefName').textContent=L.name; $('briefText').textContent=L.text;
+  $('briefNum').textContent=_t('Глава ')+(L.ch+1)+_t(' · уровень ')+(L.i+1)+_t(' из 20'); $('briefName').textContent=L.name; $('briefText').textContent=L.text;
   const foes=[...new Set(Object.keys(L.mix).concat(L.goal.boss?[L.goal.boss]:[]))].map(k=>ETYPE[k].name.toLowerCase()).join(', ');
-  $('briefGoal').innerHTML='<span>Цель: '+goalText(L)+'</span><small>Карта: '+MAPS[MAP_OF_CH[L.ch]].name+' · река с мостами, гнилые рушатся после второго прохода</small><small>Враги: '+foes+(L.night?'. Ночь — обзор меньше':'')+'</small><small>Награда: '+L.coins+' зёрен, '+L.tokens+' жетонов</small>';
-  $('briefHero').textContent='Боец: '+HEROES[SAVE.hero].name+' ('+CLASSES[clsOf(SAVE.hero)].name.toLowerCase()+') · ур. '+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name;
+  $('briefGoal').innerHTML=_t('<span>Цель: ')+goalText(L)+_t('</span><small>Карта: ')+MAPS[MAP_OF_CH[L.ch]].name+_t(' · река с мостами, гнилые рушатся после второго прохода</small><small>Враги: ')+foes+(L.night?_t('. Ночь — обзор меньше'):'')+_t('</small><small>Награда: ')+L.coins+_t(' зёрен, ')+L.tokens+_t(' жетонов</small>');
+  $('briefHero').textContent=_t('Боец: ')+HEROES[SAVE.hero].name+' ('+CLASSES[clsOf(SAVE.hero)].name.toLowerCase()+_t(') · ур. ')+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name;
   $('brief').hidden=false;
 }
 $('briefGo').addEventListener('click',()=>{initAudio();$('brief').hidden=true;startGame('story',briefIdx);});
@@ -243,11 +243,11 @@ $('briefBack').addEventListener('click',()=>{$('brief').hidden=true;});
 /* ---------- chests ---------- */
 // Три сундука: 0 обычный (корзинка), 1 большой (золотое яйцо), 2 сверхбольшой (аметистовое яйцо)
 const CHESTS=[
-  {name:'Обычный сундук',sub:'корзинка несушки',coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3],
+  {name:_t('Обычный сундук'),sub:_t('корзинка несушки'),coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3],
     hb:{common:1,rare:1,epic:.8,legendary:.6},wb:{common:1,rare:.6,legendary:.25}},
-  {name:'Большой сундук',sub:'золотое яйцо',coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5],
+  {name:_t('Большой сундук'),sub:_t('золотое яйцо'),coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5],
     hb:{common:1,rare:1,epic:1,legendary:1},wb:{common:1,rare:.8,legendary:.45}},
-  {name:'Сверхбольшой сундук',sub:'аметистовое яйцо',coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true,
+  {name:_t('Сверхбольшой сундук'),sub:_t('аметистовое яйцо'),coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true,
     hb:{common:.8,rare:1,epic:1.2,legendary:1.5},wb:{common:1,rare:1,legendary:.8}}
 ];
 const EGG_PRICE=80, SUPER_PRICE=200;
@@ -282,35 +282,35 @@ const pct=v=>String(v).replace('.',',')+'%';
 function chestCard(tier){
   const C=CHESTS[tier], card=mk('div','item chest t'+tier);
   const pv=mk('div','pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(220,150,(c,w,h)=>{c.translate(w/2,h-12);c.scale(.9,.9);drawChest(c,tier,0,0);}));
-  const ib=mk('button','propbtn','<b>i</b>Свойства');ib.setAttribute('aria-label','Свойства: '+C.name);ib.onclick=()=>openChestInfo(tier);pv.appendChild(ib);card.appendChild(pv);
+  const ib=mk('button','propbtn',_t('<b>i</b>Свойства'));ib.setAttribute('aria-label',_t('Свойства: ')+C.name);ib.onclick=()=>openChestInfo(tier);pv.appendChild(ib);card.appendChild(pv);
   card.appendChild(mk('h4','',C.name));
-  const eggTxt=C.egg[0]>=1?C.egg[1]+'–'+C.egg[2]+' золотых яиц':'шанс золотых яиц';
-  card.appendChild(mk('p','',C.coins[0]+'–'+C.coins[1]+' зёрен · '+C.hpacks+' пачки карт героев · '+C.wpacks+(C.wpacks>1?' пачки':' пачка')+' карт оружия · '+eggTxt+(C.sure?' · <b>гарантированный новый герой</b>, пока есть закрытые':'')));
+  const eggTxt=C.egg[0]>=1?C.egg[1]+'–'+C.egg[2]+_t(' золотых яиц'):_t('шанс золотых яиц');
+  card.appendChild(mk('p','',C.coins[0]+'–'+C.coins[1]+_t(' зёрен · ')+C.hpacks+_t(' пачки карт героев · ')+C.wpacks+(C.wpacks>1?_t(' пачки'):_t(' пачка'))+_t(' карт оружия · ')+eggTxt+(C.sure?_t(' · <b>гарантированный новый герой</b>, пока есть закрытые'):'')));
   const bar=(have,need,ic,label,col)=>{const pr=mk('div','');pr.innerHTML='<div class="progt"><span>'+ic+label+'</span><span>'+Math.min(have,need)+' / '+need+'</span></div>';
     const b=mk('div','prog');b.style.setProperty('--c',col);const f=mk('i');f.style.width=Math.min(100,have/need*100)+'%';b.appendChild(f);pr.appendChild(b);return pr;};
   if(tier===0){
     const ok=SAVE.tokens>=100;
-    card.appendChild(bar(SAVE.tokens,100,'<i class="tok"></i>','Жетоны','var(--tok)'));
-    card.appendChild(mk('div','meta','Жетоны дают за врагов, волны и уровни сюжета.'));card.appendChild(mk('div','grow'));
-    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?'Открыть':'<i class="tok"></i>ещё '+(100-SAVE.tokens));
-    b.onclick=()=>{if(!ok){toast('Нужно ещё '+(100-SAVE.tokens)+' жетонов');return;}openChest(0);};card.appendChild(b);
+    card.appendChild(bar(SAVE.tokens,100,'<i class="tok"></i>',_t('Жетоны'),'var(--tok)'));
+    card.appendChild(mk('div','meta',_t('Жетоны дают за врагов, волны и уровни сюжета.')));card.appendChild(mk('div','grow'));
+    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?_t('Открыть'):_t('<i class="tok"></i>ещё ')+(100-SAVE.tokens));
+    b.onclick=()=>{if(!ok){toast(_t('Нужно ещё ')+(100-SAVE.tokens)+_t(' жетонов'));return;}openChest(0);};card.appendChild(b);
   } else if(tier===1){
     const ok=SAVE.btokens>=10;
-    card.appendChild(bar(SAVE.btokens,10,'<i class="btok"></i>','Большие жетоны','var(--btok)'));
-    card.appendChild(mk('div','meta',SAVE.bigDay===today()?'Большой жетон сегодня уже получен, следующий — завтра.':'Пройди уровень сюжета сегодня — получишь большой жетон.'));card.appendChild(mk('div','grow'));
+    card.appendChild(bar(SAVE.btokens,10,'<i class="btok"></i>',_t('Большие жетоны'),'var(--btok)'));
+    card.appendChild(mk('div','meta',SAVE.bigDay===today()?_t('Большой жетон сегодня уже получен, следующий — завтра.'):_t('Пройди уровень сюжета сегодня — получишь большой жетон.')));card.appendChild(mk('div','grow'));
     const row=mk('div','brow');
-    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?'Открыть':'<i class="btok"></i>ещё '+(10-SAVE.btokens));
-    b.onclick=()=>{if(!ok){toast('Большие жетоны: 1 в день за пройденный уровень сюжета');return;}openChest(1);};row.appendChild(b);
-    const eggOk=SAVE.eggs>=EGG_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),'Купить · <i class="gegg"></i>'+EGG_PRICE);
-    b2.onclick=()=>{if(!eggOk){toast('Нужно ещё '+(EGG_PRICE-SAVE.eggs)+' золотых яиц');SFX.hurt();return;}openChest(1,'eggs');};row.appendChild(b2);card.appendChild(row);
+    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?_t('Открыть'):_t('<i class="btok"></i>ещё ')+(10-SAVE.btokens));
+    b.onclick=()=>{if(!ok){toast(_t('Большие жетоны: 1 в день за пройденный уровень сюжета'));return;}openChest(1);};row.appendChild(b);
+    const eggOk=SAVE.eggs>=EGG_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),_t('Купить · <i class="gegg"></i>')+EGG_PRICE);
+    b2.onclick=()=>{if(!eggOk){toast(_t('Нужно ещё ')+(EGG_PRICE-SAVE.eggs)+_t(' золотых яиц'));SFX.hurt();return;}openChest(1,'eggs');};row.appendChild(b2);card.appendChild(row);
   } else {
     const n=SAVE.schests;
-    card.appendChild(mk('div','meta','<b>Есть: '+n+'</b> · по одному за каждого финального босса главы (20-й уровень, первое прохождение) и за 25-ю волну в бесконечном бою.'));card.appendChild(mk('div','grow'));
+    card.appendChild(mk('div','meta',_t('<b>Есть: ')+n+_t('</b> · по одному за каждого финального босса главы (20-й уровень, первое прохождение) и за 25-ю волну в бесконечном бою.')));card.appendChild(mk('div','grow'));
     const row=mk('div','brow');
-    const b=mk('button','pbtn '+(n>0?'go':'poor'),n>0?'Открыть':'Нет в запасе');
-    b.onclick=()=>{if(n<=0){toast('Победи финального босса главы — получишь сверхбольшой сундук');return;}openChest(2,'free');};row.appendChild(b);
-    const eggOk=SAVE.eggs>=SUPER_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),'Купить · <i class="gegg"></i>'+SUPER_PRICE);
-    b2.onclick=()=>{if(!eggOk){toast('Нужно ещё '+(SUPER_PRICE-SAVE.eggs)+' золотых яиц');SFX.hurt();return;}openChest(2,'eggs');};row.appendChild(b2);card.appendChild(row);
+    const b=mk('button','pbtn '+(n>0?'go':'poor'),n>0?_t('Открыть'):_t('Нет в запасе'));
+    b.onclick=()=>{if(n<=0){toast(_t('Победи финального босса главы — получишь сверхбольшой сундук'));return;}openChest(2,'free');};row.appendChild(b);
+    const eggOk=SAVE.eggs>=SUPER_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),_t('Купить · <i class="gegg"></i>')+SUPER_PRICE);
+    b2.onclick=()=>{if(!eggOk){toast(_t('Нужно ещё ')+(SUPER_PRICE-SAVE.eggs)+_t(' золотых яиц'));SFX.hurt();return;}openChest(2,'eggs');};row.appendChild(b2);card.appendChild(row);
   }
   return card;
 }
@@ -319,9 +319,9 @@ function renderChests(){
   const g=mk('div','grid wide chests');
   [0,1,2].forEach(t=>g.appendChild(chestCard(t)));
   body.appendChild(g);
-  body.appendChild(mk('p','note','У каждого сундука свои шансы — нажми «Свойства» на картинке сундука. Герои выпадают только из сундуков. Карты героев падают только для открытых героев, карты оружия — только для купленных стволов.'));
-  body.appendChild(mk('div','sect','Золотые яйца'));
-  body.appendChild(mk('p','note','Редкая валюта: у тебя <b>'+SAVE.eggs+'</b>. Большой сундук стоит '+EGG_PRICE+', сверхбольшой — '+SUPER_PRICE+'. Где взять: первое прохождение уровней сюжета (3–15 за уровень), волны 10, 15 и 20 в бесконечном бою (один раз), 5-й и 10-й уровень героя, сундуки. Ещё за яйца продаются Нимб, Платиновый окрас и Рельсотрон.'));
+  body.appendChild(mk('p','note',_t('У каждого сундука свои шансы — нажми «Свойства» на картинке сундука. Герои выпадают только из сундуков. Карты героев падают только для открытых героев, карты оружия — только для купленных стволов.')));
+  body.appendChild(mk('div','sect',_t('Золотые яйца')));
+  body.appendChild(mk('p','note',_t('Редкая валюта: у тебя <b>')+SAVE.eggs+_t('</b>. Большой сундук стоит ')+EGG_PRICE+_t(', сверхбольшой — ')+SUPER_PRICE+_t('. Где взять: первое прохождение уровней сюжета (3–15 за уровень), волны 10, 15 и 20 в бесконечном бою (один раз), 5-й и 10-й уровень героя, сундуки. Ещё за яйца продаются Нимб, Платиновый окрас и Рельсотрон.')));
   body.scrollTop=st;
 }
 /* «Свойства» сундука: что внутри и с каким шансом — считается от текущего прогресса */
@@ -348,18 +348,18 @@ function openChestInfo(tier){
   const pv=mk('div','ci-pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(200,128,(c,w,h)=>{c.translate(w/2,h-10);c.scale(.78,.78);drawChest(c,tier,0,0);}));B.appendChild(pv);
   const tbl=(head,rows)=>{const w=mk('div','tblwrap');const t=mk('table','tbl');t.innerHTML='<thead><tr>'+head.map((h,i)=>'<th'+(i?' class="n"':'')+'>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((x,i)=>'<td'+(i?' class="n"':'')+'>'+x+'</td>').join('')+'</tr>').join('')+'</tbody>';w.appendChild(t);return w;};
   const rb=(R)=>'<span class="rar" style="--c:'+R.c+'">'+R.name+'</span>';
-  B.appendChild(mk('h3','ci-h','Всегда внутри'));
-  B.appendChild(tbl(['Награда','Сколько'],[
-    ['<i class="coin"></i>Зёрна',C.coins[0]+'–'+C.coins[1]],
-    ['Пачки карт героев',C.hpacks+' × '+C.hcard[0]+'–'+C.hcard[1]+' карт*'],
-    ['Пачки карт оружия',C.wpacks+' × '+C.wcard[0]+'–'+C.wcard[1]+' карт*'],
-    ['<i class="gegg"></i>Золотые яйца',(C.egg[0]>=1?'всегда':'шанс '+pc(C.egg[0]))+' · '+C.egg[1]+'–'+C.egg[2]]]));
-  B.appendChild(mk('h3','ci-h','Новый герой'+(C.sure?' · гарантирован':'')));
-  B.appendChild(tbl(['Редкость','Шанс','Ещё закрыто'],['legendary','epic','rare','common'].map(rk=>[rb(RAR[rk]),pc(o.hero[rk].p),String(o.hero[rk].left)]).concat([['<b>Хоть какой-то герой</b>','<b>'+pc(o.anyHero)+'</b>','']])));
-  B.appendChild(mk('h3','ci-h','Кому достанется пачка карт'));
-  B.appendChild(tbl(['Карты героя','Шанс пачки','Карт в пачке'],['common','rare','epic','legendary'].map(rk=>[rb(RAR[rk]),pc(o.hcards[rk]),Math.max(1,Math.round(C.hcard[0]*RAR[rk].card))+'–'+Math.max(1,Math.round(C.hcard[1]*RAR[rk].card))])));
-  B.appendChild(tbl(['Карты оружия','Шанс пачки','Карт в пачке'],WRAR_ORDER.map(rk=>[rb(WRAR[rk]),pc(o.wcards[rk]),Math.max(1,Math.round(C.wcard[0]*WRAR[rk].card))+'–'+Math.max(1,Math.round(C.wcard[1]*WRAR[rk].card))])));
-  B.appendChild(mk('p','ci-note','Шансы считаются от твоего прогресса: уже открытые герои и стволы на максимальном уровне не выпадают. Сначала проверяется самая высокая редкость героя. * Чем выше редкость, тем меньше карт в пачке.'));
+  B.appendChild(mk('h3','ci-h',_t('Всегда внутри')));
+  B.appendChild(tbl([_t('Награда'),_t('Сколько')],[
+    [_t('<i class="coin"></i>Зёрна'),C.coins[0]+'–'+C.coins[1]],
+    [_t('Пачки карт героев'),C.hpacks+' × '+C.hcard[0]+'–'+C.hcard[1]+_t(' карт*')],
+    [_t('Пачки карт оружия'),C.wpacks+' × '+C.wcard[0]+'–'+C.wcard[1]+_t(' карт*')],
+    [_t('<i class="gegg"></i>Золотые яйца'),(C.egg[0]>=1?_t('всегда'):_t('шанс ')+pc(C.egg[0]))+' · '+C.egg[1]+'–'+C.egg[2]]]));
+  B.appendChild(mk('h3','ci-h',_t('Новый герой')+(C.sure?_t(' · гарантирован'):'')));
+  B.appendChild(tbl([_t('Редкость'),_t('Шанс'),_t('Ещё закрыто')],['legendary','epic','rare','common'].map(rk=>[rb(RAR[rk]),pc(o.hero[rk].p),String(o.hero[rk].left)]).concat([[_t('<b>Хоть какой-то герой</b>'),'<b>'+pc(o.anyHero)+'</b>','']])));
+  B.appendChild(mk('h3','ci-h',_t('Кому достанется пачка карт')));
+  B.appendChild(tbl([_t('Карты героя'),_t('Шанс пачки'),_t('Карт в пачке')],['common','rare','epic','legendary'].map(rk=>[rb(RAR[rk]),pc(o.hcards[rk]),Math.max(1,Math.round(C.hcard[0]*RAR[rk].card))+'–'+Math.max(1,Math.round(C.hcard[1]*RAR[rk].card))])));
+  B.appendChild(tbl([_t('Карты оружия'),_t('Шанс пачки'),_t('Карт в пачке')],WRAR_ORDER.map(rk=>[rb(WRAR[rk]),pc(o.wcards[rk]),Math.max(1,Math.round(C.wcard[0]*WRAR[rk].card))+'–'+Math.max(1,Math.round(C.wcard[1]*WRAR[rk].card))])));
+  B.appendChild(mk('p','ci-note',_t('Шансы считаются от твоего прогресса: уже открытые герои и стволы на максимальном уровне не выпадают. Сначала проверяется самая высокая редкость героя. * Чем выше редкость, тем меньше карт в пачке.')));
   $('chestInfoOv').hidden=false;
 }
 $('ciClose').addEventListener('click',()=>{$('chestInfoOv').hidden=true;});
@@ -372,7 +372,7 @@ function openChest(tier,pay){
   const res=rollChest(tier);
   chestAnim={tier,res,t:0,state:'shake'};
   $('chestTitle').textContent=CHESTS[tier].name+' · '+CHESTS[tier].sub;
-  $('chestRewards').innerHTML=''; $('chestTake').textContent='Открыть'; $('chestOv').hidden=false;
+  $('chestRewards').innerHTML=''; $('chestTake').textContent=_t('Открыть'); $('chestOv').hidden=false;
   refreshMenu(); SFX.chest();
 }
 function gunPv(id,w=56,h=46,k=1.15){return preview(w,h,(c,W,H)=>{c.translate(W/2-14*k,H/2+2);c.scale(k,k);drawGun(c,id);});}
@@ -382,17 +382,17 @@ function revealChest(){
   const res=chestAnim.res, R=$('chestRewards'); R.innerHTML=''; let d=0;
   const add=(el)=>{el.style.animationDelay=d+'s';d+=.12;R.appendChild(el);};
   if(res.hero){const H=HEROES[res.hero],Rr=RAR[H.rar];const r=mk('div','rw new');r.style.setProperty('--c',Rr.c);
-    r.appendChild(mk('span','t','Новый герой · '+Rr.name));r.appendChild(heroPv(res.hero,150,96,1.6));r.appendChild(mk('span','n',H.name));add(r);}
-  add(mk('div','rw','<i class="coin"></i>+'+res.coins+' зёрен'));
-  if(res.eggs)add(mk('div','rw','<i class="gegg"></i>+'+res.eggs+' золотых яиц'+(res.tier<2?'<small>редкая находка!</small>':'')));
+    r.appendChild(mk('span','t',_t('Новый герой · ')+Rr.name));r.appendChild(heroPv(res.hero,150,96,1.6));r.appendChild(mk('span','n',H.name));add(r);}
+  add(mk('div','rw','<i class="coin"></i>+'+res.coins+_t(' зёрен')));
+  if(res.eggs)add(mk('div','rw','<i class="gegg"></i>+'+res.eggs+_t(' золотых яиц')+(res.tier<2?_t('<small>редкая находка!</small>'):'')));
   for(const id in res.cards){const H=HEROES[id],h=SAVE.heroes[id];const r=mk('div','rw');r.appendChild(heroPv(id,56,46,.9));
     const nc=h.lv<10?needCards(id,h.lv):0;
-    r.appendChild(mk('div','','+'+res.cards[id]+' карт · '+H.name+'<small>'+(h.lv<10?h.cards+' / '+nc+' до ур. '+(h.lv+1):'макс. уровень')+'</small>'));add(r);}
+    r.appendChild(mk('div','','+'+res.cards[id]+_t(' карт · ')+H.name+'<small>'+(h.lv<10?h.cards+' / '+nc+_t(' до ур. ')+(h.lv+1):_t('макс. уровень'))+'</small>'));add(r);}
   for(const id in res.wcards){const W=WEAP[id],lv=wLv(id),wr=wRec(id);const r=mk('div','rw wcard');r.style.setProperty('--c',WRAR[W.rar].c);r.appendChild(gunPv(id));
     const nc=lv<10?wNeed(id,lv):0;
-    r.appendChild(mk('div','','+'+res.wcards[id]+' карт оружия · '+W.name+'<small>'+(lv<10?wr.cards+' / '+nc+' до ур. '+(lv+1)+' · улучшай в магазине':'макс. уровень')+'</small>'));add(r);}
-  if(!res.hero){const lockedLeft=HERO_IDS.filter(id=>!SAVE.heroes[id]).length;if(lockedLeft)add(mk('div','rw','<small>Героя в этот раз нет. Ещё не открыто: '+lockedLeft+'</small>'));}
-  $('chestTake').textContent='Забрать';
+    r.appendChild(mk('div','','+'+res.wcards[id]+_t(' карт оружия · ')+W.name+'<small>'+(lv<10?wr.cards+' / '+nc+_t(' до ур. ')+(lv+1)+_t(' · улучшай в магазине'):_t('макс. уровень'))+'</small>'));add(r);}
+  if(!res.hero){const lockedLeft=HERO_IDS.filter(id=>!SAVE.heroes[id]).length;if(lockedLeft)add(mk('div','rw',_t('<small>Героя в этот раз нет. Ещё не открыто: ')+lockedLeft+'</small>'));}
+  $('chestTake').textContent=_t('Забрать');
 }
 $('chestTake').addEventListener('click',()=>{if(!chestAnim)return;if(chestAnim.state==='shake'){revealChest();return;}chestAnim=null;$('chestOv').hidden=true;afterChange();});
 $('chestCv').addEventListener('click',()=>revealChest());
@@ -443,13 +443,13 @@ function renderBg(){
     g.appendChild(b);}
 }
 $('bgBtn').addEventListener('click',()=>{initAudio();renderBg();$('bgOv').hidden=false;});
-$('bgClose').addEventListener('click',()=>{$('bgOv').hidden=true;toast('Фон меню: '+MAPS[menuMap()].name);});
+$('bgClose').addEventListener('click',()=>{$('bgOv').hidden=true;toast(_t('Фон меню: ')+MAPS[menuMap()].name);});
 $('helpBtn').addEventListener('click',()=>{initAudio();$('helpOv').hidden=false;});
 function openInfo(){
   initAudio();
-  const cl=$('creditsList'); cl.innerHTML=''; CREDITS.forEach(([n,r])=>cl.appendChild(mk('li','','<b>'+n+'</b><span>'+r+'</span>')));
+  const cl=$('creditsList'); cl.innerHTML=''; CREDITS.forEach(([n,full,r])=>cl.appendChild(mk('li','','<b>'+n+' <small>'+full+'</small></b><span>'+r+'</span>')));
   const pn=$('patchNotes'); pn.innerHTML='';
-  PATCH_NOTES.forEach(N=>{const box=mk('div','note-v');box.appendChild(mk('h4','','Версия '+N.v+(N.tag?' <i>'+N.tag+'</i>':'')));
+  PATCH_NOTES.forEach(N=>{const box=mk('div','note-v');box.appendChild(mk('h4','',_t('Версия ')+N.v+(N.tag?' <i>'+N.tag+'</i>':'')));
     const ul=mk('ul');N.items.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.appendChild(li);});box.appendChild(ul);pn.appendChild(box);});
   $('infoOv').hidden=false;
 }
@@ -457,13 +457,14 @@ $('infoBtn').addEventListener('click',openInfo);
 $('verBtn').addEventListener('click',openInfo);
 $('infoClose').addEventListener('click',()=>{$('infoOv').hidden=true;});
 $('helpClose').addEventListener('click',()=>{$('helpOv').hidden=true;});
-$('mpBtn').addEventListener('click',()=>{toast('Многопользовательская игра появится в одном из следующих обновлений');});
-$('skBtn').addEventListener('click',()=>{toast('Режим Soul Knight пока в разработке — следи за обновлениями');});
+$('mpBtn').addEventListener('click',()=>{toast(_t('Многопользовательская игра появится в одном из следующих обновлений'));});
+$('skBtn').addEventListener('click',()=>{toast(_t('Режим Soul Knight пока в разработке — следи за обновлениями'));});
 $('heroesBtn').addEventListener('click',()=>openPanel('heroes'));
 $('chestBtn').addEventListener('click',()=>openPanel('chestP'));
 $('storyBtn').addEventListener('click',()=>openPanel('storyP'));
 $('endlessBtn').addEventListener('click',()=>{initAudio();startGame('endless');});
 $('againBtn').addEventListener('click',()=>{initAudio();startGame(S.kind,S.lvIdx);});
+$('restartBtn').addEventListener('click',()=>{initAudio();bankCoins();startGame(S.kind,S.lvIdx);});
 $('menuBtn').addEventListener('click',toMenu);
 $('winMenuBtn').addEventListener('click',toMenu);
 $('nextBtn').addEventListener('click',()=>{const n=S.lvIdx+1;toMenu();if(n<STORY.length)openBrief(n);});
@@ -472,13 +473,32 @@ $('resumeBtn').addEventListener('click',resumeGame);
 $('pauseBtn').addEventListener('click',pauseGame);
 $('nadeBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();throwNade();});
 $('ultBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();useUlt();});
-function syncAuto(){const b=$('autoBtn');b.hidden=COARSE;b.classList.toggle('off',!autoAim);b.setAttribute('aria-pressed',String(autoAim));
-  const pb=$('autoPauseBtn');pb.hidden=COARSE;pb.textContent='Автонаводка: '+(autoAim?'вкл':'выкл');}
-function toggleAuto(){if(COARSE)return;autoAim=!autoAim;try{localStorage.setItem('kur_auto',autoAim?'1':'0');}catch(e){}syncAuto();toast(autoAim?'Автонаводка включена':'Автонаводка выключена: целься мышью');}
-$('autoBtn').addEventListener('click',toggleAuto);
-$('autoPauseBtn').addEventListener('click',toggleAuto);
-syncAuto();
+/* ---------- настройки ---------- */
+function syncSettings(){
+  document.querySelectorAll('#langSeg button').forEach(b=>{const on=b.dataset.lang===SET.lang;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
+  $('musVol').value=Math.round(SET.music*100); $('musVal').textContent=Math.round(SET.music*100)+'%';
+  $('sfxVol').value=Math.round(SET.sfx*100); $('sfxVal').textContent=Math.round(SET.sfx*100)+'%';
+  const tg=(b,on)=>{b.classList.toggle('on',on);b.setAttribute('aria-checked',String(on));};
+  tg($('shakeTog'),SET.shake); tg($('autoTog'),autoAim); $('autoRow').hidden=COARSE;
+  $('langNote').hidden=S.mode==='menu';
+}
+function openSettings(){initAudio();syncSettings();$('setOv').hidden=false;}
+function toggleAuto(){if(COARSE)return;autoAim=!autoAim;try{localStorage.setItem('kur_auto',autoAim?'1':'0');}catch(e){}syncSettings();toast(autoAim?_t('Автонаводка включена'):_t('Автонаводка выключена: целься мышью'));}
+$('setBtn').addEventListener('click',openSettings);
+$('pauseSetBtn').addEventListener('click',openSettings);
+$('setClose').addEventListener('click',()=>{$('setOv').hidden=true;});
+$('musVol').addEventListener('input',e=>{SET.music=e.target.value/100;saveSet();applyVolume();syncSettings();});
+$('sfxVol').addEventListener('input',e=>{SET.sfx=e.target.value/100;saveSet();applyVolume();syncSettings();});
+$('sfxVol').addEventListener('change',()=>SFX.pick());
+$('shakeTog').addEventListener('click',()=>{SET.shake=!SET.shake;saveSet();syncSettings();if(SET.shake)S.shake=Math.max(S.shake,6);});
+$('autoTog').addEventListener('click',toggleAuto);
+document.querySelectorAll('#langSeg button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.lang===SET.lang)return; SET.lang=b.dataset.lang; saveSet();
+  if(['play','paused','dying'].includes(S.mode))bankCoins();
+  location.reload();
+}));
+syncSettings();
 const muteBtn=$('muteBtn');
 function syncMute(){muteBtn.classList.toggle('off',muted);muteBtn.setAttribute('aria-pressed',String(muted));}
-muteBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('kur_mute',muted?'1':'0');}catch(e){}initAudio();syncMute();});
+muteBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('kur_mute',muted?'1':'0');}catch(e){}initAudio();applyVolume();syncMute();});
 syncMute();

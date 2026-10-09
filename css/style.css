@@ -368,3 +368,27 @@ button.lb-ver{padding:5px 9px;font-size:12px}
 .cinfo .tblwrap + .tblwrap{margin-top:8px}
 .ci-note{margin:10px 0 4px;font:600 12px/1.35 var(--body);opacity:.75}
 @media (orientation:landscape) and (max-height:500px){.ci-pv{display:none}}
+/* v0.5: настройки */
+.lb-gear{flex:none;display:grid;place-items:center;width:40px;height:40px;padding:0;border:2.5px solid var(--ink);border-radius:12px;background:var(--barn);box-shadow:0 3px 0 var(--ink);cursor:pointer}
+.lb-gear svg{width:26px;height:26px}
+.lb-gear:active{transform:translateY(2px);box-shadow:none}
+.lb-gear:focus-visible{outline:3px solid var(--yolk);outline-offset:3px}
+.card.set{width:min(440px,100%);text-align:left;gap:10px}
+.card.set .logo{text-align:center}
+.setrow{display:flex;align-items:center;gap:12px;background:var(--straw);border-radius:14px;padding:10px 12px;min-height:48px;box-sizing:border-box}
+.setrow .sl{flex:1;min-width:0;font:800 15px/1.2 var(--body)}
+.setrow .sl small{display:block;font:600 12px/1.25 var(--body);opacity:.7;margin-top:2px}
+.setrow .sv{flex:none;width:44px;text-align:right;font:900 14px/1 var(--body);font-variant-numeric:tabular-nums}
+.setrow input[type=range]{flex:1.3;min-width:90px;accent-color:var(--barn);height:28px}
+.setnote{margin:-4px 2px 0;font:600 12px/1.3 var(--body);opacity:.75}
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;flex:none}
+.seg button{border:0;background:var(--paper);color:var(--ink);font:800 14px/1 var(--body);padding:10px 12px;cursor:pointer;min-height:40px}
+.seg button + button{border-left:2.5px solid var(--ink)}
+.seg button.on{background:var(--yolk)}
+.seg button:focus-visible,.tog:focus-visible{outline:3px solid var(--barn);outline-offset:2px}
+.tog{flex:none;position:relative;width:58px;height:34px;border-radius:999px;border:2.5px solid var(--ink);background:#c9bfa8;cursor:pointer;padding:0}
+.tog i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--ink);box-sizing:border-box;transition:transform .15s}
+.tog.on{background:#5fcf3f}
+.tog.on i{transform:translateX(24px)}
+@media (orientation:landscape) and (max-height:500px){.card.set{width:min(620px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.card.set .logo,.card.set .btn,.card.set .setnote{grid-column:1/-1}.setrow{min-height:44px;padding:8px 10px}}
+.credits b small{font:600 12.5px/1.2 var(--body);opacity:.7;margin-left:4px}

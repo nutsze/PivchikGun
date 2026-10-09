@@ -43,7 +43,7 @@ function updateFlow(dt){
         if(S.kind==='story'&&S.wave>=S.L.goal.n){victory();return;}
         S.between=3; const h=Math.min(10,P.max-P.hp); P.hp+=h;
         const bonus=5+S.wave*3; S.coins+=bonus; S.tokens+=3;
-        showBanner('Двор чист!','+'+bonus+' зёрен · +3 жетона'+(h>0?' · +'+Math.round(h)+' здоровья':'')); SFX.pick(); updateHUD();
+        showBanner(_t('Двор чист!'),'+'+bonus+_t(' зёрен · +3 жетона')+(h>0?' · +'+Math.round(h)+_t(' здоровья'):'')); SFX.pick(); updateHUD();
       }
     }
   } else {
@@ -248,11 +248,11 @@ function bossAI(e,T,dt,d){
   const p=T.pats[e.pat];
   if(p==='fan'){const base=Math.atan2(P.y-e.y,P.x-e.x);for(let i=0;i<9;i++){const a=base+(i-4)*.13;eBullet(e.x+Math.cos(a)*34,e.y+Math.sin(a)*34,a,T.bspd,eDmg(T.dmg),bul);}SFX.egg();}
   else if(p==='burst'){e.burst=3;e.burstT=0;}
-  else if(p==='summon'){const n=e.type==='emperor'?3:2;for(let i=0;i<n;i++){const k=T.summon[Math.floor(Math.random()*T.summon.length)];makeEnemy(k,clamp(e.x+rand(-80,80),FENCE+30,WW-FENCE-30),clamp(e.y+rand(-60,60),FENCE+30,WH-FENCE-30));}ftext(e.x,e.y-90,T.taunt||'В атаку!','#fff',13);SFX.gobble();}
+  else if(p==='summon'){const n=e.type==='emperor'?3:2;for(let i=0;i<n;i++){const k=T.summon[Math.floor(Math.random()*T.summon.length)];makeEnemy(k,clamp(e.x+rand(-80,80),FENCE+30,WW-FENCE-30),clamp(e.y+rand(-60,60),FENCE+30,WH-FENCE-30));}ftext(e.x,e.y-90,T.taunt||_t('В атаку!'),'#fff',13);SFX.gobble();}
   else if(p==='dash'){e.dashes=1;startDash(e,.75,.55);}
   else if(p==='spiral'){e.spin=1.5;e.burstT=0;e.spinA=rand(0,TAU);}
   else if(p==='ring'){const off=rand(0,TAU);for(let i=0;i<18;i++){const a=off+i/18*TAU;eBullet(e.x+Math.cos(a)*30,e.y+Math.sin(a)*30,a,T.bspd*.9,eDmg(T.dmg),bul);}SFX.boom();}
-  else if(p==='rain'){bossRain(T);ftext(e.x,e.y-90,'Берегись неба!','#ffc93a',13);}
+  else if(p==='rain'){bossRain(T);ftext(e.x,e.y-90,_t('Берегись неба!'),'#ffc93a',13);}
 }
 function updateBullets(dt){
   for(let i=bullets.length-1;i>=0;i--){

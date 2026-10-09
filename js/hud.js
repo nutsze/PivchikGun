@@ -3,12 +3,12 @@
 const hc={};
 function setT(id,v){if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}}
 function goalLabel(long){
-  if(S.kind==='endless')return 'Волна '+Math.max(1,S.wave);
+  if(S.kind==='endless')return _t('Волна ')+Math.max(1,S.wave);
   const g=S.L.goal;
-  if(g.type==='waves')return 'Волна '+Math.max(1,S.wave)+'/'+g.n;
-  if(g.type==='kill'){const w=KILLN[g.what]||ETYPE[g.what].name;return long?'Победи: '+w.toLowerCase()+' ×'+g.n:w+' '+S.goalKills+'/'+g.n;}
-  if(g.type==='survive'){const t=Math.ceil(S.survT);return (long?'Продержись ':'Держись ')+Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
-  if(g.type==='boss')return long?'Победи босса':'Босс: '+ETYPE[g.boss].name;
+  if(g.type==='waves')return _t('Волна ')+Math.max(1,S.wave)+'/'+g.n;
+  if(g.type==='kill'){const w=KILLN[g.what]||ETYPE[g.what].name;return long?_t('Победи: ')+w.toLowerCase()+' ×'+g.n:w+' '+S.goalKills+'/'+g.n;}
+  if(g.type==='survive'){const t=Math.ceil(S.survT);return (long?_t('Продержись '):_t('Держись '))+Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+  if(g.type==='boss')return long?_t('Победи босса'):_t('Босс: ')+ETYPE[g.boss].name;
   return '';
 }
 function updateHUD(){
@@ -17,10 +17,10 @@ function updateHUD(){
   $('hpFill').style.width=(P.hp/P.max*100)+'%';
   $('hpFill').style.background=P.hp<P.max*.3?'#ff5a3c':'var(--hp)';
   setT('goalText',goalLabel(false));
-  setT('scoreText',S.score.toLocaleString('ru-RU')+' очк.');
+  setT('scoreText',S.score.toLocaleString((LANG==='en'?'en-US':'ru-RU'))+_t(' очк.'));
   setT('coinText',String(S.coins)); setT('tokText',String(S.tokens));
   const mult=Math.min(4,1+Math.floor((S.combo-1)/3));
-  $('multText').hidden=!(S.combo>=4); setT('multText','Комбо ×'+mult);
+  $('multText').hidden=!(S.combo>=4); setT('multText',_t('Комбо ×')+mult);
   setT('wName',WEAP[P.w].name); setT('wAmmo',P.ammo===Infinity?'∞':String(P.ammo));
   setT('nadeCnt',String(P.nades)); $('nadeBtn').classList.toggle('empty',P.nades<=0);
 }
@@ -30,35 +30,37 @@ function updateUltUI(){
   const st=P.buff?'live':p>=100?'ready':'charge';
   if(p!==lastUltP){b.style.setProperty('--p',p);lastUltP=p;}
   if(st!==lastUltState||st==='live'){lastUltState=st;b.classList.toggle('ready',st==='ready');b.classList.toggle('live',st==='live');
-    setT('ultLbl',st==='live'?Math.ceil(P.buffT)+' с':st==='ready'?'УЛЬТА':p+'%');}
+    setT('ultLbl',st==='live'?Math.ceil(P.buffT)+_t(' с'):st==='ready'?_t('УЛЬТА'):p+'%');}
   else if(st==='charge')setT('ultLbl',p+'%');
 }
+function clearBanner(){const b=$('banner');b.classList.remove('show');$('banBig').textContent='';$('banSmall').textContent='';}
 function showBanner(big,small){
   const b=$('banner'); $('banBig').textContent=big; $('banSmall').textContent=small||'';
   b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
 }
 let toastT=0;
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);}
-function fmt(n){return Math.round(n).toLocaleString('ru-RU');}
+function toastClear(){clearTimeout(toastT);$('toast').classList.remove('show');}
+function fmt(n){return Math.round(n).toLocaleString((LANG==='en'?'en-US':'ru-RU'));}
 function purseHTML(){return '<span class="pill"><i class="coin"></i><b>'+fmt(SAVE.coins)+'</b></span><span class="pill"><i class="tok"></i><b>'+fmt(SAVE.tokens)+'</b></span><span class="pill"><i class="btok"></i><b>'+SAVE.btokens+'</b></span><span class="pill"><i class="gegg"></i><b>'+SAVE.eggs+'</b></span>';}
 function refreshMenu(){
   $('menuCoins').textContent=fmt(SAVE.coins); $('menuTok').textContent=fmt(SAVE.tokens); $('menuBtok').textContent=SAVE.btokens; $('menuEggs').textContent=SAVE.eggs;
   const H=HEROES[SAVE.hero];
   const sq=squadIds().length;
   $('heroName').textContent=H.name;
-  $('heroLine').textContent='Ур. '+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name+(sq?' · отряд: '+sq:'');
+  $('heroLine').textContent=_t('Ур. ')+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name+(sq?_t(' · отряд: ')+sq:'');
   const hb=$('heroBadges'); hb.innerHTML='';
   [[RAR[H.rar].name,RAR[H.rar].c],[CLASSES[H.cls].name,CLASSES[H.cls].c]].forEach(([t,c])=>{const b=document.createElement('span');b.className='rar';b.textContent=t;b.style.setProperty('--c',c);hb.appendChild(b);});
   const done=SAVE.story.done.length;
-  if(done>=STORY.length)$('storySub').textContent='Все 4 главы пройдены · можно переигрывать';
-  else{const L=STORY[done<STORY.length?STORY.findIndex(l=>!SAVE.story.done.includes(l.gid)):0];$('storySub').textContent='Глава '+(L.ch+1)+' «'+CHAPTERS[L.ch].name+'» · '+CHAPTERS[L.ch].levels.filter(l=>SAVE.story.done.includes(l.gid)).length+'/20';}
-  $('bestText').textContent=SAVE.best.score>0?'Рекорд: волна '+SAVE.best.wave+' · '+fmt(SAVE.best.score)+' очк.':'Рекорда пока нет — поставь первый';
+  if(done>=STORY.length)$('storySub').textContent=_t('Все 4 главы пройдены · можно переигрывать');
+  else{const L=STORY[done<STORY.length?STORY.findIndex(l=>!SAVE.story.done.includes(l.gid)):0];$('storySub').textContent=_t('Глава ')+(L.ch+1)+(LANG==='en'?' “':' «')+CHAPTERS[L.ch].name+(LANG==='en'?'” · ':'» · ')+CHAPTERS[L.ch].levels.filter(l=>SAVE.story.done.includes(l.gid)).length+'/20';}
+  $('bestText').textContent=SAVE.best.score>0?_t('Рекорд: волна ')+SAVE.best.wave+' · '+fmt(SAVE.best.score)+_t(' очк.'):_t('Рекорда пока нет — поставь первый');
   $('chestBadge').hidden=!(SAVE.tokens>=100||SAVE.btokens>=10||SAVE.schests>0);
   document.querySelectorAll('.purse').forEach(e=>e.innerHTML=purseHTML());
 }
 function toMenu(){
   if(['play','paused','dying'].includes(S.mode))bankCoins();
-  S.mode='menu'; S.night=false; $('hud').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
+  S.mode='menu'; S.night=false; $('hud').hidden=true; music('menu'); musicDuck(1); clearBanner(); $('setOv').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
   if(MAP!==menuMap())buildWorld(menuMap());
   P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];holes=[];zones=[];strikes=[];
   refreshMenu();
@@ -68,17 +70,17 @@ function demoEnemies(){
     if(type==='hen'){e.body=T.cols[0][0];e.wing=T.cols[0][1];} enemies.push(e);};
   add('fox',-150,30,1); add('hen',160,-20,-1); add('turkey',120,90,-1); add('crow',-90,-110,1); add('raccoon',-170,120,1);
 }
-function pauseGame(){if(S.mode!=='play')return;S.mode='paused';$('pause').hidden=false;sticks.move=sticks.aim=null;input.firing=false;}
-function resumeGame(){if(S.mode!=='paused')return;S.mode='play';$('pause').hidden=true;last=performance.now();}
+function pauseGame(){if(S.mode!=='play')return;S.mode='paused';$('pause').hidden=false;musicDuck(.35);sticks.move=sticks.aim=null;input.firing=false;}
+function resumeGame(){if(S.mode!=='paused')return;S.mode='play';$('pause').hidden=true;$('setOv').hidden=true;musicDuck(1);last=performance.now();}
 function gameOver(){
   S.mode='over'; $('hud').hidden=true;
   bankCoins();
   let rec=false;
   if(S.kind==='endless'){rec=S.score>SAVE.best.score; if(rec){SAVE.best={score:S.score,wave:S.wave};persist();}}
   $('oScore').textContent=fmt(S.score); $('oKills').textContent=S.kills;
-  if(S.kind==='story'){$('oWave').textContent=S.lvIdx+1;$('oWaveL').textContent='Уровень';$('overLead').textContent='Уровень «'+S.L.name+'» не пройден. Попробуй ещё раз!';}
-  else{$('oWave').textContent=S.wave;$('oWaveL').textContent='Волна';$('overLead').textContent='Курятник пал на волне '+S.wave+'.';}
-  $('overEarn').innerHTML='Заработано: <i class="coin"></i>'+S.coins+' зёрен · <i class="tok"></i>'+S.tokens+' жетонов';
+  if(S.kind==='story'){$('oWave').textContent=S.lvIdx+1;$('oWaveL').textContent=_t('Уровень');$('overLead').textContent=_t('Уровень «')+S.L.name+_t('» не пройден. Попробуй ещё раз!');}
+  else{$('oWave').textContent=S.wave;$('oWaveL').textContent=_t('Волна');$('overLead').textContent=_t('Курятник пал на волне ')+S.wave+'.';}
+  $('overEarn').innerHTML=_t('Заработано: <i class="coin"></i>')+S.coins+_t(' зёрен · <i class="tok"></i>')+S.tokens+_t(' жетонов');
   $('oRec').hidden=!rec; $('over').hidden=false;
 }
 function victory(){
@@ -87,7 +89,7 @@ function victory(){
   for(const e of enemies){if(!e.dead){puff(e.x,e.y,'#ffffff',6,1);e.dead=true;}} S.cleanup=true;
   holes.forEach(h=>{if(h.state!=='close'){h.state='close';h.ct=0;}});
   $('bossBar').hidden=true; S.boss=null;
-  showBanner('Победа!',S.L.name); sticks.move=sticks.aim=null; input.firing=false;
+  showBanner(_t('Победа!'),S.L.name); sticks.move=sticks.aim=null; input.firing=false;
 }
 function showWin(){
   S.mode='result'; $('hud').hidden=true;
@@ -99,17 +101,17 @@ function showWin(){
   const sup=first&&L.i===19; if(sup)SAVE.schests++;
   if(first)SAVE.story.done.push(i);
   persist();
-  $('winEyebrow').textContent='Глава '+(L.ch+1)+' · уровень '+(L.i+1)+' из 20';
-  $('winLead').textContent=L.i===19&&first?CHAPTERS[L.ch].outro:'«'+L.name+'» пройден.';
+  $('winEyebrow').textContent=_t('Глава ')+(L.ch+1)+_t(' · уровень ')+(L.i+1)+_t(' из 20');
+  $('winLead').textContent=L.i===19&&first?CHAPTERS[L.ch].outro:(LANG==='en'?'“':'«')+L.name+_t('» пройден.');
   const R=$('winRewards'); R.innerHTML='';
   const row=(html,sub,d)=>{const r=mk('div','rw',html+(sub?'<small>'+sub+'</small>':''));r.style.animationDelay=d+'s';R.appendChild(r);};
-  row('<i class="coin"></i>+'+(lc+S.coins)+' зёрен',first?'награда за первое прохождение':'повторное прохождение',0);
-  row('<i class="tok"></i>+'+(lt+S.tokens)+' жетонов','на обычный сундук: '+Math.min(SAVE.tokens,100)+'/100',.12);
-  if(le)row('<i class="gegg"></i>+'+le+' золотых яиц','только за первое прохождение',.18);
-  if(sup)row('<i class="sch"></i>Сверхбольшой сундук!','за финального босса главы · открой в «Сундуках»',.21);
-  if(big)row('<i class="btok"></i>+1 большой жетон','на большой сундук: '+SAVE.btokens+'/10 · следующий завтра',.24);
-  else row('<i class="btok"></i>Большой жетон уже получен сегодня','завтра пройди уровень ещё раз',.24);
-  $('nextBtn').hidden=i>=STORY.length-1; $('nextBtn').textContent=L.i===19?'Глава '+(L.ch+2):'Уровень '+(L.i+2);
+  row('<i class="coin"></i>+'+(lc+S.coins)+_t(' зёрен'),first?_t('награда за первое прохождение'):_t('повторное прохождение'),0);
+  row('<i class="tok"></i>+'+(lt+S.tokens)+_t(' жетонов'),_t('на обычный сундук: ')+Math.min(SAVE.tokens,100)+'/100',.12);
+  if(le)row('<i class="gegg"></i>+'+le+_t(' золотых яиц'),_t('только за первое прохождение'),.18);
+  if(sup)row(_t('<i class="sch"></i>Сверхбольшой сундук!'),_t('за финального босса главы · открой в «Сундуках»'),.21);
+  if(big)row(_t('<i class="btok"></i>+1 большой жетон'),_t('на большой сундук: ')+SAVE.btokens+_t('/10 · следующий завтра'),.24);
+  else row(_t('<i class="btok"></i>Большой жетон уже получен сегодня'),_t('завтра пройди уровень ещё раз'),.24);
+  $('nextBtn').hidden=i>=STORY.length-1; $('nextBtn').textContent=L.i===19?_t('Глава ')+(L.ch+2):_t('Уровень ')+(L.i+2);
   if(L.i===19&&first)storyCh=-1;
   $('win').hidden=false; refreshMenu();
 }

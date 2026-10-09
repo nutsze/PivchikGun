@@ -6,23 +6,23 @@ let OBS=[], ground=null, RIVER=null, MAP='yard';
 // river: axis 'h' — река течёт слева направо, 'v' — сверху вниз; bridges: [позиция вдоль реки, 1 = гнилой]
 // branch: приток поперёк основной реки, end 'lo'/'hi' — с какой стороны от русла он тянется к краю карты
 const MAPS={
-  yard:{name:'Двор',grass:'#7cc451',tuft:['#5fa63b','#9ad866'],patch:'rgba(200,160,95,.55)',flowers:140,out:'#5f9e3c',seed:20261009,
+  yard:{name:_t('Двор'),grass:'#7cc451',tuft:['#5fa63b','#9ad866'],patch:'rgba(200,160,95,.55)',flowers:140,out:'#5f9e3c',seed:20261009,
     obs:['hay','stump','barrel','bush','rock','hay','stump','barrel'],bank:'#d8c38a',water:'#4aa8d8',deep:'#3a8fc2',
     river:{axis:'h',base:420,amp:55,freq:.0055,phase:.4,hw:40,bridges:[[230,0],[600,1],[960,0],[1290,1]]},
     branch:{axis:'v',base:1120,amp:40,freq:.006,phase:.7,hw:32,end:'hi',bridges:[[780,0],[1180,1]]}},
-  farm:{name:'Ферма',grass:'#82c653',tuft:['#63aa3c','#a2dc6c'],patch:'rgba(200,160,95,.6)',flowers:180,out:'#62a23e',seed:777101,
+  farm:{name:_t('Ферма'),grass:'#82c653',tuft:['#63aa3c','#a2dc6c'],patch:'rgba(200,160,95,.6)',flowers:180,out:'#62a23e',seed:777101,
     obs:['hay','hay','stump','barrel','bush','rock','hay','stump'],bank:'#dcc58c',water:'#4aa8d8',deep:'#3a8fc2',
     river:{axis:'v',base:1110,amp:70,freq:.005,phase:1.2,hw:42,bridges:[[260,1],[620,0],[980,1],[1300,0]]},
     branch:{axis:'h',base:440,amp:35,freq:.006,phase:2.4,hw:32,end:'lo',bridges:[[320,1],[760,0]]}},
-  forest:{name:'Тёмный лес',grass:'#5e9e3e',tuft:['#4a8a30','#78b850'],patch:'rgba(90,70,40,.45)',flowers:60,out:'#3f7a2a',seed:555202,
+  forest:{name:_t('Тёмный лес'),grass:'#5e9e3e',tuft:['#4a8a30','#78b850'],patch:'rgba(90,70,40,.45)',flowers:60,out:'#3f7a2a',seed:555202,
     obs:['bush','stump','rock','bush','stump','bush','stump'],bank:'#a89060',water:'#3d8fb8',deep:'#2f7aa0',
     river:{axis:'h',base:1120,amp:90,freq:.006,phase:2.1,hw:44,bridges:[[200,0],[520,1],[860,1],[1180,0],[1380,1]]},
     branch:{axis:'v',base:360,amp:35,freq:.007,phase:1.1,hw:32,end:'lo',bridges:[[330,0],[760,1]]}},
-  factory:{name:'Птицефабрика',grass:'#b9b5aa',tuft:['#a29e93','#cfcbc0'],patch:'rgba(50,50,50,.22)',flowers:0,out:'#8a867b',seed:333303,
+  factory:{name:_t('Птицефабрика'),grass:'#b9b5aa',tuft:['#a29e93','#cfcbc0'],patch:'rgba(50,50,50,.22)',flowers:0,out:'#8a867b',seed:333303,
     obs:['barrel','barrel','rock','barrel','hay','barrel'],bank:'#8f8b80',water:'#5f8f8a',deep:'#4d7a74',
     river:{axis:'v',base:400,amp:14,freq:.004,phase:.2,hw:38,bridges:[[300,0],[700,1],[1100,0],[1350,1]]},
     branch:{axis:'h',base:1225,amp:14,freq:.004,phase:.5,hw:30,end:'hi',bridges:[[760,1],[1200,0]]}},
-  mountain:{name:'Горы',grass:'#cfe0c2',tuft:['#b2c8a6','#eef6ea'],patch:'rgba(255,255,255,.65)',flowers:40,out:'#a7bd9f',seed:111404,
+  mountain:{name:_t('Горы'),grass:'#cfe0c2',tuft:['#b2c8a6','#eef6ea'],patch:'rgba(255,255,255,.65)',flowers:40,out:'#a7bd9f',seed:111404,
     obs:['rock','stump','bush','rock','rock','stump'],bank:'#b9b2a2',water:'#7cc8ea',deep:'#5fb2dc',
     river:{axis:'h',base:1010,amp:110,freq:.0045,phase:3.3,hw:36,bridges:[[240,1],[560,0],[900,1],[1230,0]]},
     branch:{axis:'v',base:1065,amp:30,freq:.006,phase:2.9,hw:30,end:'lo',bridges:[[300,1],[700,0]]}}
@@ -192,7 +192,7 @@ function updateBridges(dt){
   const b=P.alive?bridgeAt(P.x,P.y):null;
   if(b===lastBridge)return;
   if(lastBridge&&lastBridge.rotten&&!lastBridge.broken){lastBridge.passes++;if(lastBridge.passes>=2)breakBridge(lastBridge);}
-  if(b&&b.rotten&&!b.broken){b.wob=.6;SFX.creak();S.shake+=2;ftext(P.x,P.y-52,b.passes===0?'Скрип… мост гнилой':'Трещит! Сейчас рухнет','#e8d3a8',12);}
+  if(b&&b.rotten&&!b.broken){b.wob=.6;SFX.creak();S.shake+=2;ftext(P.x,P.y-52,b.passes===0?_t('Скрип… мост гнилой'):_t('Трещит! Сейчас рухнет'),'#e8d3a8',12);}
   lastBridge=b;
 }
 function breakBridge(b){
@@ -201,7 +201,7 @@ function breakBridge(b){
   for(let v=lo;v<hi;v+=16){const p=xyR(b.R,b.u+rand(-b.hw,b.hw),v);
     parts.push({k:'shell',x:p[0],y:p[1],z:6,vx:rand(-60,60),vy:rand(-40,40),vz:rand(80,200),rot:rand(0,TAU),vr:rand(-8,8),t:0,max:rand(.6,1),dirt:true});
     puff(p[0],p[1],'#bfe6ff',2,1);}
-  const m=xyR(b.R,b.u,rcR(b.R,b.u)); ftext(m[0],m[1]-30,'Мост рухнул!','#ffb3a3',15);
+  const m=xyR(b.R,b.u,rcR(b.R,b.u)); ftext(m[0],m[1]-30,_t('Мост рухнул!'),'#ffb3a3',15);
 }
 function drawRiverDyn(c){
   if(!RIVER)return;

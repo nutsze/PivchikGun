@@ -569,7 +569,7 @@ function render(){
   c.fillStyle=MAPS[MAP].out; c.fillRect(0,0,VW,VH);
   const Z=S.mode==='menu'?SC*MENU_ZOOM:SC;
   c.save(); c.scale(Z,Z);
-  let sx=0,sy=0; if(S.shake>0&&!REDUCED){sx=(Math.random()-.5)*S.shake;sy=(Math.random()-.5)*S.shake;}
+  let sx=0,sy=0; if(S.shake>0&&!REDUCED&&SET.shake){sx=(Math.random()-.5)*S.shake;sy=(Math.random()-.5)*S.shake;}
   c.translate(-camX+sx,-camY+sy);
   c.drawImage(ground,0,0);
   drawRiverDyn(c);
@@ -654,13 +654,13 @@ function drawSticks(c){
     else{if(!COARSE)return;ox=def[0];oy=def[1];kx=ox;ky=oy;}
     c.globalAlpha=act?1:.55;
     c.fillStyle='rgba(43,29,20,.18)';c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=3;c.beginPath();c.arc(ox,oy,STICK_R,0,TAU);c.fill();c.stroke();
-    c.fillStyle=label==='огонь'?'rgba(192,57,43,.85)':'rgba(255,255,255,.85)';c.strokeStyle=INK;c.lineWidth=3;c.beginPath();c.arc(kx,ky,24,0,TAU);c.fill();c.stroke();
-    if(!act){c.font='800 12px Rubik, system-ui, sans-serif';c.textAlign='center';c.fillStyle=label==='огонь'?'#fff':INK;c.fillText(label,ox,oy+4);}
+    c.fillStyle=label===_t('огонь')?'rgba(192,57,43,.85)':'rgba(255,255,255,.85)';c.strokeStyle=INK;c.lineWidth=3;c.beginPath();c.arc(kx,ky,24,0,TAU);c.fill();c.stroke();
+    if(!act){c.font='800 12px Rubik, system-ui, sans-serif';c.textAlign='center';c.fillStyle=label===_t('огонь')?'#fff':INK;c.fillText(label,ox,oy+4);}
     c.globalAlpha=1;
   };
   const land=VW>VH, by=VH-(land?Math.max(100,VH*.28):Math.max(130,VH*.17));
-  show(sticks.move,[land?Math.max(130,VW*.16):Math.max(86,VW*.22),by],'бег');
-  show(sticks.aim,[VW-(land?Math.max(150,VW*.17):Math.max(96,VW*.25)),by],'огонь');
+  show(sticks.move,[land?Math.max(130,VW*.16):Math.max(86,VW*.22),by],_t('бег'));
+  show(sticks.aim,[VW-(land?Math.max(150,VW*.17):Math.max(96,VW*.25)),by],_t('огонь'));
 }
 const fr=i=>{const v=Math.sin(i*12.9898+78.233)*43758.5453;return v-Math.floor(v);};
 function chestRays(c,cx,cy,open){

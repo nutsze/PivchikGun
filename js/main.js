@@ -1,7 +1,7 @@
 /* Запуск игры и главный цикл кадров */
 /* ---------- loop ---------- */
-document.querySelectorAll('[data-ver]').forEach(e=>e.textContent='v'+GAME_VERSION+(GAME_TAG?' '+GAME_TAG:''));
-document.querySelectorAll('[data-ver-long]').forEach(e=>e.textContent='Версия '+GAME_VERSION+(GAME_TAG?' ('+GAME_TAG+')':''));
+document.querySelectorAll('[data-ver]').forEach(e=>e.textContent='v'+GAME_VERSION+(PATCH_NOTES[0].tag?' '+PATCH_NOTES[0].tag:''));
+document.querySelectorAll('[data-ver-long]').forEach(e=>e.textContent=_t('Версия ')+GAME_VERSION+(PATCH_NOTES[0].tag?' ('+PATCH_NOTES[0].tag+')':''));
 buildWorld(menuMap()); P=newPlayer(); toMenu();
 let last=performance.now();
 function frame(now){

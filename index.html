@@ -20,7 +20,6 @@
       <div class="row"><span class="chip goal" id="goalText">Волна 1</span><span class="chip" id="scoreText">0</span><span class="chip"><i class="coin"></i><span id="coinText">0</span></span><span class="chip"><i class="tok"></i><span id="tokText">0</span></span><span class="chip mult" id="multText" hidden>×2</span></div>
     </div>
     <div class="btns">
-      <button class="ib" id="autoBtn" aria-label="Автонаводка" title="Автонаводка (T)" hidden>◎</button>
       <button class="ib" id="muteBtn" aria-label="Звук">♪</button>
       <button class="ib" id="pauseBtn" aria-label="Пауза">II</button>
     </div>
@@ -34,7 +33,7 @@
 
 <div class="lobby" id="menu">
   <header class="lb-top">
-    <div class="lb-brand"><h1 class="lb-logo">Боевой Курятник</h1><button class="lb-ver" id="verBtn" data-ver title="Информация об игре">v0.1</button></div>
+    <div class="lb-brand"><h1 class="lb-logo">Боевой Курятник</h1><button class="lb-ver" id="verBtn" data-ver title="Информация об игре">v0.1</button><button class="lb-gear" id="setBtn" aria-label="Настройки" title="Настройки"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 2h3.4l.5 2.6 1.9.8 2.2-1.5 2.4 2.4-1.5 2.2.8 1.9 2.6.5v3.4l-2.6.5-.8 1.9 1.5 2.2-2.4 2.4-2.2-1.5-1.9.8-.5 2.6h-3.4l-.5-2.6-1.9-.8-2.2 1.5-2.4-2.4 1.5-2.2-.8-1.9L2 13.7v-3.4l2.6-.5.8-1.9-1.5-2.2 2.4-2.4 2.2 1.5 1.9-.8z" fill="#fff4dc" stroke="#2b1d14" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.6" fill="#2b1d14"/></svg></button></div>
     <div class="wallet lb-wallet" aria-label="Кошелёк">
       <span class="pill" title="Зёрна"><i class="coin"></i><b id="menuCoins">0</b></span>
       <span class="pill" title="Жетоны на обычный сундук"><i class="tok"></i><b id="menuTok">0</b><small>/100</small></span>
@@ -80,6 +79,19 @@
   </div>
 </div>
 
+<div class="ov top" id="setOv" hidden>
+  <div class="card set">
+    <h2 class="logo">Настройки</h2>
+    <div class="setrow"><span class="sl">Язык</span><div class="seg" id="langSeg" role="group" aria-label="Язык"><button data-lang="ru">Русский</button><button data-lang="en">English</button></div></div>
+    <p class="setnote" id="langNote" hidden>Игра перезапустится на выбранном языке</p>
+    <label class="setrow"><span class="sl">Музыка</span><input type="range" id="musVol" min="0" max="100" step="5"><b class="sv" id="musVal">60%</b></label>
+    <label class="setrow"><span class="sl">Звуки</span><input type="range" id="sfxVol" min="0" max="100" step="5"><b class="sv" id="sfxVal">80%</b></label>
+    <div class="setrow"><span class="sl">Тряска экрана от взрывов</span><button class="tog" id="shakeTog" role="switch" aria-checked="true"><i></i></button></div>
+    <div class="setrow" id="autoRow"><span class="sl">Автонаводка<small>стреляет сама по ближнему врагу (T)</small></span><button class="tog" id="autoTog" role="switch" aria-checked="true"><i></i></button></div>
+    <button class="btn" id="setClose">Готово</button>
+  </div>
+</div>
+
 <div class="ov top" id="bgOv" hidden>
   <div class="card bgcard">
     <p class="eyebrow">Главное меню</p>
@@ -109,7 +121,8 @@
     <h2 class="logo">Пауза</h2>
     <div class="stack">
       <button class="btn" id="resumeBtn">Продолжить</button>
-      <button class="btn alt" id="autoPauseBtn" hidden>Автонаводка: вкл</button>
+      <button class="btn alt" id="restartBtn">Заново</button>
+      <button class="btn alt" id="pauseSetBtn">Настройки</button>
       <button class="btn alt" id="quitBtn">В меню</button>
     </div>
     <p class="best" data-ver-long>Версия 0.1</p>
@@ -208,6 +221,7 @@
 
 <script src="js/core.js"></script>
 <script src="js/data.js"></script>
+<script src="js/lang.js"></script>
 <script src="js/save.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/world.js"></script>
