@@ -33,6 +33,7 @@ function update(dt){
 }
 let hudTick=0;
 function updateFlow(dt){
+  updateHoles(dt);
   if(isWaves()){
     if(S.between>0){S.between-=dt;if(S.between<=0)startWave();}
     else{
@@ -118,6 +119,7 @@ function updateEnemies(dt){
       if(e.burnTick<=0){e.burnTick=.33;hitEnemy(e,e.burnDps*.33,0,0,true,0,true);if(e.dead)continue;}}
     let spdMul=1,noSep=false;
     if(e.chill>0){e.chill-=dt;spdMul*=.5;}
+    if(e.emerge>0){e.emerge-=dt;e.moving=false;continue;}
     if(e.stun>0){e.stun-=dt;e.moving=false;e.x+=e.kx*dt;e.y+=e.ky*dt;e.kx*=Math.pow(.002,dt);e.ky*=Math.pow(.002,dt);collideWorld(e,T.fly);continue;}
     let vx=0,vy=0;
     const see=alive&&(T.fly||los(e.x,e.y,tg.x,tg.y));
@@ -140,7 +142,8 @@ function updateEnemies(dt){
       vx=dx/d;vy=dy/d; const z=Math.sin(S.t*5+e.phase)*(e.type==='rat'?.25:.45); vx+=-dy/d*z; vy+=dx/d*z;
       if(e.type==='wolf'){e.cd-=dt;if(d<170&&d>50&&e.cd<=0&&see)startDash(e,.32,.3);}
       if(d<e.r+tg.r+5)bite(e,T.melee,e.type==='rat'?.6:.75);
-    } else if(e.type==='hen'||e.type==='ferret'||e.type==='robohen'||e.type==='owl'){
+    } else if(e.type==='hen'||e.type==='ferret'||e.type==='robohen'||e.type==='owl'||e.type==='mole'){
+      if(e.type==='mole'&&d<e.r+tg.r+5)bite(e,T.melee,.8);
       const keep=(enemies.length<=3&&S.toSpawn===0)||(S.night&&d>NIGHT_R)?Math.min(T.keep,S.night?NIGHT_R-60:150):T.keep; // stragglers come to you
       if(!see||d>keep+50){vx=dx/d;vy=dy/d;} else if(d<keep-60){vx=-dx/d;vy=-dy/d;}
       vx+=-dy/d*e.strafe*.75; vy+=dx/d*e.strafe*.75;
@@ -148,7 +151,7 @@ function updateEnemies(dt){
       if(e.burst>0){e.burstT-=dt;if(e.burstT<=0){e.burstT=.12;e.burst--;enemyShoot(e,T,1,0,T.bul);}}
       e.cd-=dt; if(e.cd<=0){
         if(see&&d<T.range&&onScreen(e)){
-          if(e.type==='hen'){enemyShoot(e,T,1);e.cd=rand(T.cd[0],T.cd[1])*Math.max(.6,1-(S.diff-1)*.04);}
+          if(e.type==='hen'||e.type==='mole'){enemyShoot(e,T,1);e.cd=rand(T.cd[0],T.cd[1])*Math.max(.6,1-(S.diff-1)*.04);}
           else if(e.type==='ferret'){e.burst=3;e.burstT=0;e.cd=rand(T.cd[0],T.cd[1]);}
           else{startAim(e,e.type==='owl'?.75:.55);e.cd=9;}
         } else e.cd=.3;

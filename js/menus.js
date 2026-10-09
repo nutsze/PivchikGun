@@ -322,6 +322,17 @@ document.querySelectorAll('#shop .tab').forEach(t=>t.addEventListener('click',()
 $('shopBtn').addEventListener('click',()=>openPanel('shop'));
 $('heroSwap').addEventListener('click',()=>openPanel('heroes'));
 $('helpBtn').addEventListener('click',()=>{initAudio();$('helpOv').hidden=false;});
+function openInfo(){
+  initAudio();
+  const cl=$('creditsList'); cl.innerHTML=''; CREDITS.forEach(([n,r])=>cl.appendChild(mk('li','','<b>'+n+'</b><span>'+r+'</span>')));
+  const pn=$('patchNotes'); pn.innerHTML='';
+  PATCH_NOTES.forEach(N=>{const box=mk('div','note-v');box.appendChild(mk('h4','','Версия '+N.v+(N.tag?' <i>'+N.tag+'</i>':'')));
+    const ul=mk('ul');N.items.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.appendChild(li);});box.appendChild(ul);pn.appendChild(box);});
+  $('infoOv').hidden=false;
+}
+$('infoBtn').addEventListener('click',openInfo);
+$('verBtn').addEventListener('click',openInfo);
+$('infoClose').addEventListener('click',()=>{$('infoOv').hidden=true;});
 $('helpClose').addEventListener('click',()=>{$('helpOv').hidden=true;});
 $('mpBtn').addEventListener('click',()=>{toast('Многопользовательская игра появится в одном из следующих обновлений');});
 $('skBtn').addEventListener('click',()=>{toast('Режим Soul Knight пока в разработке — следи за обновлениями');});

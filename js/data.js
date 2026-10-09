@@ -93,6 +93,7 @@ const ETYPE={
   owl:{name:'Сова',hp:55,r:14,spd:85,score:180,coin:5,tok:1,cd:[2.6,3.6],dmg:16,bspd:640,bul:'feather',keep:320,range:560},
   ferret:{name:'Хорёк',hp:60,r:14,spd:120,score:150,coin:5,tok:1,cd:[1.6,2.4],dmg:6,bspd:420,bul:'pellet',keep:210,range:440},
   robohen:{name:'Робо-несушка',hp:110,r:15,spd:85,score:220,coin:7,tok:2,cd:[2,2.8],dmg:14,bspd:720,bul:'bolt',keep:240,range:520},
+  mole:{name:'Крот',hp:50,r:13,spd:105,score:140,coin:4,tok:1,cd:[2.2,3.2],dmg:9,bspd:300,bul:'dirt',melee:10,keep:160,range:420},
   eagle:{name:'Орёл',hp:80,r:16,spd:170,score:220,coin:7,tok:2,fly:true,dash:580,melee:20,s:1.35,cd:[2.6,3.6]},
   gturkey:{name:'Индюк-генерал',hp:1100,r:34,spd:62,score:3000,coin:60,tok:25,boss:true,melee:25,bspd:240,dmg:9,s:1.6,pats:['fan','burst','summon','dash'],summon:['hen','turkey'],dash:400,bul:'egg',taunt:'Ко мне, солдаты!'},
   ataman:{name:'Лис-атаман',hp:2300,r:30,spd:120,score:6000,coin:120,tok:40,boss:true,melee:28,bspd:270,dmg:10,s:1.75,pats:['spiral','dash','summon','ring'],summon:['fox','raccoon'],dash:520,bul:'fire',taunt:'Банда, за мной!'},
@@ -103,7 +104,7 @@ const ETYPE={
   eagleboss:{name:'Орёл Буревестник',hp:8000,r:28,spd:165,score:17000,coin:290,tok:65,boss:true,fly:true,melee:36,bspd:320,dmg:15,s:2,pats:['dash','fan','summon','dash','rain'],summon:['crow','eagle'],dash:640,bul:'feather',taunt:'С неба не уйдёшь!'},
   emperor:{name:'Император Ворон',hp:10000,r:30,spd:130,score:25000,coin:400,tok:80,boss:true,fly:true,melee:38,bspd:300,dmg:16,s:2.3,pats:['spiral','rain','summon','ring','dash','fan'],summon:['crow','owl','eagle'],dash:560,bul:'fire',taunt:'Склонитесь перед Императором!'}
 };
-const KILLN={any:'Враги',fox:'Лисы',crow:'Вороны',turkey:'Индюки',wolf:'Волки',owl:'Совы',robohen:'Робо-несушки',rat:'Крысы',ferret:'Хорьки',eagle:'Орлы',raccoon:'Еноты',hen:'Несушки'};
+const KILLN={mole:'Кроты',any:'Враги',fox:'Лисы',crow:'Вороны',turkey:'Индюки',wolf:'Волки',owl:'Совы',robohen:'Робо-несушки',rat:'Крысы',ferret:'Хорьки',eagle:'Орлы',raccoon:'Еноты',hen:'Несушки'};
 const CH_MIX=[{hen:1,fox:.7,turkey:.35,crow:.4,raccoon:.4,rat:.4},{wolf:1,owl:.5,fox:.6,raccoon:.5,crow:.3},{ferret:1,robohen:.6,rat:.5,raccoon:.3},{crow:1,eagle:.6,owl:.5,wolf:.4,ferret:.3,robohen:.3}];
 const CHAPTERS=[
  {name:'Курятник в беде',
@@ -213,3 +214,21 @@ CHAPTERS.forEach((C,ch)=>{C.levels=[];C.lv.forEach((t,i)=>{
   const L={gid,ch,i,name:t[0],goal,mix,text:t[3],night:!!t[4],diff:1+ch*4+i*.22,
     coins:Math.round((40+gid*7)*(boss?1.6:1)),tokens:Math.round((18+gid*1.2)*(boss?1.5:1)),eggs:i===19?15:i===9?8:(i===4||i===14)?4:2};
   STORY.push(L);C.levels.push(L);});});
+
+/* патчноуты: показываются в окне «Об игре» (новые сверху) */
+const PATCH_NOTES=[
+  {v:'0.2',tag:'в бете',items:[
+    'Кроты: во время раунда во дворе вырываются ямки, из них вылезают кроты-шахтёры и кидаются землёй, а потом ямки зарываются',
+    'Кнопка «Об игре»: создатели, версия и патчноуты']},
+  {v:'0.1',items:[
+    'Сюжет: 4 главы по 20 уровней, 8 боссов, ночные уровни',
+    'Бесконечный бой с волнами',
+    '6 героев 4 редкостей, прокачка картами до 10 уровня, пассивки на 5 и 10, ульты',
+    'Классы: Штурмовик, Танк, Снайпер, Медик — свои бонусы и своё оружие',
+    '15 основных стволов, временные стволы и яйца-гранаты',
+    'Отряд до 3 бойцов',
+    'Сундуки, жетоны, большие жетоны, золотые яйца',
+    'Магазин шапок, окрасов и оружия',
+    'Лобби-меню; «Многопользовательская игра» и «Режим Soul Knight» пока закрыты']}
+];
+const CREDITS=[['nutsze','идея, геймдизайн, тестирование'],['Claude (Anthropic)','код и графика']];

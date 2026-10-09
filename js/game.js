@@ -21,7 +21,7 @@ function ftext(x,y,txt,col='#fff',size=15){texts.push({x,y,txt,col,size,t:0,max:
 
 /* ---------- game flow ---------- */
 function startGame(kind='endless',idx=0){
-  P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];
+  P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];holes=[];S.holeT=rand(8,12);
   const L=kind==='story'?STORY[idx]:null;
   Object.assign(S,{mode:'play',kind,lvIdx:idx,L,diff:L?L.diff:1,night:!!(L&&L.night),t:0,score:0,wave:0,toSpawn:0,spawnT:0,between:1.2,running:false,kills:0,goalKills:0,
     survT:L&&L.goal.type==='survive'?L.goal.t:0,boss:null,shake:0,combo:0,comboT:0,deadT:0,winT:0,coins:0,tokens:0,banked:false});
@@ -34,6 +34,7 @@ const isWaves=()=>S.kind==='endless'||S.L.goal.type==='waves';
 function bankCoins(){ if(S.banked)return; S.banked=true; SAVE.coins+=S.coins; SAVE.tokens+=S.tokens; persist(); }
 function startWave(){
   S.wave++;
+  if(holesOn()){spawnHole();if(S.diff>=5)spawnHole();}
   if(S.kind==='endless'){const ms={10:5,15:10,20:15}[S.wave];if(ms&&!SAVE.eggMs['w'+S.wave]){SAVE.eggMs['w'+S.wave]=1;SAVE.eggs+=ms;persist();const w=S.wave;setTimeout(()=>toast('Волна '+w+' впервые! +'+ms+' золотых яиц'),900);}}
   if(S.kind==='endless')S.diff=S.wave;
   S.toSpawn=S.kind==='endless'?Math.min(4+S.wave*2,40):Math.min(Math.round(4+S.diff+S.wave*2),28); S.spawnT=.6;
@@ -138,7 +139,7 @@ function updateAllies(dt){
 }
 function addUlt(v){ if(!P||P.buff||!P.alive)return; P.ult=Math.min(100,P.ult+v*P.ultRate); }
 function hitEnemy(e,d,vx,vy,fromP=true,kbMul=1,quiet=false){
-  if(e.dead)return;
+  if(e.dead||e.emerge>0)return;
   let crit=false;
   if(fromP&&P.hid==='rooster'&&hasP(10)&&Math.random()<.15){d*=2;crit=true;}
   if(fromP&&P.hid==='adren'&&hasP(5)&&P.hp<P.max*.5)d*=1.3;
@@ -149,7 +150,7 @@ function hitEnemy(e,d,vx,vy,fromP=true,kbMul=1,quiet=false){
   if(e===S.boss)updateBoss();
   if(e.hp<=0)killEnemy(e);
 }
-function featherCol(e){return {hen:e.body,fox:'#e8742a',turkey:'#6b4428',gturkey:'#6b4428',ataman:'#e8742a',crow:'#2e2a33',raccoon:'#8b8f98',rat:'#7d746c',wolf:'#7f8794',wolfboss:'#5d6470',owl:'#8a6a45',ferret:'#d8b48a',drferret:'#d8b48a',robohen:'#9aa3ad',steelturkey:'#9aa3ad',eagle:'#6b4a2b',eagleboss:'#5a3a1e',emperor:'#2a2238',badger:'#8d8f94'}[e.type]||'#fff';}
+function featherCol(e){return {hen:e.body,fox:'#e8742a',turkey:'#6b4428',gturkey:'#6b4428',ataman:'#e8742a',crow:'#2e2a33',raccoon:'#8b8f98',rat:'#7d746c',wolf:'#7f8794',wolfboss:'#5d6470',owl:'#8a6a45',ferret:'#d8b48a',drferret:'#d8b48a',robohen:'#9aa3ad',steelturkey:'#9aa3ad',eagle:'#6b4a2b',eagleboss:'#5a3a1e',emperor:'#2a2238',badger:'#8d8f94',mole:'#6b5a52'}[e.type]||'#fff';}
 function killEnemy(e){
   if(e.dead)return;
   e.dead=true; S.kills++; S.combo++; S.comboT=2.4;
@@ -161,7 +162,7 @@ function killEnemy(e){
   if(P.hid==='adren'&&hasP(10)&&P.alive){P.hp=Math.min(P.max,P.hp+3);}
   const tp=e.type;
   if(['fox','ataman','wolf','wolfboss'].includes(tp)){puff(e.x,e.y,tp.startsWith('wolf')?'#b9bfc8':'#f09a55',14,T.boss?2.4:1.3);feathers(e.x,e.y,featherCol(e),6,1);SFX.yelp();}
-  else if(['raccoon','rat','ferret','drferret','badger'].includes(tp)){puff(e.x,e.y,'#c9c4bb',tp==='rat'?6:T.boss?24:12,T.boss?2.2:1);SFX.squeak();}
+  else if(['raccoon','rat','ferret','drferret','badger','mole'].includes(tp)){puff(e.x,e.y,'#c9c4bb',tp==='rat'?6:T.boss?24:12,T.boss?2.2:1);SFX.squeak();}
   else if(tp==='robohen'||tp==='steelturkey'){puff(e.x,e.y,'#c9d0d8',T.boss?26:12,T.boss?2.2:1.1);puff(e.x,e.y,'#ffc93a',6,.8);SFX.zap();}
   else{feathers(e.x,e.y,featherCol(e),T.boss?50:tp==='turkey'?26:18,T.boss?1.8:1.2);puff(e.x,e.y,'#ffffff',8,1.1);
     (tp==='crow'||tp==='eagle'||tp==='eagleboss'||tp==='emperor')?SFX.caw():tp==='owl'?SFX.hoot():(tp==='turkey'||tp==='gturkey')?SFX.gobble():SFX.cluck();}
@@ -303,4 +304,32 @@ function updateBuff(dt){
     if(P.fireT<=0){P.fireT=.28;const off=rand(0,TAU);for(let i=0;i<10;i++){const a=off+i/10*TAU;pBullet(P.x+Math.cos(a)*16,P.y+Math.sin(a)*16,a,520,16*P.dmgMul,5,.55,'fire');}SFX.pop();}
   }
   if(P.buffT<=0){P.buff=null;updateHUD();}
+}
+
+/* ---------- кротовые ямки ---------- */
+const holesOn=()=>S.kind==='endless'?S.wave>=2:S.diff>=2;
+function holeActive(){return isWaves()?(S.between<=0&&S.toSpawn>0):S.running;}
+function spawnHole(){
+  if(holes.filter(h=>h.state!=='close').length>=3)return;
+  for(let i=0;i<30;i++){
+    const a=rand(0,TAU),d=rand(170,420),x=P.x+Math.cos(a)*d,y=P.y+Math.sin(a)*d;
+    if(x<FENCE+50||x>WW-FENCE-50||y<FENCE+60||y>WH-FENCE-50)continue;
+    if(OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+40)||holes.some(h=>Math.hypot(h.x-x,h.y-y)<90))continue;
+    holes.push({x,y,t:0,state:'dig',ct:0,life:rand(10,14),spawnT:rand(.8,1.6),made:0,max:2+(S.diff>6?1:0)});
+    for(let k=0;k<14;k++){const an=rand(0,TAU),sp=rand(60,170);parts.push({k:'shell',x,y,z:6,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp*.6,vz:rand(120,240),rot:rand(0,TAU),vr:rand(-8,8),t:0,max:rand(.6,1),dirt:true});}
+    puff(x,y,'#9a6b3c',8,1.2); SFX.chest(); return;
+  }
+}
+function updateHoles(dt){
+  if(holesOn()&&holeActive()){S.holeT-=dt;if(S.holeT<=0){S.holeT=rand(14,20);spawnHole();}}
+  const canSpawn=holeActive()&&enemies.length<16;
+  for(let i=holes.length-1;i>=0;i--){const h=holes[i];h.t+=dt;
+    if(h.state==='dig'&&h.t>.6)h.state='open';
+    if(h.state==='open'){
+      h.spawnT-=dt;
+      if(h.spawnT<=0&&h.made<h.max&&canSpawn){const e=makeEnemy('mole',h.x,h.y);e.emerge=.6;e.cd=rand(1,1.8);h.made++;h.spawnT=rand(2.5,4);puff(h.x,h.y,'#9a6b3c',6,1);}
+      if(h.t>h.life||(isWaves()&&S.toSpawn===0)||(h.made>=h.max&&h.spawnT<-1.5)){h.state='close';h.ct=0;}
+    }
+    if(h.state==='close'){h.ct+=dt;if(h.ct>1){holes.splice(i,1);puff(h.x,h.y,'#9a6b3c',4,.8);}}
+  }
 }

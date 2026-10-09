@@ -2,7 +2,7 @@
 /* ---------- state ---------- */
 const S={mode:'menu',kind:'endless',lvIdx:0,L:null,diff:1,night:false,t:0,score:0,wave:0,toSpawn:0,spawnT:0,between:0,running:false,kills:0,goalKills:0,survT:0,boss:null,
   shake:0,combo:0,comboT:0,deadT:0,winT:0,coins:0,tokens:0,banked:true};
-let P,enemies=[],bullets=[],parts=[],pickups=[],nades=[],bombs=[],texts=[];
+let P,enemies=[],bullets=[],parts=[],pickups=[],nades=[],bombs=[],texts=[],holes=[];
 let camX=0,camY=0;
 function lookFor(heroId,hat,color){
   const h=HEROES[heroId], col=COLORS[color];

@@ -59,7 +59,7 @@ function refreshMenu(){
 function toMenu(){
   if(['play','paused','dying'].includes(S.mode))bankCoins();
   S.mode='menu'; S.night=false; $('hud').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
-  P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];
+  P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];holes=[];
   refreshMenu();
 }
 function demoEnemies(){
@@ -84,6 +84,7 @@ function victory(){
   if(S.mode!=='play')return;
   S.mode='won'; S.winT=1.4; SFX.win(); P.buff=null; P.inv=99;
   for(const e of enemies){if(!e.dead){puff(e.x,e.y,'#ffffff',6,1);e.dead=true;}} S.cleanup=true;
+  holes.forEach(h=>{if(h.state!=='close'){h.state='close';h.ct=0;}});
   $('bossBar').hidden=true; S.boss=null;
   showBanner('Победа!',S.L.name); sticks.move=sticks.aim=null; input.firing=false;
 }
