@@ -23,8 +23,8 @@ const HEROES={
     ult:['Боевой клич','«КУКАРЕКУ!» оглушает всех рядом на 2,5 с и бьёт на 45'],
     p5:['Шпоры','Кто кусает Петю, сам получает 20 урона'],
     p10:['Задира','15% шанс критического удара ×2']},
-  duck:{cls:'medic',name:'Утка Кря',rar:'rare',chance:[6,16],sp:'duck',hp:110,spd:200,r:15,dmg:1,rate:1,armor:0,regen:4,nade:0,body:'#b9a68a',wing:'#8a7558',head:'#2f7d4a',
-    perk:'Лечится сама, если 3 секунды не получала урон',
+  duck:{cls:'medic',name:'Утка Кря',rar:'rare',chance:[6,16],sp:'duck',hp:110,spd:200,r:15,dmg:1,rate:1,armor:0,regen:3,nade:0,body:'#b9a68a',wing:'#8a7558',head:'#2f7d4a',
+    perk:'Лечится сама, если 4 секунды не получала урон',
     ult:['Кря-волна','Лечит половину здоровья, сбивает яйца и отталкивает врагов'],
     p5:['Непромокаемая','Получает на 10% меньше урона'],
     p10:['Второе дыхание','Один раз за бой встаёт с 50% здоровья']},
@@ -77,12 +77,12 @@ const WEAP={
   freeze:{cls:'tank',name:'Морозилка',price:1200,rate:.1,dmg:10,spd:720,spread:.06,pellets:1,life:.6,ammo:Infinity,sfx:'ice',kick:.8,special:'ice',desc:'Ледяные иглы замедляют врагов вдвое',meta:'Урон 10 · 10 выстр/с · замедление 50%'},
   flame:{cls:'tank',name:'Огнемёт «Жар-птица»',price:1400,rate:.05,dmg:5,spd:450,spread:.34,pellets:1,life:.6,ammo:Infinity,sfx:'flame',kick:.3,special:'flame',desc:'Струя огня поджигает всех врагов перед тобой',meta:'Урон 5 × 20/с + горение 9/с · дальность средняя'},
   minigun:{cls:'assault',name:'Миниган «Молотилка»',price:1800,rate:.045,dmg:11,spd:760,spread:.17,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,special:'mini',desc:'Раскручивается до бешеного темпа, но на бегу тормозит',meta:'Урон 11 · до 22 выстр/с после раскрутки'},
-  mortar:{cls:'medic',name:'Яйцемёт',price:2000,rate:.85,dmg:65,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'throw',kick:3,special:'mortar',heal:4,desc:'Навесом кидает взрывные яйца, каждый задетый враг лечит своих',meta:'Взрыв 65 по площади · +4 здоровья за врага'},
+  mortar:{cls:'medic',name:'Яйцемёт',price:2000,rate:.85,dmg:65,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'throw',kick:3,special:'mortar',heal:2,desc:'Навесом кидает взрывные яйца, каждый задетый враг лечит своих',meta:'Взрыв 65 по площади · +2 здоровья за врага'},
   granny:{cls:'tank',name:'Бабушкин дробовик',price:0,rate:.75,dmg:13,spd:540,spread:.4,pellets:4,life:.42,ammo:Infinity,sfx:'shotgun',kick:4,desc:'Старый, но надёжный дробовик танка'},
   cornrifle:{cls:'sniper',name:'Кукурузная винтовка',price:0,rate:.75,dmg:58,spd:980,spread:.01,pellets:1,life:.9,ammo:Infinity,sfx:'shot',kick:3,pierce:1,desc:'Меткий дальний выстрел, прошивает двоих'},
   crossbow:{cls:'sniper',name:'Арбалет «Клюв»',price:900,rate:.85,dmg:85,spd:1000,spread:.01,pellets:1,life:1,ammo:Infinity,sfx:'shot',kick:2.5,pierce:3,desc:'Тяжёлый болт пробивает четверых подряд'},
-  syringe:{cls:'medic',name:'Шприцемёт',price:0,rate:.24,dmg:17,spd:700,spread:.04,pellets:1,life:.7,ammo:Infinity,sfx:'pop',kick:1,heal:2,desc:'Каждое попадание лечит тебя и бойца рядом',meta:'Урон 17 · 4 выстр/с · +2 здоровья за попадание'},
-  vitamin:{cls:'medic',name:'Витаминный пулемёт',price:800,rate:.1,dmg:10,spd:720,spread:.12,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,heal:1,desc:'Очереди витаминок: бьют врагов и лечат своих',meta:'Урон 10 · 10 выстр/с · +1 здоровья за попадание'},
+  syringe:{cls:'medic',name:'Шприцемёт',price:0,rate:.24,dmg:17,spd:700,spread:.04,pellets:1,life:.7,ammo:Infinity,sfx:'pop',kick:1,heal:1,desc:'Каждое попадание лечит тебя и бойца рядом',meta:'Урон 17 · 4 выстр/с · +1 здоровья за попадание'},
+  vitamin:{cls:'medic',name:'Витаминный пулемёт',price:800,rate:.1,dmg:10,spd:720,spread:.12,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,heal:.5,desc:'Очереди витаминок: бьют врагов и лечат своих',meta:'Урон 10 · 10 выстр/с · +0,5 здоровья за попадание'},
   rail:{cls:'sniper',name:'Рельсотрон',eggs:120,rate:1.05,dmg:130,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'rail',kick:7,special:'rail',desc:'Луч прошивает всех врагов и даже укрытия на линии',meta:'Урон 130 всем на линии · раз в секунду'},
   shotgun:{name:'Дробовик',rate:.68,dmg:15,spd:560,spread:.36,pellets:6,life:.42,ammo:14,sfx:'shotgun',kick:6},
   smg:{name:'Тарахтелка',rate:.085,dmg:13,spd:720,spread:.13,pellets:1,life:.62,ammo:80,sfx:'smg',kick:1.2}
@@ -91,7 +91,7 @@ const CLASSES={
   assault:{name:'Штурмовик',c:'#e8742a',desc:'+10% скорости и темпа стрельбы',start:'pistol'},
   tank:{name:'Танк',c:'#6f7782',desc:'+25% здоровья и −10% входящего урона, но на 8% медленнее',start:'granny'},
   sniper:{name:'Снайпер',c:'#2f95d0',desc:'+20% урона и пули летят на 35% дальше, но −10% здоровья',start:'cornrifle'},
-  medic:{name:'Медик',c:'#4fae36',desc:'Лечится на 2 в секунду, лечит всех своих рядом и вдвое быстрее поднимает выбитых бойцов',start:'syringe'}
+  medic:{name:'Медик',c:'#4fae36',desc:'Лечится на 1,2 в секунду, лечит всех своих рядом и вдвое быстрее поднимает выбитых бойцов',start:'syringe'}
 };
 const CLASS_ORDER=['assault','tank','sniper','medic'];
 const PRIMARY=['pistol','millet','popcorn','minigun','granny','sawed','freeze','flame','cornrifle','sheriff','crossbow','rail','syringe','vitamin','mortar'];
@@ -239,7 +239,10 @@ const PATCH_NOTES=[
     'Новые герои: Перепёлка Тень (снайпер), Цесарка Буря (штурмовик), Гусыня Медсестра (медик) — у каждой своя ульта и пассивки',
     'Отряд: каждому бойцу можно выбрать оружие своего класса, и бойцы сами применяют свои ульты',
     'Медики лечат всех своих в радиусе (игрока и весь отряд), лечение видно зелёными плюсиками; рядом с медиком выбитые бойцы встают вдвое быстрее',
-    'Карточки отряда: кнопки «Сменить оружие» и «Убрать» больше не вылезают за край']},
+    'Карточки отряда: кнопки «Сменить оружие» и «Убрать» больше не вылезают за край',
+    'Баланс: враги бьют сильнее (×1,3 и +7% за ступень сложности), лечение медиков, кукуруза и лечение за волну слабее, предметы падают реже',
+    'Баланс: камикадзе редкие (5%, не больше одного за раз и не чаще раза в 12 секунд), кроты больше не мешают появляться остальным врагам',
+    'Враги реже переключаются на бойцов отряда — основной удар снова по герою']},
   {v:'0.2',items:[
     'Реки на всех картах: по воде ходить нельзя, переходи по мостам. Гнилые мосты скрипят и рушатся после второго прохода',
     '5 карт со своей рекой: Двор (бесконечный бой), Ферма, Тёмный лес, Птицефабрика и Горы — по одной на главу',

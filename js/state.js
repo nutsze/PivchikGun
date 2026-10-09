@@ -19,7 +19,7 @@ let zones=[];
 function makeAllies(){
   const ids=squadIds();
   allies=ids.map((id,i)=>{const H=HEROES[id],L=heroLv(id),C=H.cls;
-    let hpM=.85,armor=H.armor,spd=H.spd*.95;
+    let hpM=.75,armor=H.armor,spd=H.spd*.95;
     if(C==='tank'){hpM*=1.25;armor+=.1;spd*=.92;} if(C==='sniper')hpM*=.9; if(C==='assault')spd*=1.1;
     const max=Math.round(H.hp*(1+.06*(L-1))*hpM);
     const a=(i/Math.max(1,ids.length))*TAU+Math.PI/2;

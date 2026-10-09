@@ -38,10 +38,10 @@ function updateFlow(dt){
     if(S.between>0){S.between-=dt;if(S.between<=0)startWave();}
     else{
       S.spawnT-=dt;
-      if(S.spawnT<=0&&S.toSpawn>0&&enemies.length<Math.min(5+S.diff,14)){spawnEnemy(pickType());S.toSpawn--;S.spawnT=Math.max(.35,1.3-S.diff*.08);}
+      if(S.spawnT<=0&&S.toSpawn>0&&enemies.filter(e=>e.type!=='mole').length<Math.min(6+S.diff,16)){spawnEnemy(pickType());S.toSpawn--;S.spawnT=Math.max(.35,1.3-S.diff*.08);}
       if(S.toSpawn===0&&enemies.length===0&&S.wave>0){
         if(S.kind==='story'&&S.wave>=S.L.goal.n){victory();return;}
-        S.between=3; const h=Math.min(20,P.max-P.hp); P.hp+=h;
+        S.between=3; const h=Math.min(10,P.max-P.hp); P.hp+=h;
         const bonus=5+S.wave*3; S.coins+=bonus; S.tokens+=3;
         showBanner('Двор чист!','+'+bonus+' зёрен · +3 жетона'+(h>0?' · +'+Math.round(h)+' здоровья':'')); SFX.pick(); updateHUD();
       }
@@ -51,8 +51,8 @@ function updateFlow(dt){
     if(S.between>0){S.between-=dt;if(S.between<=0){S.running=true;showBanner(S.L.name,goalLabel(true));SFX.wave();if(g.type==='boss')spawnBoss(g.boss);}}
     else if(S.running){
       S.spawnT-=dt;
-      const cap=g.type==='boss'?Math.min(2+Math.floor(S.diff/2),6):Math.min(Math.round(4+S.diff),13);
-      const alive=enemies.filter(e=>!ETYPE[e.type].boss).length;
+      const cap=g.type==='boss'?Math.min(3+Math.floor(S.diff/2),7):Math.min(Math.round(5+S.diff),15);
+      const alive=enemies.filter(e=>!ETYPE[e.type].boss&&e.type!=='mole').length;
       if(S.spawnT<=0&&alive<cap){spawnEnemy(pickType());S.spawnT=Math.max(.45,(g.type==='boss'?2.6:1.5)-S.diff*.08);}
       if(g.type==='survive'){S.survT-=dt;hudTick+=dt;if(hudTick>.25){hudTick=0;updateHUD();}if(S.survT<=0){S.survT=0;victory();return;}}
     }
@@ -89,8 +89,8 @@ function updatePlayer(dt){
   P.vx=(P.x-ox)/Math.max(dt,.001); P.vy=(P.y-oy)/Math.max(dt,.001);
   {const k=Math.min(1,dt*3);P.svx=(P.svx||0)+(P.vx-(P.svx||0))*k;P.svy=(P.svy||0)+(P.vy-(P.svy||0))*k;}
   P.cd-=dt; if(P.inv>0)P.inv-=dt; if(P.flash>0)P.flash-=dt;
-  if(P.medic){if(P.hp<P.max){P.hp=Math.min(P.max,P.hp+2*dt*P.medMul);healFx(P);}healTeam(P.x,P.y,4*dt*P.medMul,240,false);}
-  if(P.regen&&S.t-P.lastHit>3&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+P.regen*dt);regenTick+=dt;if(regenTick>.5){regenTick=0;updateHUD();if(Math.random()<.5)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});}}
+  if(P.medic){if(P.hp<P.max){P.hp=Math.min(P.max,P.hp+1.2*dt*P.medMul);healFx(P);}healTeam(P.x,P.y,2.5*dt*P.medMul,240,false);}
+  if(P.regen&&S.t-P.lastHit>4&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+P.regen*dt);regenTick+=dt;if(regenTick>.5){regenTick=0;updateHUD();if(Math.random()<.5)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});}}
   if(firing&&P.cd<=0)shoot();
   if(!firing||P.w!=='minigun')P.spin=Math.max(0,(P.spin||0)-dt*1.4);
   P.wasFiring=firing;
@@ -111,7 +111,7 @@ function updateEnemies(dt){
     e._px=e.x; e._py=e.y;
     const T=ETYPE[e.type];
     let tg=P;
-    if(alive&&allies.length){e.tgT=(e.tgT||0)-dt;if(e.tgT<=0){e.tgT=.6;let best=null,bd=Math.hypot(P.x-e.x,P.y-e.y)*.75;
+    if(alive&&allies.length){e.tgT=(e.tgT||0)-dt;if(e.tgT<=0){e.tgT=.6;let best=null,bd=Math.hypot(P.x-e.x,P.y-e.y)*.5;
       for(const a of allies){if(a.down>0)continue;const da=Math.hypot(a.x-e.x,a.y-e.y);if(da<bd){bd=da;best=a;}}e.tgt=best;}
       if(e.tgt&&e.tgt.down<=0)tg=e.tgt;else e.tgt=null;}
     curTg=tg;

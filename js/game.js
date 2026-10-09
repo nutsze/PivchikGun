@@ -36,7 +36,7 @@ const isWaves=()=>S.kind==='endless'||S.L.goal.type==='waves';
 function bankCoins(){ if(S.banked)return; S.banked=true; SAVE.coins+=S.coins; SAVE.tokens+=S.tokens; persist(); }
 function startWave(){
   S.wave++;
-  if(holesOn()){spawnHole();if(S.diff>=5)spawnHole();}
+  if(holesOn()&&Math.random()<.6)spawnHole();
   if(S.kind==='endless'){const ms={10:5,15:10,20:15}[S.wave];if(ms&&!SAVE.eggMs['w'+S.wave]){SAVE.eggMs['w'+S.wave]=1;SAVE.eggs+=ms;persist();const w=S.wave;setTimeout(()=>toast('Волна '+w+' впервые! +'+ms+' золотых яиц'),900);}}
   if(S.kind==='endless')S.diff=S.wave;
   S.toSpawn=S.kind==='endless'?Math.min(4+S.wave*2,40):Math.min(Math.round(4+S.diff+S.wave*2),28); S.spawnT=.6;
@@ -119,7 +119,7 @@ function updateAllies(dt){
     if(a.down>0){a.down-=dt*((P.medic&&P.alive)||allies.some(b=>b!==a&&b.cls==='medic'&&b.down<=0)?2:1);if(a.down<=0){a.hp=a.max;a.x=clamp(P.x+rand(-40,40),FENCE+30,WW-FENCE-30);a.y=clamp(P.y+rand(-40,40),FENCE+30,WH-FENCE-30);puff(a.x,a.y,'#ffffff',8,1);ftext(a.x,a.y-50,'Снова в бою!','#9cf27a',12);}return;}
     if(a.flash>0)a.flash-=dt;
     if(a.regen&&(a.cls==='medic'||S.t-a.lastHit>3))a.hp=Math.min(a.max,a.hp+a.regen*dt);
-    if(a.cls==='medic'){const hm=a.id==='nurse'&&a.lv>=10?2:1;healTeam(a.x,a.y,4*hm*dt,240,true);}
+    if(a.cls==='medic'){const hm=a.id==='nurse'&&a.lv>=10?2:1;healTeam(a.x,a.y,2.5*hm*dt,240,true);}
     const oa=(i/Math.max(1,n))*TAU+Math.PI/2+S.t*.15, fx=P.x+Math.cos(oa)*62, fy=P.y+Math.sin(oa)*52;
     let vx=fx-a.x,vy=fy-a.y; const fd=Math.hypot(vx,vy)||1;
     if(fd>620){a.x=fx;a.y=fy;puff(a.x,a.y,'#ffffff',5,.8);return;}
@@ -163,8 +163,8 @@ function hitEnemy(e,d,vx,vy,fromP=true,kbMul=1,quiet=false){
   if(e===S.boss)updateBoss();
   if(e.hp<=0){if(e.kami){e.dead=true;kamiBoom(e,false);killEnemy(e,true);}else killEnemy(e);return;}
   // камикадзе: мелкий шанс, что раненый враг пойдёт на таран
-  if(!e.kami&&!e.kamiRolled&&e.hp<e.max*.3){e.kamiRolled=true;const T=ETYPE[e.type];
-    if(!T.boss&&!T.fly&&!e.emerge&&Math.random()<.14){e.kami=true;e.kamiT=4.5;e.st='walk';e.burst=0;ftext(e.x,e.y-60*(e.s||1),'КАМИКАДЗЕ!','#ff5a3c',14);SFX.fuse();}}
+  if(!quiet&&!e.kami&&!e.kamiRolled&&e.hp<e.max*.3){e.kamiRolled=true;const T=ETYPE[e.type];
+    if(!T.boss&&!T.fly&&!e.emerge&&S.t>(S.kamiNext||0)&&!enemies.some(f=>f.kami&&!f.dead)&&Math.random()<.05){S.kamiNext=S.t+12;e.kami=true;e.kamiT=4.5;e.st='walk';e.burst=0;ftext(e.x,e.y-60*(e.s||1),'КАМИКАДЗЕ!','#ff5a3c',14);SFX.fuse();}}
 }
 function featherCol(e){return {hen:e.body,fox:'#e8742a',turkey:'#6b4428',gturkey:'#6b4428',ataman:'#e8742a',crow:'#2e2a33',raccoon:'#8b8f98',rat:'#7d746c',wolf:'#7f8794',wolfboss:'#5d6470',owl:'#8a6a45',ferret:'#d8b48a',drferret:'#d8b48a',robohen:'#9aa3ad',steelturkey:'#9aa3ad',eagle:'#6b4a2b',eagleboss:'#5a3a1e',emperor:'#2a2238',badger:'#8d8f94',mole:'#6b5a52'}[e.type]||'#fff';}
 function kamiBoom(e,contact){
@@ -189,11 +189,11 @@ function killEnemy(e,force){
   else{feathers(e.x,e.y,featherCol(e),T.boss?50:tp==='turkey'?26:18,T.boss?1.8:1.2);puff(e.x,e.y,'#ffffff',8,1.1);
     (tp==='crow'||tp==='eagle'||tp==='eagleboss'||tp==='emperor')?SFX.caw():tp==='owl'?SFX.hoot():(tp==='turkey'||tp==='gturkey')?SFX.gobble():SFX.cluck();}
   if(T.boss){S.shake+=18;SFX.boom();ring(e.x,e.y,'#fff6c8',200,.6);}
-  const r=Math.random(), cornCh=.17*(P.hid==='hen'&&hasP(10)?1.5:1);
+  const r=Math.random(), cornCh=.08*(P.hid==='hen'&&hasP(10)?1.5:1);
   if((e.type!=='rat'||Math.random()<.3)&&!nearWater(e.x,e.y,12)){
     if(r<cornCh)pickups.push({x:e.x,y:e.y,kind:'corn',t:12,ph:0});
-    else if(r<cornCh+.09)pickups.push({x:e.x,y:e.y,kind:Math.random()<.5?'shotgun':'smg',t:12,ph:0});
-    else if(r<cornCh+.15)pickups.push({x:e.x,y:e.y,kind:'nade',t:12,ph:0});
+    else if(r<cornCh+.05)pickups.push({x:e.x,y:e.y,kind:Math.random()<.5?'shotgun':'smg',t:12,ph:0});
+    else if(r<cornCh+.09)pickups.push({x:e.x,y:e.y,kind:'nade',t:12,ph:0});
   }
   if(S.kind==='story'&&S.mode==='play'){
     const g=S.L.goal;
@@ -249,7 +249,7 @@ function fireBeam(sx,sy,ang,dmg,fromP,owner){
   SFX.rail();
 }
 function eBullet(x,y,a,sp,dmg,kind='egg'){bullets.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='fire'?6:kind==='rock'?7:kind==='pellet'?3.5:5,dmg,from:'e',life:2.4,kind});}
-const eDmg=v=>v*(1+(S.diff-1)*.05);
+const eDmg=v=>v*(1.3+(S.diff-1)*.07); // урон врагов: база ×1.3 и +7% за ступень сложности
 function enemyShoot(e,T,spreadN,gap=.22,kind){
   const tg=curTg||P, lead=Math.hypot(tg.x-e.x,tg.y-e.y)/T.bspd*rand(.3,.9), vx=tg===P?(P.svx||0):(tg.vx||0), vy=tg===P?(P.svy||0):(tg.vy||0), tx=tg.x+vx*lead, ty=tg.y+vy*lead;
   const base=Math.atan2(ty-e.y,tx-e.x)+rand(-.07,.07);
@@ -288,7 +288,7 @@ function blast(x,y,R,dmg,fromP,selfDmg,heal=0){
 }
 function collect(p){
   SFX.pick();
-  if(p.kind==='corn'){const heal=P.hid==='hen'&&hasP(10)?60:30;const h=Math.min(heal,P.max-P.hp);P.hp=Math.min(P.max,P.hp+heal);ftext(P.x,P.y-50,'+'+Math.max(Math.round(h),0)+' здоровья','#7df05a',14);}
+  if(p.kind==='corn'){const heal=P.hid==='hen'&&hasP(10)?40:20;const h=Math.min(heal,P.max-P.hp);P.hp=Math.min(P.max,P.hp+heal);ftext(P.x,P.y-50,'+'+Math.max(Math.round(h),0)+' здоровья','#7df05a',14);}
   else if(p.kind==='nade'){P.nades=Math.min(6,P.nades+1);ftext(P.x,P.y-50,'+1 яйцо','#ffc93a',14);}
   else{const W=WEAP[p.kind]; if(P.w===p.kind)P.ammo+=W.ammo; else{P.w=p.kind;P.ammo=W.ammo;} ftext(P.x,P.y-50,W.name,'#ffc93a',15);}
   updateHUD();
@@ -386,19 +386,19 @@ function allyUlt(a){
 const holesOn=()=>S.kind==='endless'?S.wave>=2:S.diff>=2;
 function holeActive(){return isWaves()?(S.between<=0&&S.toSpawn>0):S.running;}
 function spawnHole(){
-  if(holes.filter(h=>h.state!=='close').length>=3)return;
+  if(holes.filter(h=>h.state!=='close').length>=2)return;
   for(let i=0;i<30;i++){
     const a=rand(0,TAU),d=rand(170,420),x=P.x+Math.cos(a)*d,y=P.y+Math.sin(a)*d;
     if(x<FENCE+50||x>WW-FENCE-50||y<FENCE+60||y>WH-FENCE-50)continue;
     if(OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+40)||holes.some(h=>Math.hypot(h.x-x,h.y-y)<90)||nearWater(x,y,50))continue;
-    holes.push({x,y,t:0,state:'dig',ct:0,life:rand(10,14),spawnT:rand(.8,1.6),made:0,max:2+(S.diff>6?1:0)});
+    holes.push({x,y,t:0,state:'dig',ct:0,life:rand(9,12),spawnT:rand(1.2,2),made:0,max:S.diff>8?3:2});
     for(let k=0;k<14;k++){const an=rand(0,TAU),sp=rand(60,170);parts.push({k:'shell',x,y,z:6,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp*.6,vz:rand(120,240),rot:rand(0,TAU),vr:rand(-8,8),t:0,max:rand(.6,1),dirt:true});}
     puff(x,y,'#9a6b3c',8,1.2); SFX.chest(); return;
   }
 }
 function updateHoles(dt){
-  if(holesOn()&&holeActive()){S.holeT-=dt;if(S.holeT<=0){S.holeT=rand(14,20);spawnHole();}}
-  const canSpawn=holeActive()&&enemies.length<16;
+  if(holesOn()&&holeActive()){S.holeT-=dt;if(S.holeT<=0){S.holeT=rand(20,28);spawnHole();}}
+  const canSpawn=holeActive()&&enemies.filter(e=>e.type==='mole').length<3;
   for(let i=holes.length-1;i>=0;i--){const h=holes[i];h.t+=dt;
     if(h.state==='dig'&&h.t>.6)h.state='open';
     if(h.state==='open'){
