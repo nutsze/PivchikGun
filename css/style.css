@@ -327,3 +327,9 @@ button.lb-ver{padding:5px 9px;font-size:12px}
   .nav svg{width:28px;height:28px}
   .phead .ib{width:46px;height:46px}
 }
+
+/* карточки отряда: кнопки друг под другом */
+.grid.sq{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.grid.sq .brow{grid-template-columns:1fr}
+.pbtn{white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+.pbtn.thin{min-height:38px;padding:7px 8px;font-size:13.5px;box-shadow:0 2px 0 var(--ink)}

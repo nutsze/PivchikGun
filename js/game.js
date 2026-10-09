@@ -116,10 +116,10 @@ function hitTarget(tg,d,e){
 function updateAllies(dt){
   const n=allies.length;
   allies.forEach((a,i)=>{
-    if(a.down>0){a.down-=dt;if(a.down<=0){a.hp=a.max;a.x=clamp(P.x+rand(-40,40),FENCE+30,WW-FENCE-30);a.y=clamp(P.y+rand(-40,40),FENCE+30,WH-FENCE-30);puff(a.x,a.y,'#ffffff',8,1);ftext(a.x,a.y-50,'Снова в бою!','#9cf27a',12);}return;}
+    if(a.down>0){a.down-=dt*((P.medic&&P.alive)||allies.some(b=>b!==a&&b.cls==='medic'&&b.down<=0)?2:1);if(a.down<=0){a.hp=a.max;a.x=clamp(P.x+rand(-40,40),FENCE+30,WW-FENCE-30);a.y=clamp(P.y+rand(-40,40),FENCE+30,WH-FENCE-30);puff(a.x,a.y,'#ffffff',8,1);ftext(a.x,a.y-50,'Снова в бою!','#9cf27a',12);}return;}
     if(a.flash>0)a.flash-=dt;
     if(a.regen&&(a.cls==='medic'||S.t-a.lastHit>3))a.hp=Math.min(a.max,a.hp+a.regen*dt);
-    if(a.cls==='medic'){const hm=a.id==='nurse'&&a.lv>=10?2:1;if(P.alive&&Math.hypot(P.x-a.x,P.y-a.y)<200)P.hp=Math.min(P.max,P.hp+3*hm*dt);for(const b2 of allies)if(b2!==a&&b2.down<=0&&Math.hypot(b2.x-a.x,b2.y-a.y)<200)b2.hp=Math.min(b2.max,b2.hp+3*hm*dt);}
+    if(a.cls==='medic'){const hm=a.id==='nurse'&&a.lv>=10?2:1;healTeam(a.x,a.y,4*hm*dt,240,true);}
     const oa=(i/Math.max(1,n))*TAU+Math.PI/2+S.t*.15, fx=P.x+Math.cos(oa)*62, fy=P.y+Math.sin(oa)*52;
     let vx=fx-a.x,vy=fy-a.y; const fd=Math.hypot(vx,vy)||1;
     if(fd>620){a.x=fx;a.y=fy;puff(a.x,a.y,'#ffffff',5,.8);return;}
@@ -267,12 +267,13 @@ function throwNade(){
   nades.push({x:P.x,y:P.y,z:24,vx:Math.cos(ang)*dist/tt,vy:Math.sin(ang)*dist/tt,vz:240,t:1.05,rot:0});
   updateHUD();
 }
-function healHit(v){
-  if(!P||!P.alive||!v)return; P.hp=Math.min(P.max,P.hp+v);
-  let best=null,bd=230;for(const a of allies){if(a.down>0||a.hp>=a.max)continue;const d=Math.hypot(a.x-P.x,a.y-P.y);if(d<bd){bd=d;best=a;}}
-  if(best)best.hp=Math.min(best.max,best.hp+v);
-  if(Math.random()<.25)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});
+function healFx(t){t._hf=(t._hf||0)-1;if(t._hf>0)return;t._hf=8;parts.push({k:'plus',x:t.x+rand(-10,10),y:t.y,z:rand(34,46),vz:34,t:0,max:.7});}
+function healTeam(cx,cy,v,R=240,inclP=true){ // лечит игрока и всех живых бойцов отряда в радиусе
+  if(!v)return;
+  if(inclP&&P&&P.alive&&P.hp<P.max&&Math.hypot(P.x-cx,P.y-cy)<R){P.hp=Math.min(P.max,P.hp+v);healFx(P);}
+  for(const a of allies)if(a.down<=0&&a.hp<a.max&&Math.hypot(a.x-cx,a.y-cy)<R){a.hp=Math.min(a.max,a.hp+v);healFx(a);}
 }
+function healHit(v){if(!P||!P.alive||!v)return;healTeam(P.x,P.y,v,240,true);}
 function blast(x,y,R,dmg,fromP,selfDmg,heal=0){
   S.shake+=R>100?16:9; SFX.boom(); buzz(40);
   const n=R>100?16:9;

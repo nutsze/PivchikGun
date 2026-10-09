@@ -456,6 +456,7 @@ function drawParts(c,ground){
     else if(p.k==='shell'){c.save();c.translate(p.x,p.y-p.z);c.rotate(p.rot);c.globalAlpha=Math.min(1,a*3);c.fillStyle=p.dirt?'#8a5a2b':'#fffaf0';c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(-4,-2);c.lineTo(4,-3);c.lineTo(2,3);c.closePath();c.fill();c.stroke();c.restore();}
     else if(p.k==='flash'){c.save();c.translate(p.x,p.y-p.z);c.rotate(p.a);c.scale(p.s,p.s);c.fillStyle='#fff3a0';c.beginPath();
       for(let i=0;i<8;i++){const an=i/8*TAU,q=i%2?4:11;c.lineTo(Math.cos(an)*q*1.3,Math.sin(an)*q*.8);}c.closePath();c.fill();c.fillStyle='#fff';c.beginPath();c.arc(0,0,3.5,0,TAU);c.fill();c.restore();}
+    else if(p.k==='plus'){c.save();c.globalAlpha=Math.min(1,a*2);c.translate(p.x,p.y-p.z);c.fillStyle='#5fcf3f';c.strokeStyle=INK;c.lineWidth=1.4;c.beginPath();c.rect(-2,-6,4,12);c.rect(-6,-2,12,4);c.fill();c.fillStyle='#9cf27a';c.fillRect(-1.2,-5,2.4,10);c.fillRect(-5,-1.2,10,2.4);c.restore();}
     else if(p.k==='beam'){c.save();c.lineCap='round';c.globalAlpha=a;c.strokeStyle='rgba(120,230,255,.55)';c.lineWidth=16*a+2;seg(c,p.x,p.y-19,p.x2,p.y2-19);c.strokeStyle='#ffffff';c.lineWidth=4.5*a+1;seg(c,p.x,p.y-19,p.x2,p.y2-19);c.restore();}
     else if(p.k==='ring'){const R=p.R||130,f=1-a*a*.6;c.globalAlpha=a;c.strokeStyle=p.col||'#fff6c8';c.lineWidth=6*a+1;c.beginPath();c.ellipse(p.x,p.y,R*f,R*.42*f,0,0,TAU);c.stroke();c.globalAlpha=1;}
   }
@@ -522,7 +523,7 @@ function render(){
   for(const o of OBS)list.push({y:o.y,f:()=>drawObstacle(c,o)});
   for(const e of enemies)list.push({y:e.y+(ETYPE[e.type].fly?60:0),f:()=>drawEnemy(c,e)});
   if(P.alive)list.push({y:P.y,f:()=>drawBird(c,playerSprite())});
-  for(const a of allies){if(a.down>0)continue;list.push({y:a.y,f:()=>{c.save();c.strokeStyle='rgba(95,207,63,.9)';c.lineWidth=2.5;c.beginPath();c.ellipse(a.x,a.y+1,16,6,0,0,TAU);c.stroke();c.restore();
+  for(const a of allies){if(a.down>0)continue;list.push({y:a.y,f:()=>{if(a.cls==='medic'&&S.mode!=='menu'){c.save();c.globalAlpha=.18+Math.sin(S.t*3)*.05;c.strokeStyle='#5fcf3f';c.lineWidth=2;c.setLineDash([8,8]);c.beginPath();c.ellipse(a.x,a.y,240,100,0,0,TAU);c.stroke();c.restore();}c.save();c.strokeStyle='rgba(95,207,63,.9)';c.lineWidth=2.5;c.beginPath();c.ellipse(a.x,a.y+1,16,6,0,0,TAU);c.stroke();c.restore();
     drawBird(c,{x:a.x,y:a.y,face:a.face,ang:a.ang,phase:a.phase,moving:a.moving,flash:a.flash,kind:'player',gun:a.gun,buff:a.buff,...a.look});}});}
   for(const n of nades)list.push({y:n.y,f:()=>{c.save();c.translate(n.x,n.y-n.z-8);c.rotate(n.rot);c.fillStyle=n.t<.35&&Math.floor(S.t*20)%2?'#ffd34d':'#fffaf0';c.strokeStyle=INK;c.lineWidth=2;
     c.beginPath();c.ellipse(0,0,6,7.5,0,0,TAU);c.fill();c.stroke();c.fillStyle='#c0392b';c.fillRect(-5.6,-1,11.2,3);c.restore();}});

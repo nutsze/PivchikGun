@@ -89,8 +89,7 @@ function updatePlayer(dt){
   P.vx=(P.x-ox)/Math.max(dt,.001); P.vy=(P.y-oy)/Math.max(dt,.001);
   {const k=Math.min(1,dt*3);P.svx=(P.svx||0)+(P.vx-(P.svx||0))*k;P.svy=(P.svy||0)+(P.vy-(P.svy||0))*k;}
   P.cd-=dt; if(P.inv>0)P.inv-=dt; if(P.flash>0)P.flash-=dt;
-  if(P.medic&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+2*dt*P.medMul);for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt*P.medMul);}
-  else if(P.medic)for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt*P.medMul);
+  if(P.medic){if(P.hp<P.max){P.hp=Math.min(P.max,P.hp+2*dt*P.medMul);healFx(P);}healTeam(P.x,P.y,4*dt*P.medMul,240,false);}
   if(P.regen&&S.t-P.lastHit>3&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+P.regen*dt);regenTick+=dt;if(regenTick>.5){regenTick=0;updateHUD();if(Math.random()<.5)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});}}
   if(firing&&P.cd<=0)shoot();
   if(!firing||P.w!=='minigun')P.spin=Math.max(0,(P.spin||0)-dt*1.4);
@@ -265,7 +264,7 @@ function updateBullets(dt){
         if((b.x-e.x)**2+(b.y-e.y)**2<(er+b.r)**2){const k=b.kind;hitEnemy(e,b.dmg,b.vx,b.vy,!b.ally,k==='flame'?.06:k==='ice'?.4:1,k==='flame');
           if(k==='flame'){e.burn=2.2;e.burnDps=9*P.dmgMul;}else if(k==='ice')e.chill=1.6;
           if(!b.ally&&WEAP[k]&&WEAP[k].heal)healHit(WEAP[k].heal);
-          if(b.owner){b.owner.ult=Math.min(100,b.owner.ult+b.dmg*.14);if(WEAP[k]&&WEAP[k].heal){b.owner.hp=Math.min(b.owner.max,b.owner.hp+WEAP[k].heal);if(P.alive)P.hp=Math.min(P.max,P.hp+WEAP[k].heal*.5);}}
+          if(b.owner){b.owner.ult=Math.min(100,b.owner.ult+b.dmg*.14);if(WEAP[k]&&WEAP[k].heal)healTeam(b.owner.x,b.owner.y,WEAP[k].heal,240,true);}
           if(b.pierce>0){b.pierce--;b.hits.push(e.id);}else{dead=true;}break;}}}
       else if(P.alive){
         const d2=(b.x-P.x)**2+(b.y-P.y)**2;
@@ -295,6 +294,7 @@ function updateParts(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;
     if(p.k==='feather'){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz=Math.max(p.vz-320*dt,-34);p.vx*=Math.pow(.3,dt);p.vy*=Math.pow(.3,dt);p.x+=Math.sin(p.t*7+p.rot)*14*dt;p.rot+=p.vr*dt;if(p.z<0){p.z=0;p.vz=0;p.vr=0;}}
     else if(p.k==='puff'){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;}
+    else if(p.k==='plus'){p.z+=p.vz*dt;}
     else if(p.k==='shell'){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz-=700*dt;p.rot+=p.vr*dt;if(p.z<0){p.z=0;p.vz*=-.3;p.vx*=.5;p.vy*=.5;p.vr*=.5;}}
     if(p.t>=p.max)parts.splice(i,1);
   }
