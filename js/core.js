@@ -11,7 +11,7 @@ const SET=(()=>{const nl=(navigator.language||'ru').toLowerCase(),d={lang:/^(ru|
     if(typeof s.music==='number')d.music=Math.min(1,Math.max(0,s.music));if(typeof s.sfx==='number')d.sfx=Math.min(1,Math.max(0,s.sfx));if(typeof s.shake==='boolean')d.shake=s.shake;}}catch(e){}
   return d;})();
 function saveSet(){try{localStorage.setItem('kur_set',JSON.stringify(SET));}catch(e){}}
-const LANG=SET.lang;
+let LANG=SET.lang;
 document.documentElement.lang=LANG;
 // _t('текст') — перевод строки интерфейса; словарь EN лежит в js/lang.js
 function _t(s){return LANG==='en'&&typeof EN!=='undefined'&&EN[s]!==undefined?EN[s]:s;}

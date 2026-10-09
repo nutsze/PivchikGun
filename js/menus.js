@@ -29,27 +29,12 @@ function afterChange(){
   if(S.mode==='menu'){const x=P.x,y=P.y;P=newPlayer();P.x=x;P.y=y;makeAllies();}
   if(!$('shop').hidden)renderShop(); if(!$('heroes').hidden)renderHeroes(); if(!$('chestP').hidden)renderChests(); if(!$('storyP').hidden)renderStory();
 }
-let shopTab='skins';
+let shopTab='guns';
 function renderShop(){
   const body=$('shopBody'), st=body.scrollTop; body.innerHTML='';
   document.querySelectorAll('#shop .tab').forEach(t=>{t.classList.toggle('on',t.dataset.tab===shopTab);t.setAttribute('aria-selected',String(t.dataset.tab===shopTab));});
-  if(shopTab==='skins'){
-    body.appendChild(mk('div','sect',_t('Шапки')));
-    const g1=mk('div','grid');
-    for(const id in HATS){const it=HATS[id],owned=SAVE.hats.includes(id),eq=SAVE.hat===id;
-      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,id,SAVE.color),gunOf(SAVE.hero)));card.appendChild(pv);
-      card.appendChild(mk('h4','',it.name));card.appendChild(mk('div','grow'));
-      card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.hats.push(id);SAVE.hat=id;},()=>equip(()=>{SAVE.hat=id;},_t('Надето: ')+it.name),it.eggs?'eggs':'coins'));
-      g1.appendChild(card);}
-    body.appendChild(g1);
-    body.appendChild(mk('div','sect',_t('Окрас')));
-    const g2=mk('div','grid');
-    for(const id in COLORS){const it=COLORS[id],owned=SAVE.colors.includes(id),eq=SAVE.color===id;
-      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,SAVE.hat,id),gunOf(SAVE.hero)));card.appendChild(pv);
-      card.appendChild(mk('h4','',it.name));card.appendChild(mk('div','grow'));
-      card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.colors.push(id);SAVE.color=id;},()=>equip(()=>{SAVE.color=id;},_t('Окрас: ')+it.name),it.eggs?'eggs':'coins'));
-      g2.appendChild(card);}
-    body.appendChild(g2);
+  if(shopTab==='gems'){
+    renderGems(body);
   } else {
     const myC=clsOf(SAVE.hero);
     body.appendChild(mk('p','note',_t('У каждого класса своё оружие: герой берёт в бой только стволы своего класса. Сейчас в бою ')+HEROES[SAVE.hero].name+_t(' — класс «')+CLASSES[myC].name+_t('». Патроны у основного ствола бесконечные.')));
@@ -87,6 +72,50 @@ function renderShop(){
   }
   body.scrollTop=st;
 }
+/* ---------- донат и обмен: золотые яйца за деньги (пока закрыто) и зёрна за яйца ---------- */
+const GEM_PACKS=[
+  {name:'Горстка яиц',eggs:25,price:39},{name:'Корзинка яиц',eggs:55,price:79},{name:'Лукошко яиц',eggs:130,price:179},
+  {name:'Ящик яиц',eggs:240,price:309},{name:'Телега яиц',eggs:600,price:749,tag:'Хит'},{name:'Золотой курятник',eggs:1700,price:1999,tag:'Выгодно'}];
+const GRAIN_PACKS=[{name:'Мешочек зерна',eggs:10,coins:500},{name:'Мешок зерна',eggs:50,coins:2750},{name:'Амбар зерна',eggs:150,coins:9000}];
+function drawEggPile(c,n){
+  const pos=[[0,0],[-14,2],[14,2],[-7,-12],[7,-12],[-24,6],[24,6],[0,-24],[-20,-8],[20,-8],[-30,-2],[30,-2]];
+  c.fillStyle='#c9973f';c.strokeStyle=INK;c.lineWidth=2.5;c.beginPath();c.ellipse(0,14,44,12,0,0,Math.PI);c.ellipse(0,8,36,7,0,Math.PI,0,true);c.closePath();c.fill();c.stroke();
+  pos.slice(0,n).sort((a,b)=>a[1]-b[1]).forEach(([x,y])=>{const g=c.createLinearGradient(x-8,y-14,x+8,y+6);g.addColorStop(0,'#fff3b0');g.addColorStop(.5,'#ffc93a');g.addColorStop(1,'#d9861a');
+    c.fillStyle=g;c.lineWidth=2;c.beginPath();c.ellipse(x,y,8.5,11,0,0,TAU);c.fill();c.stroke();c.fillStyle='rgba(255,255,255,.75)';c.beginPath();c.ellipse(x-3,y-4,2,3.5,-.4,0,TAU);c.fill();});
+}
+function drawSack(c,k){
+  const s=.8+k*.18; c.scale(s,s); c.strokeStyle=INK;c.lineWidth=2.5;
+  c.fillStyle='#d9b77a';c.beginPath();c.moveTo(-22,12);c.quadraticCurveTo(-30,-14,-12,-22);c.lineTo(12,-22);c.quadraticCurveTo(30,-14,22,12);c.quadraticCurveTo(0,20,-22,12);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#b8925a';c.beginPath();c.moveTo(-12,-22);c.lineTo(-16,-30);c.lineTo(16,-30);c.lineTo(12,-22);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#ffe066';[[-8,-30],[0,-33],[8,-30],[4,-36],[-4,-35]].forEach(([x,y])=>{c.beginPath();c.ellipse(x,y,2.6,1.8,.4,0,TAU);c.fill();});
+  c.fillStyle='#8a5a2b';c.font='900 13px Rubik, system-ui, sans-serif';c.textAlign='center';c.fillText('✿',0,2);
+}
+function renderGems(body){
+  body.appendChild(mk('div','sect',_t('Золотые яйца')));
+  body.appendChild(mk('p','note',_t('Наборы золотых яиц за реальные деньги появятся позже — пока кнопки закрыты.')));
+  const g=mk('div','grid gems');
+  const base=GEM_PACKS[0].eggs/GEM_PACKS[0].price;
+  GEM_PACKS.forEach((p,i)=>{const card=mk('div','item gem');
+    const pv=mk('div','pv gold');pv.appendChild(preview(140,86,(c,w,h)=>{c.translate(w/2,h-24);drawEggPile(c,[1,2,3,5,8,12][i]);}));
+    if(p.tag)pv.appendChild(mk('span','lvl',_t(p.tag)));
+    const bonus=Math.round((p.eggs/p.price/base-1)*100); if(bonus>0)pv.appendChild(mk('span','bonus','+'+bonus+'%'));
+    card.appendChild(pv); card.appendChild(mk('h4','','<i class="gegg"></i>'+fmt(p.eggs)));card.appendChild(mk('p','',p.name));
+    card.appendChild(mk('div','grow'));
+    const b=mk('button','pbtn poor locked','<i class="lockic" aria-hidden="true"></i>'+p.price+' ₽');b.setAttribute('aria-disabled','true');
+    b.onclick=()=>{toast(_t('Донат пока закрыт — скоро откроем'));};card.appendChild(b);g.appendChild(card);});
+  body.appendChild(g);
+  body.appendChild(mk('div','sect',_t('Зёрна за золотые яйца')));
+  body.appendChild(mk('p','note',_t('Обменяй золотые яйца на зёрна: чем больше набор, тем выгоднее.')));
+  const g2=mk('div','grid gems');
+  GRAIN_PACKS.forEach((p,i)=>{const card=mk('div','item gem');
+    const pv=mk('div','pv nest');pv.appendChild(preview(140,86,(c,w,h)=>{c.translate(w/2,h/2+10);drawSack(c,i);}));
+    const bonus=Math.round((p.coins/p.eggs/(GRAIN_PACKS[0].coins/GRAIN_PACKS[0].eggs)-1)*100); if(bonus>0)pv.appendChild(mk('span','bonus','+'+bonus+'%'));
+    card.appendChild(pv); card.appendChild(mk('h4','','<i class="coin"></i>'+fmt(p.coins)));card.appendChild(mk('p','',p.name));
+    card.appendChild(mk('div','grow'));
+    const ok=SAVE.eggs>=p.eggs, b=mk('button','pbtn '+(ok?'buy':'buy poor'),priceTag(p.eggs,'eggs'));
+    b.onclick=()=>buy(p.eggs,()=>{SAVE.coins+=p.coins;},'eggs');card.appendChild(b);g2.appendChild(card);});
+  body.appendChild(g2);
+}
 function upgradeGun(id){
   const lv=wLv(id); if(lv>=10||!SAVE.guns.includes(id))return;
   const r=wRec(id), nc=wNeed(id,lv), co=wCost(id,lv);
@@ -112,7 +141,7 @@ function renderHeroes(){
   const body=$('heroBody'), st=body.scrollTop; body.innerHTML='';
   body.appendChild(mk('p','note',_t('Новых героев выбивают из сундуков. Карты героя из сундуков вместе с зёрнами повышают его уровень: +6% здоровья и +5% урона за уровень. На 5-м уровне открывается первая пассивка, на 10-м вторая.')));
   body.appendChild(mk('div','sect',_t('Отряд')));
-  body.appendChild(mk('p','note',_t('Бойцы отряда в армейских касках идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается, а рядом с живым медиком — вдвое быстрее. Сила зависит от уровня героя.')));
+  body.appendChild(mk('p','note',_t('Бойцы отряда (зелёный круг под ногами) идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается, а рядом с живым медиком — вдвое быстрее. Сила зависит от уровня героя. Места в отряде открываются за золотые яйца.')));
   const sg=mk('div','grid sq');
   for(let k=0;k<3;k++){
     const card=mk('div','item');
@@ -137,7 +166,7 @@ function renderHeroes(){
       const pv=mk('div','pv dark');pv.style.height='92px';pv.appendChild(mk('span','lock',_t('Закрыто')));card.appendChild(pv);
       card.appendChild(mk('h4','',_t('Место ')+(k+1)));
       card.appendChild(mk('div','grow'));
-      if(k===SAVE.slots){const price=SLOT_PRICE[k];const b=mk('button','pbtn '+(SAVE.coins>=price?'buy':'buy poor'),_t('Открыть · ')+coinTag(price));b.onclick=()=>buy(price,()=>{SAVE.slots=k+1;});card.appendChild(b);}
+      if(k===SAVE.slots){const price=SLOT_PRICE[k];const b=mk('button','pbtn '+(SAVE.eggs>=price?'buy':'buy poor'),_t('Открыть · ')+priceTag(price,'eggs'));b.onclick=()=>buy(price,()=>{SAVE.slots=k+1;},'eggs');card.appendChild(b);}
       else card.appendChild(mk('div','meta',_t('Сначала открой место ')+k));
     }
     sg.appendChild(card);
@@ -243,11 +272,11 @@ $('briefBack').addEventListener('click',()=>{$('brief').hidden=true;});
 /* ---------- chests ---------- */
 // Три сундука: 0 обычный (корзинка), 1 большой (золотое яйцо), 2 сверхбольшой (аметистовое яйцо)
 const CHESTS=[
-  {name:_t('Обычный сундук'),sub:_t('корзинка несушки'),coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3],
+  {name:'Обычный сундук',sub:'корзинка несушки',coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3],
     hb:{common:1,rare:1,epic:.8,legendary:.6},wb:{common:1,rare:.6,legendary:.25}},
-  {name:_t('Большой сундук'),sub:_t('золотое яйцо'),coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5],
+  {name:'Большой сундук',sub:'золотое яйцо',coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5],
     hb:{common:1,rare:1,epic:1,legendary:1},wb:{common:1,rare:.8,legendary:.45}},
-  {name:_t('Сверхбольшой сундук'),sub:_t('аметистовое яйцо'),coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true,
+  {name:'Сверхбольшой сундук',sub:'аметистовое яйцо',coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true,
     hb:{common:.8,rare:1,epic:1.2,legendary:1.5},wb:{common:1,rare:1,legendary:.8}}
 ];
 const EGG_PRICE=80, SUPER_PRICE=200;
@@ -279,6 +308,13 @@ function rollChest(tier){
   persist(); return res;
 }
 const pct=v=>String(v).replace('.',',')+'%';
+const chestN=[1,1,1]; // сколько сундуков открыть за раз: ×1, ×3 или ×10
+function chestCost(tier,pay,n){ // что и сколько списать; null — не хватает
+  if(pay==='eggs'){const p=(tier===2?SUPER_PRICE:EGG_PRICE)*n;return {have:SAVE.eggs,need:p,cur:'eggs'};}
+  if(tier===2)return {have:SAVE.schests,need:n,cur:'sch'};
+  if(tier===1)return {have:SAVE.btokens,need:10*n,cur:'btok'};
+  return {have:SAVE.tokens,need:100*n,cur:'tok'};
+}
 function chestCard(tier){
   const C=CHESTS[tier], card=mk('div','item chest t'+tier);
   const pv=mk('div','pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(220,150,(c,w,h)=>{c.translate(w/2,h-12);c.scale(.9,.9);drawChest(c,tier,0,0);}));
@@ -288,30 +324,24 @@ function chestCard(tier){
   card.appendChild(mk('p','',C.coins[0]+'–'+C.coins[1]+_t(' зёрен · ')+C.hpacks+_t(' пачки карт героев · ')+C.wpacks+(C.wpacks>1?_t(' пачки'):_t(' пачка'))+_t(' карт оружия · ')+eggTxt+(C.sure?_t(' · <b>гарантированный новый герой</b>, пока есть закрытые'):'')));
   const bar=(have,need,ic,label,col)=>{const pr=mk('div','');pr.innerHTML='<div class="progt"><span>'+ic+label+'</span><span>'+Math.min(have,need)+' / '+need+'</span></div>';
     const b=mk('div','prog');b.style.setProperty('--c',col);const f=mk('i');f.style.width=Math.min(100,have/need*100)+'%';b.appendChild(f);pr.appendChild(b);return pr;};
-  if(tier===0){
-    const ok=SAVE.tokens>=100;
-    card.appendChild(bar(SAVE.tokens,100,'<i class="tok"></i>',_t('Жетоны'),'var(--tok)'));
-    card.appendChild(mk('div','meta',_t('Жетоны дают за врагов, волны и уровни сюжета.')));card.appendChild(mk('div','grow'));
-    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?_t('Открыть'):_t('<i class="tok"></i>ещё ')+(100-SAVE.tokens));
-    b.onclick=()=>{if(!ok){toast(_t('Нужно ещё ')+(100-SAVE.tokens)+_t(' жетонов'));return;}openChest(0);};card.appendChild(b);
-  } else if(tier===1){
-    const ok=SAVE.btokens>=10;
-    card.appendChild(bar(SAVE.btokens,10,'<i class="btok"></i>',_t('Большие жетоны'),'var(--btok)'));
-    card.appendChild(mk('div','meta',SAVE.bigDay===today()?_t('Большой жетон сегодня уже получен, следующий — завтра.'):_t('Пройди уровень сюжета сегодня — получишь большой жетон.')));card.appendChild(mk('div','grow'));
-    const row=mk('div','brow');
-    const b=mk('button','pbtn '+(ok?'go':'poor'),ok?_t('Открыть'):_t('<i class="btok"></i>ещё ')+(10-SAVE.btokens));
-    b.onclick=()=>{if(!ok){toast(_t('Большие жетоны: 1 в день за пройденный уровень сюжета'));return;}openChest(1);};row.appendChild(b);
-    const eggOk=SAVE.eggs>=EGG_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),_t('Купить · <i class="gegg"></i>')+EGG_PRICE);
-    b2.onclick=()=>{if(!eggOk){toast(_t('Нужно ещё ')+(EGG_PRICE-SAVE.eggs)+_t(' золотых яиц'));SFX.hurt();return;}openChest(1,'eggs');};row.appendChild(b2);card.appendChild(row);
-  } else {
-    const n=SAVE.schests;
-    card.appendChild(mk('div','meta',_t('<b>Есть: ')+n+_t('</b> · по одному за каждого финального босса главы (20-й уровень, первое прохождение) и за 25-ю волну в бесконечном бою.')));card.appendChild(mk('div','grow'));
-    const row=mk('div','brow');
-    const b=mk('button','pbtn '+(n>0?'go':'poor'),n>0?_t('Открыть'):_t('Нет в запасе'));
-    b.onclick=()=>{if(n<=0){toast(_t('Победи финального босса главы — получишь сверхбольшой сундук'));return;}openChest(2,'free');};row.appendChild(b);
-    const eggOk=SAVE.eggs>=SUPER_PRICE, b2=mk('button','pbtn '+(eggOk?'buy':'poor'),_t('Купить · <i class="gegg"></i>')+SUPER_PRICE);
-    b2.onclick=()=>{if(!eggOk){toast(_t('Нужно ещё ')+(SUPER_PRICE-SAVE.eggs)+_t(' золотых яиц'));SFX.hurt();return;}openChest(2,'eggs');};row.appendChild(b2);card.appendChild(row);
-  }
+  if(tier===0){card.appendChild(bar(SAVE.tokens,100,'<i class="tok"></i>',_t('Жетоны'),'var(--tok)'));card.appendChild(mk('div','meta',_t('Жетоны дают за врагов, волны и уровни сюжета.')));}
+  else if(tier===1){card.appendChild(bar(SAVE.btokens,10,'<i class="btok"></i>',_t('Большие жетоны'),'var(--btok)'));card.appendChild(mk('div','meta',_t('Большой жетон дают за первое прохождение каждого уровня сюжета и за каждые 10 волн в бесконечном бою.')));}
+  else card.appendChild(mk('div','meta','<b>'+_t('Есть: ')+SAVE.schests+'</b>'+_t(' · по одному за каждого финального босса главы (20-й уровень, первое прохождение) и за 25-ю волну в бесконечном бою.')));
+  card.appendChild(mk('div','grow'));
+  // выбор количества
+  const seg=mk('div','cnt');seg.setAttribute('role','group');seg.setAttribute('aria-label',_t('Сколько открыть'));
+  [1,3,10].forEach(n=>{const b=mk('button',chestN[tier]===n?'on':'','×'+n);b.setAttribute('aria-pressed',String(chestN[tier]===n));b.onclick=()=>{chestN[tier]=n;renderChests();};seg.appendChild(b);});
+  card.appendChild(seg);
+  const n=chestN[tier], row=mk('div','brow');
+  const own=chestCost(tier,null,n), ok=own.have>=own.need, ic={tok:'<i class="tok"></i>',btok:'<i class="btok"></i>',sch:'<i class="sch"></i>'}[own.cur];
+  const b=mk('button','pbtn '+(ok?'go':'poor'),ok?_t('Открыть')+(n>1?' ×'+n:''):ic+_t('ещё ')+(own.need-own.have));
+  b.onclick=()=>{if(!ok){toast(tier===0?_t('Нужно ещё ')+(own.need-own.have)+_t(' жетонов'):tier===1?_t('Большие жетоны: за первое прохождение уровня сюжета и каждые 10 волн в бесконечном бою'):_t('Победи финального босса главы — получишь сверхбольшой сундук'));return;}openChest(tier,'own',n);};
+  row.appendChild(b);
+  if(tier>0){const eg=chestCost(tier,'eggs',n), eok=eg.have>=eg.need;
+    const b2=mk('button','pbtn '+(eok?'buy':'poor'),_t('Купить · <i class="gegg"></i>')+eg.need);
+    b2.onclick=()=>{if(!eok){toast(_t('Нужно ещё ')+(eg.need-eg.have)+_t(' золотых яиц'));SFX.hurt();return;}openChest(tier,'eggs',n);};row.appendChild(b2);}
+  else row.style.gridTemplateColumns='1fr';
+  card.appendChild(row);
   return card;
 }
 function renderChests(){
@@ -341,7 +371,9 @@ function chestOdds(tier){
   return o;
 }
 const pc=v=>{const x=v*100;return (x===0?'0':x>=10?Math.round(x):x>=1?x.toFixed(1):x.toFixed(2)).toString().replace('.',',')+'%';};
+let ciTier=null;
 function openChestInfo(tier){
+  ciTier=tier;
   initAudio(); SFX.pick();
   const C=CHESTS[tier], o=chestOdds(tier), B=$('ciBody'); B.innerHTML='';
   $('ciName').textContent=C.name; $('ciSub').textContent=C.sub[0].toUpperCase()+C.sub.slice(1);
@@ -364,14 +396,15 @@ function openChestInfo(tier){
 }
 $('ciClose').addEventListener('click',()=>{$('chestInfoOv').hidden=true;});
 let chestAnim=null;
-function openChest(tier,pay){
+function openChest(tier,pay,n=1){
   initAudio();
-  if(pay==='eggs'){const pr=tier===2?SUPER_PRICE:EGG_PRICE;if(SAVE.eggs<pr)return;SAVE.eggs-=pr;}
-  else if(pay==='free'){if(SAVE.schests<1)return;SAVE.schests--;}
-  else if(tier===1){if(SAVE.btokens<10)return;SAVE.btokens-=10;}else{if(SAVE.tokens<100)return;SAVE.tokens-=100;}
-  const res=rollChest(tier);
+  const c=chestCost(tier,pay==='eggs'?'eggs':null,n); if(c.have<c.need)return;
+  if(c.cur==='eggs')SAVE.eggs-=c.need; else if(c.cur==='sch')SAVE.schests-=c.need; else if(c.cur==='btok')SAVE.btokens-=c.need; else SAVE.tokens-=c.need;
+  const res={tier,n,coins:0,eggs:0,cards:{},wcards:{},heroes:[]};
+  for(let i=0;i<n;i++){const r=rollChest(tier);res.coins+=r.coins;res.eggs+=r.eggs;if(r.hero)res.heroes.push(r.hero);
+    for(const id in r.cards)res.cards[id]=(res.cards[id]||0)+r.cards[id];for(const id in r.wcards)res.wcards[id]=(res.wcards[id]||0)+r.wcards[id];}
   chestAnim={tier,res,t:0,state:'shake'};
-  $('chestTitle').textContent=CHESTS[tier].name+' · '+CHESTS[tier].sub;
+  $('chestTitle').textContent=CHESTS[tier].name+(n>1?' ×'+n:'')+' · '+CHESTS[tier].sub;
   $('chestRewards').innerHTML=''; $('chestTake').textContent=_t('Открыть'); $('chestOv').hidden=false;
   refreshMenu(); SFX.chest();
 }
@@ -380,9 +413,9 @@ function revealChest(){
   if(!chestAnim||chestAnim.state!=='shake')return;
   chestAnim.state='open'; chestAnim.t=0; SFX.boom(); SFX.win();
   const res=chestAnim.res, R=$('chestRewards'); R.innerHTML=''; let d=0;
-  const add=(el)=>{el.style.animationDelay=d+'s';d+=.12;R.appendChild(el);};
-  if(res.hero){const H=HEROES[res.hero],Rr=RAR[H.rar];const r=mk('div','rw new');r.style.setProperty('--c',Rr.c);
-    r.appendChild(mk('span','t',_t('Новый герой · ')+Rr.name));r.appendChild(heroPv(res.hero,150,96,1.6));r.appendChild(mk('span','n',H.name));add(r);}
+  const add=(el)=>{el.style.animationDelay=d+'s';d+=Math.max(.05,.12-res.n*.006);R.appendChild(el);};
+  for(const id of res.heroes){const H=HEROES[id],Rr=RAR[H.rar];const r=mk('div','rw new');r.style.setProperty('--c',Rr.c);
+    r.appendChild(mk('span','t',_t('Новый герой · ')+Rr.name));r.appendChild(heroPv(id,150,96,1.6));r.appendChild(mk('span','n',H.name));add(r);}
   add(mk('div','rw','<i class="coin"></i>+'+res.coins+_t(' зёрен')));
   if(res.eggs)add(mk('div','rw','<i class="gegg"></i>+'+res.eggs+_t(' золотых яиц')+(res.tier<2?_t('<small>редкая находка!</small>'):'')));
   for(const id in res.cards){const H=HEROES[id],h=SAVE.heroes[id];const r=mk('div','rw');r.appendChild(heroPv(id,56,46,.9));
@@ -390,8 +423,8 @@ function revealChest(){
     r.appendChild(mk('div','','+'+res.cards[id]+_t(' карт · ')+H.name+'<small>'+(h.lv<10?h.cards+' / '+nc+_t(' до ур. ')+(h.lv+1):_t('макс. уровень'))+'</small>'));add(r);}
   for(const id in res.wcards){const W=WEAP[id],lv=wLv(id),wr=wRec(id);const r=mk('div','rw wcard');r.style.setProperty('--c',WRAR[W.rar].c);r.appendChild(gunPv(id));
     const nc=lv<10?wNeed(id,lv):0;
-    r.appendChild(mk('div','','+'+res.wcards[id]+_t(' карт оружия · ')+W.name+'<small>'+(lv<10?wr.cards+' / '+nc+_t(' до ур. ')+(lv+1)+_t(' · улучшай в магазине'):_t('макс. уровень'))+'</small>'));add(r);}
-  if(!res.hero){const lockedLeft=HERO_IDS.filter(id=>!SAVE.heroes[id]).length;if(lockedLeft)add(mk('div','rw',_t('<small>Героя в этот раз нет. Ещё не открыто: ')+lockedLeft+'</small>'));}
+    r.appendChild(mk('div','','+'+res.wcards[id]+_t(' карт · ')+W.name+'<small>'+(lv<10?wr.cards+' / '+nc+_t(' до ур. ')+(lv+1)+_t(' · улучшай в магазине'):_t('макс. уровень'))+'</small>'));add(r);}
+  if(!res.heroes.length){const lockedLeft=HERO_IDS.filter(id=>!SAVE.heroes[id]).length;if(lockedLeft)add(mk('div','rw',_t('<small>Героя в этот раз нет. Ещё не открыто: ')+lockedLeft+'</small>'));}
   $('chestTake').textContent=_t('Забрать');
 }
 $('chestTake').addEventListener('click',()=>{if(!chestAnim)return;if(chestAnim.state==='shake'){revealChest();return;}chestAnim=null;$('chestOv').hidden=true;afterChange();});
@@ -480,7 +513,6 @@ function syncSettings(){
   $('sfxVol').value=Math.round(SET.sfx*100); $('sfxVal').textContent=Math.round(SET.sfx*100)+'%';
   const tg=(b,on)=>{b.classList.toggle('on',on);b.setAttribute('aria-checked',String(on));};
   tg($('shakeTog'),SET.shake); tg($('autoTog'),autoAim); $('autoRow').hidden=COARSE;
-  $('langNote').hidden=S.mode==='menu';
 }
 function openSettings(){initAudio();syncSettings();$('setOv').hidden=false;}
 function toggleAuto(){if(COARSE)return;autoAim=!autoAim;try{localStorage.setItem('kur_auto',autoAim?'1':'0');}catch(e){}syncSettings();toast(autoAim?_t('Автонаводка включена'):_t('Автонаводка выключена: целься мышью'));}
@@ -493,10 +525,18 @@ $('sfxVol').addEventListener('change',()=>SFX.pick());
 $('shakeTog').addEventListener('click',()=>{SET.shake=!SET.shake;saveSet();syncSettings();if(SET.shake)S.shake=Math.max(S.shake,6);});
 $('autoTog').addEventListener('click',toggleAuto);
 document.querySelectorAll('#langSeg button').forEach(b=>b.addEventListener('click',()=>{
-  if(b.dataset.lang===SET.lang)return; SET.lang=b.dataset.lang; saveSet();
-  if(['play','paused','dying'].includes(S.mode))bankCoins();
-  location.reload();
+  if(b.dataset.lang===SET.lang)return; setLang(b.dataset.lang);
 }));
+function setLang(l){ // язык меняется сразу, окно настроек и текущий бой остаются на месте
+  SET.lang=l; LANG=l; saveSet(); applyLang(); verLabels();
+  refreshMenu(); afterChange(); syncSettings(); syncMute();
+  if(!$('infoOv').hidden)openInfo();
+  if(!$('brief').hidden)openBrief(briefIdx);
+  if(!$('chestInfoOv').hidden&&ciTier!=null)openChestInfo(ciTier);
+  if(!$('bgOv').hidden)renderBg();
+  if(P&&S.mode!=='menu'){updateHUD();if(S.boss)$('bossName').textContent=ETYPE[S.boss.type].name;}
+  SFX.pick();
+}
 syncSettings();
 const muteBtn=$('muteBtn');
 function syncMute(){muteBtn.classList.toggle('off',muted);muteBtn.setAttribute('aria-pressed',String(muted));}

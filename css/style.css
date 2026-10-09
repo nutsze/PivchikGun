@@ -392,3 +392,15 @@ button.lb-ver{padding:5px 9px;font-size:12px}
 .tog.on i{transform:translateX(24px)}
 @media (orientation:landscape) and (max-height:500px){.card.set{width:min(620px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.card.set .logo,.card.set .btn,.card.set .setnote{grid-column:1/-1}.setrow{min-height:44px;padding:8px 10px}}
 .credits b small{font:600 12.5px/1.2 var(--body);opacity:.7;margin-left:4px}
+/* v0.4: сундуки ×3/×10, донат */
+.cnt{display:grid;grid-template-columns:repeat(3,1fr);border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.cnt button{border:0;background:var(--paper);color:var(--ink);font:900 14px/1 var(--body);padding:9px 0;cursor:pointer;min-height:38px}
+.cnt button + button{border-left:2.5px solid var(--ink)}
+.cnt button.on{background:var(--yolk)}
+.cnt button:focus-visible{outline:3px solid var(--barn);outline-offset:-3px}
+.grid.gems{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.item.gem h4{display:flex;align-items:center;font-size:18px;font-variant-numeric:tabular-nums}
+.item .pv .bonus{position:absolute;right:8px;top:8px;background:#e8322a;color:#fff;border:2px solid var(--ink);border-radius:8px;padding:3px 6px;font:900 12px/1 var(--body)}
+.pbtn.locked{display:flex;align-items:center;justify-content:center;gap:6px}
+.pbtn.locked .lockic{position:relative;left:auto;top:auto;margin:6px 2px 0 0;width:13px;height:10px;flex:none}
+.pbtn.locked .lockic::before{left:2px;top:-7px;width:5px;height:6px;border-width:2.5px}

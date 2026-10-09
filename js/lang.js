@@ -317,7 +317,7 @@ const EN={
 'Уровень 5! Пассивка «':'Level 5! Passive “','» и +3 золотых яйца':'” and +3 golden eggs','Уровень 10! Пассивка «':'Level 10! Passive “','» и +10 золотых яиц':'” and +10 golden eggs',
 'Новых героев выбивают из сундуков. Карты героя из сундуков вместе с зёрнами повышают его уровень: +6% здоровья и +5% урона за уровень. На 5-м уровне открывается первая пассивка, на 10-м вторая.':'New heroes come from chests. Hero cards from chests plus grain raise a hero’s level: +6% HP and +5% damage per level. The first passive unlocks at level 5, the second at level 10.',
 'Отряд':'Squad',
-'Бойцы отряда в армейских касках идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается, а рядом с живым медиком — вдвое быстрее. Сила зависит от уровня героя.':'Squad members in army helmets walk beside you, fire their chosen weapon, use their ultimate on their own (yellow bar under HP) and take hits for you. A downed fighter returns after 18 seconds, twice as fast near a living medic. Strength depends on the hero’s level.',
+'Бойцы отряда (зелёный круг под ногами) идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается, а рядом с живым медиком — вдвое быстрее. Сила зависит от уровня героя. Места в отряде открываются за золотые яйца.':'Squad members (green circle underfoot) walk beside you, fire their chosen weapon, use their ultimate on their own (yellow bar under HP) and take hits for you. A downed fighter returns after 18 seconds, twice as fast near a living medic. Strength depends on the hero’s level. Squad slots unlock for golden eggs.',
 'Место ':'Slot ',' · ульта: ':' · ult: ','Оружие: <b>':'Weapon: <b>',' · купи ещё стволы класса в магазине':' · buy more class guns in the shop','Сменить оружие':'Change weapon',
 'У класса «':'The “','» пока один ствол — купи ещё в магазине':'” class has only one gun so far — buy more in the shop','Убрать из отряда':'Remove from squad','Боец ушёл из отряда':'Fighter left the squad',
 'Свободно':'Empty','Нажми «В отряд» у героя ниже':'Tap “To squad” on a hero below','Закрыто':'Locked','Открыть · ':'Unlock · ','Сначала открой место ':'First unlock slot ',
@@ -363,16 +363,83 @@ const EN={
 'Очки':'Score','Новый рекорд!':'New record!','Ещё раз':'Again','Уровень 1':'Level 1','Двор отбит.':'Yard defended.','Следующий уровень':'Next level','Название':'Title','Текст':'Text','Боец':'Fighter',
 'В бой!':'Fight!','Назад':'Back','Свойства сундука':'Chest details','Сундук':'Chest','Скины':'Skins','Оружие':'Weapons','Игровое поле':'Playing field','Звук':'Sound','Ульта':'Ultimate',
 'Бросить яйцо-гранату':'Throw an egg grenade','Кошелёк':'Wallet','Зёрна':'Grain','Жетоны на обычный сундук':'Tokens for a Common chest','Твой боец':'Your fighter','Выбрать фон меню':'Pick menu background',
+/* ---------- 0.4: способности, экономика, магазин ---------- */
+'«КУКАРЕКУ!» оглушает всех рядом на 2,5 с, бьёт на 45, и 4 с Петя получает вдвое меньше урона':"“COCK-A-DOODLE-DOO!” stuns everyone nearby for 2.5 s, deals 45, and for 4 s Pete takes half damage",
+'Плавает: переходит реки вплавь (в воде медленнее) и лечится сама, если 4 секунды не получала урон':"Swims: crosses rivers by swimming (slower in water) and heals herself after 4 seconds without damage",
+'Лечит половину здоровья себе и бойцам рядом, сбивает яйца, отталкивает врагов и оставляет лужу, в которой враги вязнут':"Heals half HP to herself and nearby fighters, knocks down eggs, pushes enemies away and leaves a puddle that bogs enemies down",
+'Утиный нырок':"Duck Dive",
+'В воде утка ныряет: пули и яйца пролетают над ней':"In water the duck dives: bullets and eggs fly over her",
+'5 секунд неуязвимости, вражеские яйца отлетают обратно, а в конце — ударная волна на 70':"5 seconds of invulnerability, enemy eggs bounce back, and at the end — a 70-damage shockwave",
+'Три пробивающих луча в самых крепких врагов, а потом 3 с невидимости: враги теряют Перепёлку из виду':"Three piercing beams at the toughest enemies, then 3 s of invisibility: enemies lose sight of the Quail",
+'Пёстрая и шустрая: каждый 8-й выстрел — веер из 5 острых перьев':"Speckled and nimble: every 8th shot is a fan of 5 sharp feathers",
+'4 с вихрь затягивает врагов к Цесарке, бьёт их и сбивает пули, а в конце раскидывает взрывом':"For 4 s a whirlwind pulls enemies to the Guinea, hits them and knocks down shots, then flings them away with a blast",
+'Аптечки: каждые 15 с бросает аптечку (+25 здоровья) самому раненому из своих':"Medkits: every 15 s throws a medkit (+25 HP) to the most wounded ally",
+'Легенда двора: каждый 5-й выстрел — огненный снаряд, который взрывается и поджигает врагов':"Legend of the yard: every 5th shot is a fireball that explodes and sets enemies ablaze",
+'6 с ярости: огненные кольца пуль, +40% скорости, а каждый убитый враг взрывается огнём':"6 s of rage: rings of fire bullets, +40% speed, and every enemy killed bursts into flames",
+'Зерно прошивает троих, а при попадании лопается на 3 осколка':"Kernels pierce three and burst into 3 fragments on hit",
+'Ледяные иглы замедляют врагов вдвое, а 4 попадания подряд замораживают на 1,2 с':"Ice needles slow enemies by half, and 4 hits in a row freeze them for 1.2 s",
+'Урон 10 · 10 выстр/с · замедление 50% · заморозка':"Damage 10 · 10 shots/s · 50% slow · freeze",
+'Струя огня поджигает всех врагов перед тобой, а горящие при смерти поджигают соседей':"A stream of fire ignites every enemy in front of you, and burning enemies ignite their neighbours when they die",
+'Тяжёлый болт пробивает четверых и пригвождает их на полсекунды':"A heavy bolt pierces four and pins them for half a second",
+'креатор, геймдизайн, тестирование':"creator, game design, testing",
+'Волна босса!':"Boss wave!",
+'Нырок!':"Dive!",
+'<i class=\"btok\"></i>Большой жетон — за первое прохождение':"<i class=\"btok\"></i>Big tokens — for first clears",
+'или каждые 10 волн в бесконечном бою':"or every 10 waves in Endless",
+'Скины теперь у каждого героя свои — вернули за покупки: ':"Every hero now has their own skin — refunded for your purchases: ",
+'Наборы золотых яиц за реальные деньги появятся позже — пока кнопки закрыты.':"Golden egg packs for real money are coming later — the buttons are locked for now.",
+'Донат пока закрыт — скоро откроем':"Purchases are locked for now — coming soon",
+'Зёрна за золотые яйца':"Grain for golden eggs",
+'Обменяй золотые яйца на зёрна: чем больше набор, тем выгоднее.':"Trade golden eggs for grain: the bigger the pack, the better the deal.",
+'Большой жетон дают за первое прохождение каждого уровня сюжета и за каждые 10 волн в бесконечном бою.':"Big tokens come from the first clear of every story level and every 10 waves in Endless.",
+'Есть: ':"You have: ",
+' · по одному за каждого финального босса главы (20-й уровень, первое прохождение) и за 25-ю волну в бесконечном бою.':" · one for each chapter’s final boss (level 20, first clear) and for wave 25 in Endless.",
+'Сколько открыть':"How many to open",
+'ещё ':"need ",
+'Большие жетоны: за первое прохождение уровня сюжета и каждые 10 волн в бесконечном бою':"Big tokens: for first story level clears and every 10 waves in Endless",
+'+1 большой жетон за 10 волн':"+1 big token for 10 waves",
+'Горстка яиц':"Handful of eggs",
+'Корзинка яиц':"Basket of eggs",
+'Лукошко яиц':"Hamper of eggs",
+'Ящик яиц':"Crate of eggs",
+'Телега яиц':"Cart of eggs",
+'Хит':"Popular",
+'Золотой курятник':"Golden coop",
+'Выгодно':"Best value",
+'Мешочек зерна':"Pouch of grain",
+'Мешок зерна':"Sack of grain",
+'Амбар зерна':"Barn of grain",
+'Золотые яйца':"Golden eggs",
+'Язык меняется сразу, без перезапуска — окно настроек и бой остаются на месте':"The language switches instantly, without a restart — the settings window and your battle stay put",
+'Музыка включается с первого касания, а не после захода в настройки':"Music starts on your first tap, not only after opening settings",
+'У каждого героя свои способности, и чем реже герой, тем они интереснее: Утка плавает по рекам, Медсестра бросает аптечки, Петя после клича получает вдвое меньше урона, Перепёлка уходит в тень, Цесарка стреляет веером перьев и затягивает врагов в вихрь, Бронебой бьёт ударной волной, Adrenaline стреляет огненными снарядами':"Every hero has their own abilities, and the rarer the hero, the cooler they are: the Duck swims across rivers, the Nurse throws medkits, Pete takes half damage after his cry, the Quail vanishes into shadow, the Guinea fires feather fans and pulls enemies into her whirlwind, Ironclad hits with a shockwave, Adrenaline fires fireballs",
+'Редкое и легендарное оружие стреляет интереснее: попкорн лопается на осколки, морозилка замораживает, арбалет пригвождает, огонь перекидывается на соседей':"Rare and legendary weapons fire in more interesting ways: popcorn bursts into fragments, the Freezer freezes solid, the crossbow pins enemies, fire spreads to neighbours",
+'Большой жетон теперь даётся за первое прохождение каждого уровня и за каждые 10 волн бесконечного боя':"A big token now comes from every first level clear and every 10 waves in Endless",
+'Бесконечный бой: каждые 5 волн выходит босс':"Endless: a boss appears every 5 waves",
+'Места в отряде продаются только за золотые яйца: 50, 100 и 250':"Squad slots are sold only for golden eggs: 50, 100 and 250",
+'Сундуки можно открывать сразу по 3 и по 10':"Chests can be opened 3 or 10 at a time",
+'У каждого героя свой фирменный образ; скины из магазина убраны, потраченное на них вернули':"Every hero has a signature look; skins are gone from the shop and what you spent on them was refunded",
+'Магазин: раздел «Золотые яйца» с наборами (пока закрыты) и обменом яиц на зёрна':"Shop: a “Golden eggs” section with egg packs (locked for now) and an eggs-for-grain exchange",
 'Режимы':'Modes','Разделы':'Sections','Пауза':'Pause'
 };
-/* Перевод данных на месте (имена, описания, сюжет, патчноуты) и статичного HTML */
-if(LANG==='en'){
+/* Перевод на лету: при первом вызове запоминаем русские оригиналы данных и страницы,
+   дальше applyLang() просто подставляет русскую или английскую строку — без перезагрузки */
+const I18N={recs:[],nodes:[],attrs:[],ready:false};
+function i18nCollect(){
   const CYR=/[А-Яа-яЁё]/, seen=new Set();
   (function walk(o){if(!o||typeof o!=='object'||seen.has(o))return;seen.add(o);
-    for(const k of Object.keys(o)){const v=o[k];if(typeof v==='string'){if(CYR.test(v)&&EN[v]!==undefined)o[k]=EN[v];}else walk(v);}})
-  ([HEROES,WEAP,CLASSES,RAR,WRAR,HATS,COLORS,ETYPE,KILLN,CHAPTERS,STORY,PATCH_NOTES,CREDITS]);
+    for(const k of Object.keys(o)){const v=o[k];if(typeof v==='string'){if(CYR.test(v))I18N.recs.push({o,k,ru:v});}else walk(v);}})
+  ([HEROES,WEAP,CLASSES,RAR,WRAR,HATS,COLORS,ETYPE,KILLN,CHAPTERS,STORY,PATCH_NOTES,CREDITS,MAPS,CHESTS,GEM_PACKS,GRAIN_PACKS]);
   const tw=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
-  while((n=tw.nextNode())){const s=n.nodeValue.trim();if(s&&CYR.test(s)&&EN[s]!==undefined)n.nodeValue=n.nodeValue.replace(s,EN[s]);}
-  document.querySelectorAll('[aria-label],[title]').forEach(el=>['aria-label','title'].forEach(a=>{const v=el.getAttribute(a);if(v&&EN[v]!==undefined)el.setAttribute(a,EN[v]);}));
-  document.title=EN['Боевой Курятник'];
+  while((n=tw.nextNode())){const s=n.nodeValue.trim();if(s&&CYR.test(s))I18N.nodes.push({n,full:n.nodeValue,ru:s});}
+  document.querySelectorAll('[aria-label],[title]').forEach(el=>['aria-label','title'].forEach(a=>{const v=el.getAttribute(a);if(v&&CYR.test(v))I18N.attrs.push({el,a,ru:v});}));
+  I18N.ready=true;
+}
+function applyLang(){
+  if(!I18N.ready)i18nCollect();
+  const tr=s=>LANG==='en'&&EN[s]!==undefined?EN[s]:s;
+  for(const r of I18N.recs)r.o[r.k]=tr(r.ru);
+  for(const r of I18N.nodes)r.n.nodeValue=r.full.replace(r.ru,tr(r.ru));
+  for(const r of I18N.attrs)r.el.setAttribute(r.a,tr(r.ru));
+  document.title=tr('Боевой Курятник'); document.documentElement.lang=LANG;
 }

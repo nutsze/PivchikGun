@@ -1,7 +1,7 @@
 /* Сохранение прогресса и настроек в localStorage */
 /* ---------- save ---------- */
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],squadGun:{},bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]},wlv:{},schests:0,menuBg:'yard'};
+const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],squadGun:{},bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]},skinRefund:0,wlv:{},schests:0,menuBg:'yard'};
 function loadSave(){
   let s=null; try{s=JSON.parse(localStorage.getItem('kur_save')||'null');}catch(e){}
   const o=JSON.parse(JSON.stringify(DEF));
@@ -25,6 +25,10 @@ function loadSave(){
   if(!o.heroes.hen)o.heroes.hen={lv:1,cards:0};
   ['hats','colors','guns'].forEach(k=>{if(!Array.isArray(o[k]))o[k]=DEF[k].slice();});
   if(!o.heroes[o.hero])o.hero='hen';
+  if(!o.skinRefund){ // скины больше не продаются: возвращаем потраченное на шапки и окрасы
+    let rc=0,re=0; o.hats.concat(o.colors).forEach(id=>{const it=HATS[id]||COLORS[id];if(it){rc+=it.price||0;re+=it.eggs||0;}});
+    if(s&&(rc||re)){o.coins+=rc;o.eggs+=re;o.refundMsg=[rc,re];}
+    o.hats=['none','bandana'];o.colors=['native'];o.hat='bandana';o.color='native';o.skinRefund=1;}
   if(!HATS[o.hat]||!o.hats.includes(o.hat))o.hat='bandana';
   if(!COLORS[o.color]||!o.colors.includes(o.color))o.color='native';
   CLASS_ORDER.forEach(k=>{const st=CLASSES[k].start;if(!o.guns.includes(st))o.guns.push(st);});

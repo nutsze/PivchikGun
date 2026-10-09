@@ -23,10 +23,10 @@ function ftext(x,y,txt,col='#fff',size=15){texts.push({x,y,txt,col,size,t:0,max:
 /* ---------- game flow ---------- */
 function startGame(kind='endless',idx=0){
   const mk2=kind==='story'?MAP_OF_CH[STORY[idx].ch]:'yard'; buildWorld(mk2); lastBridge=null;
-  P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];holes=[];zones=[];strikes=[];S.holeT=rand(8,12);
+  P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];holes=[];zones=[];strikes=[];puddles=[];S.holeT=rand(8,12);
   const L=kind==='story'?STORY[idx]:null;
   Object.assign(S,{mode:'play',kind,lvIdx:idx,L,diff:L?L.diff:1,night:!!(L&&L.night),t:0,score:0,wave:0,toSpawn:0,spawnT:0,between:1.2,running:false,kills:0,goalKills:0,
-    survT:L&&L.goal.type==='survive'?L.goal.t:0,boss:null,shake:0,combo:0,comboT:0,deadT:0,winT:0,coins:0,tokens:0,banked:false});
+    survT:L&&L.goal.type==='survive'?L.goal.t:0,boss:null,bossT:0,shake:0,combo:0,comboT:0,deadT:0,winT:0,coins:0,tokens:0,banked:false});
   sticks.move=sticks.aim=null; clearBanner(); toastClear(); music('battle'); musicDuck(1); // старый баннер «Волна N» не всплывает после перезапуска
   closePanels(); ['menu','over','pause','win','brief','chestOv','setOv'].forEach(i=>$(i).hidden=true); $('hud').hidden=false; $('bossBar').hidden=true;
   if(L)showBanner(_t('Глава ')+(L.ch+1)+' · '+(L.i+1)+'/20',L.name);
@@ -42,7 +42,8 @@ function startWave(){
   if(S.kind==='endless')S.diff=S.wave;
   S.toSpawn=S.kind==='endless'?Math.min(4+S.wave*2,40):Math.min(Math.round(4+S.diff+S.wave*2),28); S.spawnT=.6;
   const sub=S.kind==='story'?_t('Волна ')+S.wave+_t(' из ')+S.L.goal.n:(S.wave===1?_t('Защити курятник!'):S.wave===2?_t('Лисы почуяли запах'):S.wave===3?_t('Пришли индюки'):S.wave===4?_t('Вороны в небе!'):S.wave===5?_t('Еноты вышли на охоту'):_t('Врагов всё больше'));
-  showBanner(S.kind==='story'?S.L.name:_t('Волна ')+S.wave, sub);
+  const bossWave=S.kind==='endless'&&S.wave%5===0; if(bossWave){S.bossT=2.2;S.toSpawn=Math.round(S.toSpawn*.5);} // каждые 5 волн — босс
+  showBanner(S.kind==='story'?S.L.name:_t('Волна ')+S.wave, bossWave?_t('Волна босса!'):sub);
   SFX.wave();
   if(S.wave>1){spawnPickupNear(['shotgun','smg','nade'][S.wave%3]); if(P.hid==='hen'&&hasP(5)){P.nades=Math.min(6,P.nades+1);ftext(P.x,P.y-50,_t('+1 яйцо'),'#ffc93a',14);}}
   updateHUD();
@@ -90,12 +91,20 @@ function spawnBoss(type){
   $('bossName').textContent=ETYPE[type].name; $('bossBar').hidden=false; updateBoss();
   showBanner(ETYPE[type].name,_t('Босс вышел на поле!')); SFX.gobble(); S.shake+=10;
 }
+const ENDLESS_BOSSES=['gturkey','ataman','badger','wolfboss','steelturkey','drferret','eagleboss','emperor'];
+function spawnEndlessBoss(){
+  const n=S.wave/5, type=ENDLESS_BOSSES[(n-1)%ENDLESS_BOSSES.length], cycle=Math.floor((n-1)/ENDLESS_BOSSES.length);
+  spawnBoss(type); const hp=Math.round((600+S.wave*90)*(1+cycle*.6));
+  S.boss.hp=S.boss.max=hp; S.boss.endless=true; updateBoss();
+}
 function updateBoss(){ if(!S.boss)return; $('bossFill').style.width=Math.max(0,S.boss.hp/S.boss.max*100)+'%'; }
 function hurtPlayer(d,src){
   if(!P.alive||P.inv>0||S.mode!=='play')return;
   if(P.buff==='fort'){ftext(P.x,P.y-50,_t('Блок'),'#cfe8ff',13);return;}
   if(src==='egg'&&P.hid==='chick'&&hasP(5)&&Math.random()<.15){ftext(P.x,P.y-50,_t('Мимо!'),'#ffe27a',14);return;}
   if(P.hid==='guinea'&&hasP(5)&&src!=='self'&&Math.random()<.1){ftext(P.x,P.y-50,_t('Уклон!'),'#cfe8ff',14);return;}
+  if(P.hid==='duck'&&hasP(5)&&src==='egg'&&inWater(P.x,P.y)){ftext(P.x,P.y-40,_t('Нырок!'),'#7fd4ff',13);return;}
+  if(P.buff==='cry')d*=.5;
   d*=1-P.armor;
   P.hp-=d; P.inv=.3; P.flash=.15; P.lastHit=S.t; S.shake+=7; SFX.hurt(); buzz(25);
   feathers(P.x,P.y,P.look.body,3,.8);
@@ -141,7 +150,7 @@ function updateAllies(dt){
     }
     else if(fd>8)a.ang=Math.atan2(vy,vx);
     const ox=a.x,oy=a.y; a._px=ox; a._py=oy;
-    {const nt=navTarget(a,fx,fy);if(nt&&fd>40){vx=nt[0]-a.x;vy=nt[1]-a.y;const nd=Math.hypot(vx,vy)||1;vx=vx/nd*fd;vy=vy/nd*fd;}}
+    if(!a.hop){const nt=navTarget(a,fx,fy);if(nt&&fd>40){vx=nt[0]-a.x;vy=nt[1]-a.y;const nd=Math.hypot(vx,vy)||1;vx=vx/nd*fd;vy=vy/nd*fd;}}
     if(fd>26){const sp=a.spd*(fd>180?1.35:1)*Math.min(1,fd/60)*(a.buff==='turbo'?1.8:1);a.x+=vx/fd*sp*dt;a.y+=vy/fd*sp*dt;a.moving=true;a.phase+=dt*15;}else a.moving=false;
     for(const e of enemies){if(e.dead||ETYPE[e.type].fly)continue;const dx=a.x-e.x,dy=a.y-e.y,d=Math.hypot(dx,dy)||1,m=a.r+e.r;if(d<m){a.x+=dx/d*(m-d)*.5;a.y+=dy/d*(m-d)*.5;}}
     for(const b2 of allies){if(b2===a||b2.down>0)continue;const dx=a.x-b2.x,dy=a.y-b2.y,d=Math.hypot(dx,dy)||1,m=a.r+b2.r;if(d<m){a.x+=dx/d*(m-d)*.5;a.y+=dy/d*(m-d)*.5;}}
@@ -178,8 +187,11 @@ function killEnemy(e,force){
   if(e.dead&&!force)return;
   e.dead=true; S.kills++; S.combo++; S.comboT=2.4;
   const T=ETYPE[e.type];
+  if(e.burn>0)for(const f of enemies)if(!f.dead&&f!==e&&Math.hypot(f.x-e.x,f.y-e.y)<85){f.burn=Math.max(f.burn,2);f.burnDps=Math.max(f.burnDps||0,e.burnDps||9);} // огонь перекидывается на соседей
+  if(P.buff==='adren'&&!T.boss){ring(e.x,e.y,'#ff7a1a',90,.35);puff(e.x,e.y,'#ff7a1a',6,1.1);
+    for(const f of enemies)if(!f.dead&&f!==e&&Math.hypot(f.x-e.x,f.y-e.y)<90){f.burn=2;f.burnDps=10*P.dmgMul;hitEnemy(f,30*P.dmgMul,f.x-e.x,f.y-e.y,true,1,true);}}
   const mult=Math.min(4,1+Math.floor((S.combo-1)/3));
-  const pts=T.score*mult; S.score+=pts; S.coins+=T.coin; S.tokens+=T.tok;
+  const pts=T.score*mult, rk=e.endless?.4:1; S.score+=pts; S.coins+=Math.round(T.coin*rk); S.tokens+=Math.round(T.tok*rk);
   ftext(e.x,e.y-56,'+'+pts,mult>1?'#ffc93a':'#fff',17);
   addUlt(5);
   if(P.hid==='adren'&&hasP(10)&&P.alive){P.hp=Math.min(P.max,P.hp+3);}
@@ -233,6 +245,8 @@ function shoot(){
       pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,a,sp,W.dmg*P.dmgMul*wm,kind==='flame'?7:W.pellets>1?3.5:(P.w==='sheriff'||P.w==='crossbow'||P.w==='cornrifle'?5:4.5),W.life*P.rangeMul*(W.pellets>1||kind==='flame'?rand(.8,1.1):1),kind,kind==='flame'?99:(W.pierce||0),W.bounce?{bounce:W.bounce,shape:i%4}:null);
     }
   }
+  if(P.hid==='guinea'&&(P.gN=(P.gN||0)+1)%8===0){for(let k=-2;k<=2;k++)pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,ang+k*.16,720,18*P.dmgMul,4.5,.6*P.rangeMul,'pfeather',1);}
+  if(P.hid==='adren'&&(P.aN=(P.aN||0)+1)%5===0){pBullet(P.x+Math.cos(ang)*22,P.y+Math.sin(ang)*22,ang,620,30*P.dmgMul,7,.75,'fireball');}
   if(W.special!=='flame'){const fl=(P.w==='shotgun'||P.w==='sawed'||P.w==='rail')?1.5:1;
     parts.push({k:'flash',x:P.x+Math.cos(ang)*28*fl,y:P.y+Math.sin(ang)*28*fl,z:19,t:0,max:.06,a:ang,s:fl});}
   SFX[W.sfx](); S.shake+=W.kick*.5; P.x-=Math.cos(ang)*W.kick*.6; P.y-=Math.sin(ang)*W.kick*.6;
@@ -310,7 +324,7 @@ function useUlt(){
     eggStrike(cx,cy,8,70*P.dmgMul,72);
   } else if(id==='chick'){P.buff='turbo';P.buffT=4;ring(P.x,P.y,'#ffe066',120,.4);}
   else if(id==='rooster'){
-    showBanner(_t('КУКАРЕКУ!'),''); SFX.crow(); S.shake+=10;
+    showBanner(_t('КУКАРЕКУ!'),''); SFX.crow(); S.shake+=10; P.buff='cry'; P.buffT=4;
     ring(P.x,P.y,'#ff6b4a',280,.5); ring(P.x,P.y,'#ffc93a',200,.4);
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<280){hitEnemy(e,45*P.dmgMul,e.x-P.x,e.y-P.y);e.stun=ETYPE[e.type].boss?.8:2.5;if(!ETYPE[e.type].boss){e.kx+=(e.x-P.x)/(d||1)*300;e.ky+=(e.y-P.y)/(d||1)*300;}}}
   } else if(id==='duck'){
@@ -318,10 +332,12 @@ function useUlt(){
     for(const a of allies)if(!a.down&&Math.hypot(a.x-P.x,a.y-P.y)<260)a.hp=Math.min(a.max,a.hp+a.max*.5);
     ring(P.x,P.y,'#7fd4ff',240,.5); ring(P.x,P.y,'#ffffff',160,.4);
     for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.from==='e'&&Math.hypot(b.x-P.x,b.y-P.y)<340){puff(b.x,b.y,'#ffffff',2,.5);bullets.splice(i,1);}}
+    puddles.push({x:P.x,y:P.y,r:150,t:5,max:5});
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<240){hitEnemy(e,30*P.dmgMul,e.x-P.x,e.y-P.y);if(!ETYPE[e.type].boss){e.kx+=(e.x-P.x)/(d||1)*420;e.ky+=(e.y-P.y)/(d||1)*420;}}}
   } else if(id==='goose'){P.buff='fort';P.buffT=5;ring(P.x,P.y,'#cfe8ff',100,.4);}
   else if(id==='quail'){const tg=enemies.filter(e=>!e.dead&&onScreen(e,0)).sort((a,b)=>b.hp-a.hp).slice(0,3);
-    if(!tg.length)fireBeam(P.x,P.y,P.ang,200*P.dmgMul,true); tg.forEach(e=>fireBeam(P.x,P.y,Math.atan2(e.y-P.y,e.x-P.x),200*P.dmgMul,true)); S.shake+=8;}
+    if(!tg.length)fireBeam(P.x,P.y,P.ang,200*P.dmgMul,true); tg.forEach(e=>fireBeam(P.x,P.y,Math.atan2(e.y-P.y,e.x-P.x),200*P.dmgMul,true)); S.shake+=8;
+    P.buff='shadow';P.buffT=3;puff(P.x,P.y,'#3b3550',10,1.2);}
   else if(id==='guinea'){P.buff='storm';P.buffT=4;ring(P.x,P.y,'#cfe8ff',120,.4);}
   else if(id==='nurse'){P.buff='hosp';P.buffT=6;zones.push({x:P.x,y:P.y,t:6,r:130});ring(P.x,P.y,'#9cf27a',140,.5);}
   else if(id==='adren'){P.buff='adren';P.buffT=6+(hasP(10)?2:0);P.fireT=0;ring(P.x,P.y,'#ff4d2e',200,.5);S.shake+=8;}
@@ -335,11 +351,19 @@ function updateBuff(dt){
     P.fireT-=dt; if(Math.random()<dt*25)parts.push({k:'puff',x:P.x+rand(-12,12),y:P.y,z:rand(5,40),vx:0,vy:0,vz:60,t:0,max:.4,r:rand(3,6),col:Math.random()<.5?'#ff7a1a':'#ffd23a'});
     if(P.fireT<=0){P.fireT=.28;const off=rand(0,TAU);for(let i=0;i<10;i++){const a=off+i/10*TAU;pBullet(P.x+Math.cos(a)*16,P.y+Math.sin(a)*16,a,520,16*P.dmgMul,5,.55,'fire');}SFX.pop();}
   }
-  if(P.buff==='storm')stormAt(P,dt,1,P.dmgMul,true);
-  if(P.buffT<=0){P.buff=null;updateHUD();}
+  if(P.buff==='storm')stormAt(P,dt,1,P.dmgMul,true,true);
+  if(P.buffT<=0){const was=P.buff;P.buff=null;updateHUD();
+    if(was==='storm')shockwave(P,190,60*P.dmgMul,520,'#ffffff');      // вихрь раскидывает врагов
+    if(was==='fort')shockwave(P,200,70*P.dmgMul,420,'#cfe8ff');       // крепость бьёт ударной волной
+    if(was==='shadow')puff(P.x,P.y,'#3b3550',8,1);}
 }
-function stormAt(c,dt,R,dmgMul,fromP){
+function shockwave(c,R,dmg,kb,col){
+  ring(c.x,c.y,col,R,.5); ring(c.x,c.y,'#ffc93a',R*.7,.4); S.shake+=10; SFX.boom();
+  for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-c.x,e.y-c.y);if(d<R+e.r){hitEnemy(e,dmg,e.x-c.x,e.y-c.y);if(!ETYPE[e.type].boss){e.kx+=(e.x-c.x)/(d||1)*kb;e.ky+=(e.y-c.y)/(d||1)*kb;}}}
+}
+function stormAt(c,dt,R,dmgMul,fromP,pull){
   const rad=115*R;
+  if(pull)for(const e of enemies){if(e.dead||ETYPE[e.type].boss)continue;const d=Math.hypot(e.x-c.x,e.y-c.y);if(d<280&&d>40){e.kx-=(e.x-c.x)/d*520*dt;e.ky-=(e.y-c.y)/d*520*dt;}}
   for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-c.x,e.y-c.y);if(d<rad+e.r){hitEnemy(e,70*dmgMul*dt,e.x-c.x,e.y-c.y,fromP,0,true);if(!ETYPE[e.type].boss){e.kx+=(e.x-c.x)/(d||1)*900*dt;e.ky+=(e.y-c.y)/(d||1)*900*dt;}}}
   for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.from==='e'&&Math.hypot(b.x-c.x,b.y-c.y)<rad){puff(b.x,b.y,'#ffffff',1,.5);bullets.splice(i,1);}}
   if(Math.random()<dt*30){const a=rand(0,TAU);parts.push({k:'feather',x:c.x+Math.cos(a)*rad*.8,y:c.y+Math.sin(a)*rad*.4,z:rand(10,40),vx:-Math.sin(a)*160,vy:Math.cos(a)*70,vz:40,rot:rand(0,TAU),vr:10,t:0,max:.6,col:'#fff'});}
@@ -359,7 +383,19 @@ function eggStrike(cx,cy,n,dmg,r){
   for(let i=0;i<n;i++){const a=rand(0,TAU),d=Math.sqrt(Math.random())*STRIKE_R*.78,tt=.6+i*.11;
     bombs.push({x:clamp(cx+Math.cos(a)*d,FENCE+10,WW-FENCE-10),y:clamp(cy+Math.sin(a)*d,FENCE+10,WH-FENCE-10),t:tt,max:tt,r,dmg,from:'p',quiet:true});}
 }
+function nurseKit(src,dt){ // Гусыня Медсестра: аптечка самому раненому из своих
+  src.kitT-=dt; if(src.kitT>0)return;
+  const team=[P].concat(allies).filter(u=>(u===P?P.alive:u.down<=0)&&u.hp<u.max*.95);
+  if(!team.length){src.kitT=1;return;}
+  const tg=team.sort((a,b)=>a.hp/a.max-b.hp/b.max)[0]; src.kitT=15;
+  const h=Math.min(25,tg.max-tg.hp); tg.hp+=h;
+  parts.push({k:'kit',x:tg.x,y:tg.y,sx:src.x,sy:src.y,z:0,t:0,max:.55});
+  ftext(tg.x,tg.y-54,'+'+Math.round(h),'#7df05a',13); if(tg===P)updateHUD();
+}
 function updateZones(dt){
+  for(let i=puddles.length-1;i>=0;i--){puddles[i].t-=dt;if(puddles[i].t<=0)puddles.splice(i,1);}
+  if(P.alive&&P.hid==='nurse')nurseKit(P,dt);
+  for(const a of allies)if(a.id==='nurse'&&a.down<=0)nurseKit(a,dt);
   for(let i=strikes.length-1;i>=0;i--){strikes[i].t-=dt;if(strikes[i].t<=0)strikes.splice(i,1);}
   for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;
     const heal=25*dt*(P.medMul||1);
@@ -392,7 +428,7 @@ function allyUlt(a){
   if(a.id==='hen'){const [cx,cy]=strikeCenter(a,near);eggStrike(cx,cy,5,55*m,66);}
   else if(a.id==='chick'){a.buff='turbo';a.buffT=4;}
   else if(a.id==='rooster'){SFX.crow();ring(a.x,a.y,'#ff6b4a',220,.5);for(const e of near){if(Math.hypot(e.x-a.x,e.y-a.y)<220){hitEnemy(e,35*m,e.x-a.x,e.y-a.y,false);e.stun=ETYPE[e.type].boss?.6:2;}}}
-  else if(a.id==='duck'){ring(a.x,a.y,'#7fd4ff',240,.5);if(Math.hypot(P.x-a.x,P.y-a.y)<240)P.hp=Math.min(P.max,P.hp+P.max*.4);for(const b of allies)if(b.down<=0&&Math.hypot(b.x-a.x,b.y-a.y)<240)b.hp=Math.min(b.max,b.hp+b.max*.4);
+  else if(a.id==='duck'){ring(a.x,a.y,'#7fd4ff',240,.5);puddles.push({x:a.x,y:a.y,r:130,t:4,max:4});if(Math.hypot(P.x-a.x,P.y-a.y)<240)P.hp=Math.min(P.max,P.hp+P.max*.4);for(const b of allies)if(b.down<=0&&Math.hypot(b.x-a.x,b.y-a.y)<240)b.hp=Math.min(b.max,b.hp+b.max*.4);
     for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.from==='e'&&Math.hypot(b.x-a.x,b.y-a.y)<260)bullets.splice(i,1);}
     for(const e of near){const d=Math.hypot(e.x-a.x,e.y-a.y)||1;if(d<240&&!ETYPE[e.type].boss){e.kx+=(e.x-a.x)/d*380;e.ky+=(e.y-a.y)/d*380;}}}
   else if(a.id==='goose'){a.buff='fort';a.buffT=5;ring(a.x,a.y,'#cfe8ff',90,.4);}

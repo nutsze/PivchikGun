@@ -35,14 +35,16 @@ let hudTick=0;
 function updateFlow(dt){
   updateHoles(dt);
   if(isWaves()){
+    if(S.bossT>0){S.bossT-=dt;if(S.bossT<=0)spawnEndlessBoss();}
     if(S.between>0){S.between-=dt;if(S.between<=0)startWave();}
     else{
       S.spawnT-=dt;
       if(S.spawnT<=0&&S.toSpawn>0&&enemies.filter(e=>e.type!=='mole').length<Math.min(6+S.diff,16)){spawnEnemy(pickType());S.toSpawn--;S.spawnT=Math.max(.35,1.3-S.diff*.08);}
-      if(S.toSpawn===0&&enemies.length===0&&S.wave>0){
+      if(S.toSpawn===0&&enemies.length===0&&S.wave>0&&!(S.bossT>0)){
         if(S.kind==='story'&&S.wave>=S.L.goal.n){victory();return;}
         S.between=3; const h=Math.min(10,P.max-P.hp); P.hp+=h;
         const bonus=5+S.wave*3; S.coins+=bonus; S.tokens+=3;
+        if(S.kind==='endless'&&S.wave%10===0){SAVE.btokens++;persist();setTimeout(()=>toast(_t('+1 большой жетон за 10 волн')),900);}
         showBanner(_t('Двор чист!'),'+'+bonus+_t(' зёрен · +3 жетона')+(h>0?' · +'+Math.round(h)+_t(' здоровья'):'')); SFX.pick(); updateHUD();
       }
     }
@@ -71,7 +73,7 @@ function updatePlayer(dt){
   let ml=Math.hypot(mx,my); if(ml>1){mx/=ml;my/=ml;ml=1;}
   if(ml<.12){mx=my=0;ml=0;}
   P._px=P.x; P._py=P.y;
-  const ox=P.x, oy=P.y, spd=P.spd*(P.buff==='turbo'?2:P.buff==='adren'?1.4:1)*(P.w==='minigun'&&P.wasFiring?.72:1);
+  const ox=P.x, oy=P.y, spd=P.spd*(P.buff==='turbo'?2:P.buff==='adren'?1.4:1)*(P.w==='minigun'&&P.wasFiring?.72:1)*(P.hop&&inWater(P.x,P.y)?.65:1); // утка плывёт медленнее
   P.x+=mx*spd*dt; P.y+=my*spd*dt; P.moving=ml>0; if(P.moving)P.phase+=dt*15*Math.max(.5,ml);
   let firing=false;
   if(sticks.aim){const a=stickVal(sticks.aim),m=Math.hypot(a.x,a.y);
@@ -94,7 +96,7 @@ function updatePlayer(dt){
   if(firing&&P.cd<=0)shoot();
   if(!firing||P.w!=='minigun')P.spin=Math.max(0,(P.spin||0)-dt*1.4);
   P.wasFiring=firing;
-  waterBlock(P,P._px,P._py);
+  if(!P.hop)waterBlock(P,P._px,P._py);
   updateBridges(dt);
   if(P.moving&&Math.random()<dt*8)puff(P.x-mx*8,P.y,'#e9dcc0',1,.5);
 }
@@ -114,7 +116,11 @@ function updateEnemies(dt){
     if(alive&&allies.length){e.tgT=(e.tgT||0)-dt;if(e.tgT<=0){e.tgT=.6;let best=null,bd=Math.hypot(P.x-e.x,P.y-e.y)*.5;
       for(const a of allies){if(a.down>0)continue;const da=Math.hypot(a.x-e.x,a.y-e.y);if(da<bd){bd=da;best=a;}}e.tgt=best;}
       if(e.tgt&&e.tgt.down<=0)tg=e.tgt;else e.tgt=null;}
+    if(tg===P&&P.buff==='shadow'&&!ETYPE[e.type].boss){ // Перепёлка в тени: враг её не видит и бродит
+      e.cd=Math.max(e.cd||0,.5); e.bite=Math.max(e.bite||0,.3); if(e.kami)e.kamiT=Math.max(e.kamiT,.5);
+      tg={x:e.x+Math.cos(e.phase*.25)*160,y:e.y+Math.sin(e.phase*.25)*160,r:1};}
     curTg=tg;
+    if(e.iceT>0)e.iceT-=dt; if(e.frozen>0)e.frozen-=dt;
     const dx=tg.x-e.x,dy=tg.y-e.y,d=Math.hypot(dx,dy)||1;
     if(e.bite>0)e.bite-=dt;
     if(e.flash>0)e.flash-=dt;
@@ -123,6 +129,7 @@ function updateEnemies(dt){
       if(e.burnTick<=0){e.burnTick=.33;hitEnemy(e,e.burnDps*.33,0,0,true,0,true);if(e.dead)continue;}}
     let spdMul=1,noSep=false;
     if(e.chill>0){e.chill-=dt;spdMul*=.5;}
+    for(const pd of puddles)if(!ETYPE[e.type].fly&&Math.hypot(e.x-pd.x,(e.y-pd.y)*1.6)<pd.r){spdMul*=.45;break;}
     if(e.emerge>0){e.emerge-=dt;e.moving=false;continue;}
     if(e.stun>0){e.stun-=dt;e.moving=false;e.x+=e.kx*dt;e.y+=e.ky*dt;e.kx*=Math.pow(.002,dt);e.ky*=Math.pow(.002,dt);collideWorld(e,T.fly);continue;}
     let vx=0,vy=0;
@@ -273,7 +280,12 @@ function updateBullets(dt){
       if(b.from==='p'){for(const e of enemies){if(e.dead||(b.hits&&b.hits.includes(e.id)))continue;
         const er=e.r*(e.s?1:1);
         if((b.x-e.x)**2+(b.y-e.y)**2<(er+b.r)**2){const k=b.kind;hitEnemy(e,b.dmg,b.vx,b.vy,!b.ally,k==='flame'?.06:k==='ice'?.4:1,k==='flame');
-          if(k==='flame'){e.burn=2.2;e.burnDps=9*P.dmgMul;}else if(k==='ice')e.chill=1.6;
+          if(k==='flame'){e.burn=2.2;e.burnDps=9*P.dmgMul;}else if(k==='ice'){e.chill=1.6;e.iceN=(e.iceT>0?e.iceN||0:0)+1;e.iceT=1.5;
+            if(e.iceN>=4&&!ETYPE[e.type].boss){e.iceN=0;e.stun=Math.max(e.stun,1.2);e.frozen=1.2;puff(e.x,e.y,'#cfefff',6,1);SFX.ice();}}
+          if(k==='crossbow'&&!ETYPE[e.type].boss)e.stun=Math.max(e.stun,.5);
+          if(k==='popcorn'&&!b.frag){for(let q=0;q<3;q++){const an=rand(0,TAU);bullets.push({x:e.x,y:e.y,vx:Math.cos(an)*420,vy:Math.sin(an)*420,r:2.6,dmg:b.dmg*.3,from:'p',life:.28,max:.28,kind:'popcorn',frag:true,pierce:0,hits:[e.id],ally:b.ally,owner:b.owner});}}
+          if(k==='fireball'){e.burn=2.5;e.burnDps=10*P.dmgMul;ring(b.x,b.y,'#ff7a1a',70,.3);puff(b.x,b.y,'#ff7a1a',6,1);SFX.pop();
+            for(const f of enemies)if(!f.dead&&f!==e&&Math.hypot(f.x-b.x,f.y-b.y)<70){hitEnemy(f,b.dmg*.6,f.x-b.x,f.y-b.y,true,1,true);f.burn=2;f.burnDps=8*P.dmgMul;}}
           if(!b.ally&&WEAP[k]&&WEAP[k].heal)healHit(WEAP[k].heal);
           if(b.owner){b.owner.ult=Math.min(100,b.owner.ult+b.dmg*.14);if(WEAP[k]&&WEAP[k].heal)healTeam(b.owner.x,b.owner.y,WEAP[k].heal,240,true);}
           if(b.pierce>0){b.pierce--;b.hits.push(e.id);}else{dead=true;}break;}}}

@@ -62,7 +62,7 @@ function toMenu(){
   if(['play','paused','dying'].includes(S.mode))bankCoins();
   S.mode='menu'; S.night=false; $('hud').hidden=true; music('menu'); musicDuck(1); clearBanner(); $('setOv').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
   if(MAP!==menuMap())buildWorld(menuMap());
-  P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];holes=[];zones=[];strikes=[];
+  P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];holes=[];zones=[];strikes=[];puddles=[];
   refreshMenu();
 }
 function demoEnemies(){
@@ -97,7 +97,7 @@ function showWin(){
   const lc=first?L.coins:Math.round(L.coins*.4), lt=first?L.tokens:Math.round(L.tokens*.5);
   bankCoins();
   SAVE.coins+=lc; SAVE.tokens+=lt; const le=first?L.eggs:0; SAVE.eggs+=le;
-  let big=false; if(SAVE.bigDay!==today()){SAVE.bigDay=today();SAVE.btokens+=1;big=true;}
+  const big=first; if(big)SAVE.btokens+=1; // большой жетон — за каждое первое прохождение уровня
   const sup=first&&L.i===19; if(sup)SAVE.schests++;
   if(first)SAVE.story.done.push(i);
   persist();
@@ -109,8 +109,8 @@ function showWin(){
   row('<i class="tok"></i>+'+(lt+S.tokens)+_t(' жетонов'),_t('на обычный сундук: ')+Math.min(SAVE.tokens,100)+'/100',.12);
   if(le)row('<i class="gegg"></i>+'+le+_t(' золотых яиц'),_t('только за первое прохождение'),.18);
   if(sup)row(_t('<i class="sch"></i>Сверхбольшой сундук!'),_t('за финального босса главы · открой в «Сундуках»'),.21);
-  if(big)row(_t('<i class="btok"></i>+1 большой жетон'),_t('на большой сундук: ')+SAVE.btokens+_t('/10 · следующий завтра'),.24);
-  else row(_t('<i class="btok"></i>Большой жетон уже получен сегодня'),_t('завтра пройди уровень ещё раз'),.24);
+  if(big)row(_t('<i class="btok"></i>+1 большой жетон'),_t('на большой сундук: ')+SAVE.btokens+'/10',.24);
+  else row(_t('<i class="btok"></i>Большой жетон — за первое прохождение'),_t('или каждые 10 волн в бесконечном бою'),.24);
   $('nextBtn').hidden=i>=STORY.length-1; $('nextBtn').textContent=L.i===19?_t('Глава ')+(L.ch+2):_t('Уровень ')+(L.i+2);
   if(L.i===19&&first)storyCh=-1;
   $('win').hidden=false; refreshMenu();
