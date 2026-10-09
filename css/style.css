@@ -304,3 +304,26 @@ button.lb-ver:focus-visible{outline:3px solid var(--yolk);outline-offset:2px}
   .card.info .notes{max-height:none;flex:1;min-height:0}
   .card.info .logo{font-size:28px}
 }
+
+/* ---------- крупнее кнопки (v0.2) ---------- */
+.ib{width:48px;height:48px;font-size:18px;border-radius:15px}
+.nade{width:68px;height:80px;bottom:calc(env(safe-area-inset-bottom,0px) + 200px);right:calc(env(safe-area-inset-right,0px) + 18px)}
+.nade::before{top:34px}.nade .lbl{margin-top:34px;font-size:12px}
+.nade .cnt{min-width:28px;height:28px;font-size:14px}
+.ult{width:78px;height:78px;bottom:calc(env(safe-area-inset-bottom,0px) + 212px);right:calc(env(safe-area-inset-right,0px) + 100px)}
+.ult span{font-size:12.5px}
+.tab{padding:12px 16px;font-size:16px}
+.pbtn{min-height:46px;font-size:15.5px}
+.phead .ib{width:50px;height:50px;font-size:22px}
+.lb-chip{padding:9px 14px;font-size:14px}
+button.lb-ver{padding:5px 9px;font-size:12px}
+.nav{min-height:62px}
+@media (max-height:500px) and (orientation:landscape){
+  .ib{width:46px;height:46px}
+  .nade{width:62px;height:72px;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);right:calc(env(safe-area-inset-right,0px) + 22px)}
+  .nade::before{top:30px}.nade .lbl{margin-top:30px}
+  .ult{width:68px;height:68px;bottom:calc(env(safe-area-inset-bottom,0px) + 178px);right:calc(env(safe-area-inset-right,0px) + 100px)}
+  .nav{padding:6px 4px 7px;font-size:12px;min-height:56px}
+  .nav svg{width:28px;height:28px}
+  .phead .ib{width:46px;height:46px}
+}

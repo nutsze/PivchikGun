@@ -70,6 +70,7 @@ function updatePlayer(dt){
   if(K.KeyA||K.ArrowLeft)mx-=1; if(K.KeyD||K.ArrowRight)mx+=1; if(K.KeyW||K.ArrowUp)my-=1; if(K.KeyS||K.ArrowDown)my+=1;
   let ml=Math.hypot(mx,my); if(ml>1){mx/=ml;my/=ml;ml=1;}
   if(ml<.12){mx=my=0;ml=0;}
+  P._px=P.x; P._py=P.y;
   const ox=P.x, oy=P.y, spd=P.spd*(P.buff==='turbo'?2:P.buff==='adren'?1.4:1)*(P.w==='minigun'&&P.wasFiring?.72:1);
   P.x+=mx*spd*dt; P.y+=my*spd*dt; P.moving=ml>0; if(P.moving)P.phase+=dt*15*Math.max(.5,ml);
   let firing=false;
@@ -93,6 +94,8 @@ function updatePlayer(dt){
   if(firing&&P.cd<=0)shoot();
   if(!firing||P.w!=='minigun')P.spin=Math.max(0,(P.spin||0)-dt*1.4);
   P.wasFiring=firing;
+  waterBlock(P,P._px,P._py);
+  updateBridges(dt);
   if(P.moving&&Math.random()<dt*8)puff(P.x-mx*8,P.y,'#e9dcc0',1,.5);
 }
 function bite(e,dmg,cd){
@@ -105,6 +108,7 @@ function updateEnemies(dt){
   const gooseSlow=P.hid==='goose'&&hasP(5)&&alive;
   for(const e of enemies){
     if(e.dead)continue;
+    e._px=e.x; e._py=e.y;
     const T=ETYPE[e.type];
     let tg=P;
     if(alive&&allies.length){e.tgT=(e.tgT||0)-dt;if(e.tgT<=0){e.tgT=.6;let best=null,bd=Math.hypot(P.x-e.x,P.y-e.y)*.75;
@@ -181,6 +185,16 @@ function updateEnemies(dt){
       if(d<e.r+tg.r+5)bite(e,T.melee,1);
       bossAI(e,T,dt,d);
       if(T.fly)noSep=true;
+    }
+    const straggle=enemies.length<=3&&S.toSpawn===0;
+    if(!T.fly&&alive&&RIVER&&e.st!=='dash'&&e.st!=='tell'&&e.st!=='aim'&&(straggle||!(T.bul&&!T.boss&&d<(T.range||400)*.85))){
+      const nt=navTarget(e,tg.x,tg.y,e.navAlt||0);
+      if(nt){const nx=nt[0]-e.x,ny=nt[1]-e.y,nd=Math.hypot(nx,ny)||1;vx=nx/nd;vy=ny/nd;
+        // защита от застревания: другой мост, а потом обход на нужный берег
+        e.navT=(e.navT||0)+dt; if(e.navBest===undefined||d<e.navBest-25){e.navBest=d;e.navT=0;}
+        if(e.navT>7){e.navT=0;e.navBest=undefined;e.navAlt=(e.navAlt||0)+1;
+          if(e.navAlt>2){const p=sidePoint(sideOf(tg.x,tg.y));if(p){puff(e.x,e.y,'#e9dcc0',6,1);e.x=p[0];e.y=p[1];e._px=e.x;e._py=e.y;}e.navAlt=0;}}
+      } else {e.navT=0;e.navBest=undefined;}
     }
     if(gooseSlow&&d<110)spdMul*=.7;
     if(!T.fly)for(const o of OBS){const ox=e.x-o.x,oy=e.y-o.y,od=Math.hypot(ox,oy);if(od<o.r+e.r+26){vx+=ox/od*.9;vy+=oy/od*.9;}}

@@ -473,12 +473,13 @@ function playerSprite(){return {x:P.x,y:P.y,face:P.face,ang:P.ang,phase:P.phase,
 function render(){
   const c=ctx;
   c.setTransform(DPR,0,0,DPR,0,0);
-  c.fillStyle='#5f9e3c'; c.fillRect(0,0,VW,VH);
+  c.fillStyle=MAPS[MAP].out; c.fillRect(0,0,VW,VH);
   const Z=S.mode==='menu'?SC*MENU_ZOOM:SC;
   c.save(); c.scale(Z,Z);
   let sx=0,sy=0; if(S.shake>0&&!REDUCED){sx=(Math.random()-.5)*S.shake;sy=(Math.random()-.5)*S.shake;}
   c.translate(-camX+sx,-camY+sy);
   c.drawImage(ground,0,0);
+  drawRiverDyn(c);
   drawParts(c,true);
   for(const h of holes)drawHole(c,h);
   for(const p of pickups)drawPickup(c,p);

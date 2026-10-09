@@ -3,6 +3,7 @@
 function collideWorld(e,noObs){
   if(!noObs)for(const o of OBS){const dx=e.x-o.x,dy=e.y-o.y,d=Math.hypot(dx,dy)||1,m=o.r+e.r*.85;if(d<m){e.x=o.x+dx/d*m;e.y=o.y+dy/d*m;}}
   e.x=clamp(e.x,FENCE+e.r+6,WW-FENCE-e.r-6); e.y=clamp(e.y,FENCE+e.r+12,WH-FENCE-e.r-4);
+  if(!noObs&&RIVER&&e._px!==undefined)waterBlock(e,e._px,e._py);
 }
 function onScreen(e,m=24){const vw=VW/SC,vh=VH/SC;return e.x>camX+m&&e.x<camX+vw-m&&e.y>camY+m+30&&e.y<camY+vh-m+10;}
 function nearestTarget(){let bt=null,bd=1e9;for(const e of enemies){if(e.dead||!onScreen(e,0))continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(S.night&&d>NIGHT_R+20)continue;if(d<bd&&(ETYPE[e.type].fly||los(P.x,P.y,e.x,e.y))){bd=d;bt=e;}}return bt;}
@@ -21,6 +22,7 @@ function ftext(x,y,txt,col='#fff',size=15){texts.push({x,y,txt,col,size,t:0,max:
 
 /* ---------- game flow ---------- */
 function startGame(kind='endless',idx=0){
+  const mk2=kind==='story'?MAP_OF_CH[STORY[idx].ch]:'yard'; buildWorld(mk2); lastBridge=null;
   P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];holes=[];S.holeT=rand(8,12);
   const L=kind==='story'?STORY[idx]:null;
   Object.assign(S,{mode:'play',kind,lvIdx:idx,L,diff:L?L.diff:1,night:!!(L&&L.night),t:0,score:0,wave:0,toSpawn:0,spawnT:0,between:1.2,running:false,kills:0,goalKills:0,
@@ -47,7 +49,7 @@ function startWave(){
 function spawnPickupNear(kind){
   for(let i=0;i<30;i++){const a=rand(0,TAU),d=rand(140,320);const x=P.x+Math.cos(a)*d,y=P.y+Math.sin(a)*d;
     if(x<FENCE+40||x>WW-FENCE-40||y<FENCE+40||y>WH-FENCE-40)continue;
-    if(OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+24))continue;
+    if(OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+24)||nearWater(x,y,24))continue;
     pickups.push({x,y,kind,t:16,ph:rand(0,6)});return;}
 }
 function pickFrom(mix){let tot=0;for(const k in mix)tot+=mix[k];let r=Math.random()*tot;for(const k in mix){r-=mix[k];if(r<=0)return k;}return Object.keys(mix)[0];}
@@ -63,7 +65,7 @@ function edgePoint(r){
   for(let i=0;i<25;i++){
     const side=Math.floor(Math.random()*4),m=FENCE+30;
     x=side<2?rand(m,WW-m):side===2?m:WW-m; y=side>=2?rand(m,WH-m):side===0?m+10:WH-m;
-    if(Math.hypot(x-P.x,y-P.y)>430&&!OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+r))break;
+    if(Math.hypot(x-P.x,y-P.y)>430&&!OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+r)&&!nearWater(x,y,r+16))break;
   }
   return [x,y];
 }
@@ -81,7 +83,7 @@ function spawnEnemy(type){
   else makeEnemy(type,x,y);
 }
 function spawnBoss(type){
-  const x=P.x<WW/2?WW-FENCE-180:FENCE+180, y=P.y<WH/2?WH-FENCE-180:FENCE+180;
+  const [x,y]=dryPoint(P.x<WW/2?WW-FENCE-180:FENCE+180, P.y<WH/2?WH-FENCE-180:FENCE+180);
   S.boss=makeEnemy(type,x,y); S.boss.atkT=2;
   $('bossName').textContent=ETYPE[type].name; $('bossBar').hidden=false; updateBoss();
   showBanner(ETYPE[type].name,'Босс вышел на поле!'); SFX.gobble(); S.shake+=10;
@@ -127,7 +129,8 @@ function updateAllies(dt){
         bullets.push({x:a.x+Math.cos(a.ang)*20,y:a.y+Math.sin(a.ang)*20,vx:Math.cos(a.ang+sp)*(a.cls==='sniper'?900:620),vy:Math.sin(a.ang+sp)*(a.cls==='sniper'?900:620),r:4.2,dmg:a.dmg,from:'p',life:a.range/600,max:a.range/600,kind:a.gun,pierce:0,hits:null,ally:true});
         parts.push({k:'flash',x:a.x+Math.cos(a.ang)*26,y:a.y+Math.sin(a.ang)*26,z:19,t:0,max:.05,a:a.ang,s:.8});}}
     else if(fd>8)a.ang=Math.atan2(vy,vx);
-    const ox=a.x,oy=a.y;
+    const ox=a.x,oy=a.y; a._px=ox; a._py=oy;
+    {const nt=navTarget(a,fx,fy);if(nt&&fd>40){vx=nt[0]-a.x;vy=nt[1]-a.y;const nd=Math.hypot(vx,vy)||1;vx=vx/nd*fd;vy=vy/nd*fd;}}
     if(fd>26){const sp=a.spd*(fd>180?1.35:1)*Math.min(1,fd/60);a.x+=vx/fd*sp*dt;a.y+=vy/fd*sp*dt;a.moving=true;a.phase+=dt*15;}else a.moving=false;
     for(const e of enemies){if(e.dead||ETYPE[e.type].fly)continue;const dx=a.x-e.x,dy=a.y-e.y,d=Math.hypot(dx,dy)||1,m=a.r+e.r;if(d<m){a.x+=dx/d*(m-d)*.5;a.y+=dy/d*(m-d)*.5;}}
     for(const b2 of allies){if(b2===a||b2.down>0)continue;const dx=a.x-b2.x,dy=a.y-b2.y,d=Math.hypot(dx,dy)||1,m=a.r+b2.r;if(d<m){a.x+=dx/d*(m-d)*.5;a.y+=dy/d*(m-d)*.5;}}
@@ -168,7 +171,7 @@ function killEnemy(e){
     (tp==='crow'||tp==='eagle'||tp==='eagleboss'||tp==='emperor')?SFX.caw():tp==='owl'?SFX.hoot():(tp==='turkey'||tp==='gturkey')?SFX.gobble():SFX.cluck();}
   if(T.boss){S.shake+=18;SFX.boom();ring(e.x,e.y,'#fff6c8',200,.6);}
   const r=Math.random(), cornCh=.17*(P.hid==='hen'&&hasP(10)?1.5:1);
-  if(e.type!=='rat'||Math.random()<.3){
+  if((e.type!=='rat'||Math.random()<.3)&&!nearWater(e.x,e.y,12)){
     if(r<cornCh)pickups.push({x:e.x,y:e.y,kind:'corn',t:12,ph:0});
     else if(r<cornCh+.09)pickups.push({x:e.x,y:e.y,kind:Math.random()<.5?'shotgun':'smg',t:12,ph:0});
     else if(r<cornCh+.15)pickups.push({x:e.x,y:e.y,kind:'nade',t:12,ph:0});
@@ -314,7 +317,7 @@ function spawnHole(){
   for(let i=0;i<30;i++){
     const a=rand(0,TAU),d=rand(170,420),x=P.x+Math.cos(a)*d,y=P.y+Math.sin(a)*d;
     if(x<FENCE+50||x>WW-FENCE-50||y<FENCE+60||y>WH-FENCE-50)continue;
-    if(OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+40)||holes.some(h=>Math.hypot(h.x-x,h.y-y)<90))continue;
+    if(OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+40)||holes.some(h=>Math.hypot(h.x-x,h.y-y)<90)||nearWater(x,y,50))continue;
     holes.push({x,y,t:0,state:'dig',ct:0,life:rand(10,14),spawnT:rand(.8,1.6),made:0,max:2+(S.diff>6?1:0)});
     for(let k=0;k<14;k++){const an=rand(0,TAU),sp=rand(60,170);parts.push({k:'shell',x,y,z:6,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp*.6,vz:rand(120,240),rot:rand(0,TAU),vr:rand(-8,8),t:0,max:rand(.6,1),dirt:true});}
     puff(x,y,'#9a6b3c',8,1.2); SFX.chest(); return;

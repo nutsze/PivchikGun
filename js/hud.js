@@ -59,6 +59,7 @@ function refreshMenu(){
 function toMenu(){
   if(['play','paused','dying'].includes(S.mode))bankCoins();
   S.mode='menu'; S.night=false; $('hud').hidden=true; ['pause','over','win','brief'].forEach(i=>$(i).hidden=true); $('menu').hidden=false;
+  if(MAP!=='yard')buildWorld('yard');
   P=newPlayer(); makeAllies(); enemies=[];bullets=[];nades=[];bombs=[];pickups=[];texts=[];parts=[];holes=[];
   refreshMenu();
 }

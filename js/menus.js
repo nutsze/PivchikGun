@@ -204,7 +204,7 @@ function openBrief(i){
   briefIdx=i; const L=STORY[i];
   $('briefNum').textContent='Глава '+(L.ch+1)+' · уровень '+(L.i+1)+' из 20'; $('briefName').textContent=L.name; $('briefText').textContent=L.text;
   const foes=[...new Set(Object.keys(L.mix).concat(L.goal.boss?[L.goal.boss]:[]))].map(k=>ETYPE[k].name.toLowerCase()).join(', ');
-  $('briefGoal').innerHTML='<span>Цель: '+goalText(L)+'</span><small>Враги: '+foes+(L.night?'. Ночь — обзор меньше':'')+'</small><small>Награда: '+L.coins+' зёрен, '+L.tokens+' жетонов</small>';
+  $('briefGoal').innerHTML='<span>Цель: '+goalText(L)+'</span><small>Карта: '+MAPS[MAP_OF_CH[L.ch]].name+' · река с мостами, гнилые рушатся после второго прохода</small><small>Враги: '+foes+(L.night?'. Ночь — обзор меньше':'')+'</small><small>Награда: '+L.coins+' зёрен, '+L.tokens+' жетонов</small>';
   $('briefHero').textContent='Боец: '+HEROES[SAVE.hero].name+' ('+CLASSES[clsOf(SAVE.hero)].name.toLowerCase()+') · ур. '+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name;
   $('brief').hidden=false;
 }
