@@ -74,6 +74,8 @@ function updatePlayer(dt){
   collideWorld(P);
   P.vx=(P.x-ox)/Math.max(dt,.001); P.vy=(P.y-oy)/Math.max(dt,.001);
   P.cd-=dt; if(P.inv>0)P.inv-=dt; if(P.flash>0)P.flash-=dt;
+  if(P.medic&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+2*dt);for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt);}
+  else if(P.medic)for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt);
   if(P.regen&&S.t-P.lastHit>3&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+P.regen*dt);regenTick+=dt;if(regenTick>.5){regenTick=0;updateHUD();if(Math.random()<.5)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});}}
   if(firing&&P.cd<=0)shoot();
   if(!firing||P.w!=='minigun')P.spin=Math.max(0,(P.spin||0)-dt*1.4);
@@ -207,6 +209,7 @@ function updateBullets(dt){
         const er=e.r*(e.s?1:1);
         if((b.x-e.x)**2+(b.y-e.y)**2<(er+b.r)**2){const k=b.kind;hitEnemy(e,b.dmg,b.vx,b.vy,!b.ally,k==='flame'?.06:k==='ice'?.4:1,k==='flame');
           if(k==='flame'){e.burn=2.2;e.burnDps=9*P.dmgMul;}else if(k==='ice')e.chill=1.6;
+          if(!b.ally&&WEAP[k]&&WEAP[k].heal)healHit(WEAP[k].heal);
           if(b.pierce>0){b.pierce--;b.hits.push(e.id);}else{dead=true;}break;}}}
       else if(P.alive){
         const d2=(b.x-P.x)**2+(b.y-P.y)**2;
@@ -228,7 +231,7 @@ function updateNades(dt){
   }
 }
 function updateBombs(dt){
-  for(let i=bombs.length-1;i>=0;i--){const b=bombs[i];if(!b)continue;b.t-=dt;if(b.t<=0){bombs.splice(i,1);if(b.from==='e'&&S.mode!=='play')continue;blast(b.x,b.y,b.r,b.dmg,b.from==='p',false);}}
+  for(let i=bombs.length-1;i>=0;i--){const b=bombs[i];if(!b)continue;b.t-=dt;if(b.t<=0){bombs.splice(i,1);if(b.from==='e'&&S.mode!=='play')continue;blast(b.x,b.y,b.r,b.dmg,b.from==='p',false,b.heal||0);}}
 }
 function updateParts(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;

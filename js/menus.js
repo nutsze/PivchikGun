@@ -4,7 +4,8 @@ function mk(tag,cls,html){const e=document.createElement(tag);if(cls)e.className
 function preview(w,h,fn){const cvs=document.createElement('canvas');const d=Math.min(2,devicePixelRatio||1);cvs.width=w*d;cvs.height=h*d;cvs.style.width=w+'px';cvs.style.height=h+'px';
   const c=cvs.getContext('2d');c.scale(d,d);fn(c,w,h);return cvs;}
 function birdPv(look,gun,w=140,h=100,k=1.55){return preview(w,h,(c)=>{c.translate(w/2-6,h-14);c.scale(k,k);drawBird(c,{x:0,y:0,face:1,ang:-.18,phase:0,moving:false,flash:0,kind:'player',gun,...look});});}
-function heroPv(id,w,h,k){return birdPv(lookFor(id,SAVE.hat,SAVE.color),SAVE.gun,w,h,k);}
+function heroPv(id,w,h,k){return birdPv(lookFor(id,SAVE.hat,SAVE.color),gunOf(id),w,h,k);}
+function clsBadge(c){const C=CLASSES[c];const b=mk('span','rar',C.name);b.style.setProperty('--c',C.c);return b;}
 function coinTag(n){return '<i class="coin"></i>'+fmt(n);}
 function rarBadge(id){const r=RAR[HEROES[id].rar];const b=mk('span','rar',r.name);b.style.setProperty('--c',r.c);return b;}
 function priceTag(n,cur){return (cur==='eggs'?'<i class="gegg"></i>':'<i class="coin"></i>')+fmt(n);}
@@ -36,7 +37,7 @@ function renderShop(){
     body.appendChild(mk('div','sect','Шапки'));
     const g1=mk('div','grid');
     for(const id in HATS){const it=HATS[id],owned=SAVE.hats.includes(id),eq=SAVE.hat===id;
-      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,id,SAVE.color),SAVE.gun));card.appendChild(pv);
+      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,id,SAVE.color),gunOf(SAVE.hero)));card.appendChild(pv);
       card.appendChild(mk('h4','',it.name));card.appendChild(mk('div','grow'));
       card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.hats.push(id);SAVE.hat=id;},()=>equip(()=>{SAVE.hat=id;},'Надето: '+it.name),it.eggs?'eggs':'coins'));
       g1.appendChild(card);}
@@ -44,23 +45,32 @@ function renderShop(){
     body.appendChild(mk('div','sect','Окрас'));
     const g2=mk('div','grid');
     for(const id in COLORS){const it=COLORS[id],owned=SAVE.colors.includes(id),eq=SAVE.color===id;
-      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,SAVE.hat,id),SAVE.gun));card.appendChild(pv);
+      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(SAVE.hero,SAVE.hat,id),gunOf(SAVE.hero)));card.appendChild(pv);
       card.appendChild(mk('h4','',it.name));card.appendChild(mk('div','grow'));
       card.appendChild(actBtn(owned,eq,it.eggs||it.price,()=>{SAVE.colors.push(id);SAVE.color=id;},()=>equip(()=>{SAVE.color=id;},'Окрас: '+it.name),it.eggs?'eggs':'coins'));
       g2.appendChild(card);}
     body.appendChild(g2);
   } else {
-    body.appendChild(mk('div','sect','Основной ствол · патроны бесконечные'));
-    const g=mk('div','grid');
-    for(const id of PRIMARY){const W=WEAP[id],owned=SAVE.guns.includes(id),eq=SAVE.gun===id;
-      const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');
-      pv.appendChild(preview(140,90,(c,w,h)=>{c.translate(w/2-32,h/2+2);c.scale(2.1,2.1);drawGun(c,id);}));card.appendChild(pv);
-      card.appendChild(mk('h4','',W.name));card.appendChild(mk('p','',W.desc));
-      const dps=Math.round(W.dmg*W.pellets/W.rate);
-      card.appendChild(mk('div','meta',W.meta||('Урон '+W.dmg+(W.pellets>1?'×'+W.pellets:'')+' · '+(1/W.rate).toFixed(1)+' выстр/с · ≈'+dps+' в сек')));
-      card.appendChild(mk('div','grow'));
-      card.appendChild(actBtn(owned,eq,W.eggs||W.price,()=>{SAVE.guns.push(id);SAVE.gun=id;},()=>equip(()=>{SAVE.gun=id;},'В руках: '+W.name),W.eggs?'eggs':'coins'));
-      g.appendChild(card);}
+    const myC=clsOf(SAVE.hero);
+    body.appendChild(mk('p','note','У каждого класса своё оружие: герой берёт в бой только стволы своего класса. Сейчас в бою '+HEROES[SAVE.hero].name+' — класс «'+CLASSES[myC].name+'». Патроны у основного ствола бесконечные.'));
+    const order=[myC].concat(CLASS_ORDER.filter(k=>k!==myC));
+    let g;
+    order.forEach((ck,oi)=>{
+      const C=CLASSES[ck];
+      const sec=mk('div','sect',C.name+(ck===myC?' · твой класс':'')+' — '+C.desc);body.appendChild(sec);
+      g=mk('div','grid');
+      for(const id of PRIMARY.filter(w=>WEAP[w].cls===ck)){const W=WEAP[id],owned=SAVE.guns.includes(id),eq=SAVE.loadout[ck]===id;
+        const card=mk('div','item'+(eq?' sel':''));const pv=mk('div','pv');
+        pv.appendChild(preview(140,90,(c,w,h)=>{c.translate(w/2-32,h/2+2);c.scale(2.1,2.1);drawGun(c,id);}));card.appendChild(pv);
+        card.appendChild(clsBadge(ck));
+        card.appendChild(mk('h4','',W.name));card.appendChild(mk('p','',W.desc));
+        const dps=Math.round(W.dmg*W.pellets/W.rate);
+        card.appendChild(mk('div','meta',W.meta||('Урон '+W.dmg+(W.pellets>1?'×'+W.pellets:'')+' · '+(1/W.rate).toFixed(1)+' выстр/с · ≈'+dps+' в сек')));
+        card.appendChild(mk('div','grow'));
+        card.appendChild(actBtn(owned,eq,W.eggs||W.price,()=>{SAVE.guns.push(id);SAVE.loadout[ck]=id;},()=>equip(()=>{SAVE.loadout[ck]=id;},C.name+': '+W.name),W.eggs?'eggs':'coins'));
+        g.appendChild(card);}
+      if(oi<order.length-1)body.appendChild(g);
+    });
     body.appendChild(g);
   }
   body.scrollTop=st;
@@ -87,7 +97,7 @@ function renderHeroes(){
     if(k<SAVE.slots){
       const id=SAVE.squad[k];
       if(id&&SAVE.heroes[id]&&id!==SAVE.hero){
-        const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(id,'helmet','native'),ALLY_GUN[id]||'pistol',140,92,1.45));pv.appendChild(mk('span','lvl','Ур. '+heroLv(id)));card.appendChild(pv);
+        const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(id,'helmet','native'),gunOf(id),140,92,1.45));pv.appendChild(mk('span','lvl','Ур. '+heroLv(id)));card.appendChild(pv);
         card.appendChild(mk('h4','',HEROES[id].name));card.appendChild(mk('p','','Место '+(k+1)));card.appendChild(mk('div','grow'));
         const b=mk('button','pbtn eq','Убрать');b.onclick=()=>equip(()=>{SAVE.squad.splice(k,1);},'Боец ушёл из отряда');card.appendChild(b);
       } else {
@@ -113,9 +123,10 @@ function renderHeroes(){
     const pv=mk('div','pv'+(own?'':' dark'));pv.appendChild(heroPv(id,200,120,1.85));
     if(own)pv.appendChild(mk('span','lvl','Ур. '+own.lv));else pv.appendChild(mk('span','lock','Не открыт'));
     card.appendChild(pv);
-    card.appendChild(rarBadge(id));
+    {const bw=mk('div','');bw.style.display='flex';bw.style.gap='6px';bw.style.flexWrap='wrap';bw.appendChild(rarBadge(id));bw.appendChild(clsBadge(H.cls));card.appendChild(bw);}
     card.appendChild(mk('h4','',H.name));
     card.appendChild(mk('p','',H.perk+' · '+H.hp+' здоровья'));
+    card.appendChild(mk('div','ab','<span class="k">'+CLASSES[H.cls].name.toUpperCase()+'</span>'+CLASSES[H.cls].desc+'. Оружие: <b>'+WEAP[gunOf(id)].name+'</b>'));
     const ab=mk('div','abil');
     ab.appendChild(mk('div','ab ul','<span class="k">УЛЬТА</span><b>'+H.ult[0]+'.</b> '+H.ult[1]));
     const lv=own?own.lv:0;
@@ -194,7 +205,7 @@ function openBrief(i){
   $('briefNum').textContent='Глава '+(L.ch+1)+' · уровень '+(L.i+1)+' из 20'; $('briefName').textContent=L.name; $('briefText').textContent=L.text;
   const foes=[...new Set(Object.keys(L.mix).concat(L.goal.boss?[L.goal.boss]:[]))].map(k=>ETYPE[k].name.toLowerCase()).join(', ');
   $('briefGoal').innerHTML='<span>Цель: '+goalText(L)+'</span><small>Враги: '+foes+(L.night?'. Ночь — обзор меньше':'')+'</small><small>Награда: '+L.coins+' зёрен, '+L.tokens+' жетонов</small>';
-  $('briefHero').textContent='Боец: '+HEROES[SAVE.hero].name+' · ур. '+heroLv(SAVE.hero)+' · '+WEAP[SAVE.gun].name;
+  $('briefHero').textContent='Боец: '+HEROES[SAVE.hero].name+' ('+CLASSES[clsOf(SAVE.hero)].name.toLowerCase()+') · ур. '+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name;
   $('brief').hidden=false;
 }
 $('briefGo').addEventListener('click',()=>{initAudio();$('brief').hidden=true;startGame('story',briefIdx);});

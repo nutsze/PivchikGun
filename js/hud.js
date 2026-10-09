@@ -45,7 +45,7 @@ function refreshMenu(){
   $('menuCoins').textContent=fmt(SAVE.coins); $('menuTok').textContent=fmt(SAVE.tokens); $('menuBtok').textContent=SAVE.btokens; $('menuEggs').textContent=SAVE.eggs;
   const H=HEROES[SAVE.hero];
   const sq=squadIds().length;
-  $('heroLine').textContent='Боец: '+H.name+' · ур. '+heroLv(SAVE.hero)+' · '+WEAP[SAVE.gun].name+(sq?' · отряд: '+sq:'');
+  $('heroLine').textContent='Боец: '+H.name+' ('+CLASSES[H.cls].name.toLowerCase()+') · ур. '+heroLv(SAVE.hero)+' · '+WEAP[gunOf(SAVE.hero)].name+(sq?' · отряд: '+sq:'');
   const done=SAVE.story.done.length;
   $('bestText').textContent='Сюжет: '+done+'/'+STORY.length+(SAVE.best.score>0?' · Рекорд: '+fmt(SAVE.best.score)+' очк., волна '+SAVE.best.wave:'');
   $('chestBadge').hidden=!(SAVE.tokens>=100||SAVE.btokens>=10);

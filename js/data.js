@@ -8,32 +8,32 @@ const RAR={
 };
 const RAR_ORDER=['legendary','epic','rare','common'];
 const HEROES={
-  hen:{name:'Пеструшка',rar:'common',chance:null,sp:'hen',hp:100,spd:205,r:15,dmg:1,rate:1,armor:0,regen:0,nade:1,body:'#fbfbf4',wing:'#e6e3d6',
+  hen:{cls:'assault',name:'Пеструшка',rar:'common',chance:null,sp:'hen',hp:100,spd:205,r:15,dmg:1,rate:1,armor:0,regen:0,nade:1,body:'#fbfbf4',wing:'#e6e3d6',
     perk:'Сбалансированная, берёт в бой лишнее яйцо',
     ult:['Яичный дождь','С неба падают 8 яиц-бомб прямо на врагов'],
     p5:['Запасливая','Каждая новая волна даёт +1 яйцо-гранату'],
     p10:['Наседка','Кукуруза лечит вдвое сильнее и падает в полтора раза чаще']},
-  chick:{name:'Цыпа Шустрик',rar:'common',chance:[12,30],sp:'chick',hp:75,spd:248,r:12,dmg:1,rate:1.25,armor:0,regen:0,nade:0,body:'#ffd84a',wing:'#f0b628',
+  chick:{cls:'sniper',name:'Цыпа Шустрик',rar:'common',chance:[12,30],sp:'chick',hp:75,spd:248,r:12,dmg:1,rate:1.25,armor:0,regen:0,nade:0,body:'#ffd84a',wing:'#f0b628',
     perk:'Мелкий и быстрый, +25% темпа стрельбы',
     ult:['Турбо-пух','4 секунды двойной скорости и двойного темпа стрельбы'],
     p5:['Увёртливый','15% шанс, что яйцо пролетит мимо'],
     p10:['Пух-реактор','Ульта копится на 40% быстрее']},
-  rooster:{name:'Петя Шпора',rar:'rare',chance:[6,16],sp:'rooster',hp:130,spd:192,r:16,dmg:1.15,rate:1,armor:0,regen:0,nade:0,body:'#d9622b',wing:'#9e3f1b',tail:'#1f4a35',
+  rooster:{cls:'tank',name:'Петя Шпора',rar:'rare',chance:[6,16],sp:'rooster',hp:130,spd:192,r:16,dmg:1.15,rate:1,armor:0,regen:0,nade:0,body:'#d9622b',wing:'#9e3f1b',tail:'#1f4a35',
     perk:'Крепкий задира, +15% урона',
     ult:['Боевой клич','«КУКАРЕКУ!» оглушает всех рядом на 2,5 с и бьёт на 45'],
     p5:['Шпоры','Кто кусает Петю, сам получает 20 урона'],
     p10:['Задира','15% шанс критического удара ×2']},
-  duck:{name:'Утка Кря',rar:'rare',chance:[6,16],sp:'duck',hp:110,spd:200,r:15,dmg:1,rate:1,armor:0,regen:4,nade:0,body:'#b9a68a',wing:'#8a7558',head:'#2f7d4a',
+  duck:{cls:'medic',name:'Утка Кря',rar:'rare',chance:[6,16],sp:'duck',hp:110,spd:200,r:15,dmg:1,rate:1,armor:0,regen:4,nade:0,body:'#b9a68a',wing:'#8a7558',head:'#2f7d4a',
     perk:'Лечится сама, если 3 секунды не получала урон',
     ult:['Кря-волна','Лечит половину здоровья, сбивает яйца и отталкивает врагов'],
     p5:['Непромокаемая','Получает на 10% меньше урона'],
     p10:['Второе дыхание','Один раз за бой встаёт с 50% здоровья']},
-  goose:{name:'Гусь Бронебой',rar:'epic',chance:[2,7],sp:'goose',hp:160,spd:178,r:17,dmg:1.05,rate:1,armor:.25,regen:0,nade:0,body:'#ecebe4',wing:'#c9c7bd',
+  goose:{cls:'tank',name:'Гусь Бронебой',rar:'epic',chance:[2,7],sp:'goose',hp:160,spd:178,r:17,dmg:1.05,rate:1,armor:.25,regen:0,nade:0,body:'#ecebe4',wing:'#c9c7bd',
     perk:'Толстые перья: на 25% меньше урона',
     ult:['Гусиная крепость','5 секунд неуязвимости, вражеские яйца отлетают обратно'],
     p5:['Шипение','Враги рядом с гусём двигаются на 30% медленнее'],
     p10:['Бронеперья','Ещё −15% получаемого урона']},
-  adren:{name:'Боевой Петушок Adrenaline',rar:'legendary',chance:[.5,3],sp:'rooster',special:'adren',hp:140,spd:218,r:16,dmg:1.2,rate:1.15,armor:0,regen:0,nade:1,body:'#2a2a32',wing:'#c0392b',tail:'#ff7a1a',
+  adren:{cls:'assault',name:'Боевой Петушок Adrenaline',rar:'legendary',chance:[.5,3],sp:'rooster',special:'adren',hp:140,spd:218,r:16,dmg:1.2,rate:1.15,armor:0,regen:0,nade:1,body:'#2a2a32',wing:'#c0392b',tail:'#ff7a1a',
     perk:'Легенда двора: быстрее, крепче и злее всех',
     ult:['Адреналин','6 секунд ярости: огненные кольца пуль и +40% скорости'],
     p5:['Кровь кипит','+30% урона, когда здоровья меньше половины'],
@@ -54,20 +54,33 @@ const COLORS={
   gold:{name:'Золотое перо',price:800,body:'#f6cd4c',wing:'#d9a21c'}, platinum:{name:'Платиновый',eggs:70,body:'#e3e9f0',wing:'#a9b6c6'}
 };
 const WEAP={
-  pistol:{name:'Пугач',price:0,rate:.26,dmg:24,spd:640,spread:.05,pellets:1,life:.75,ammo:Infinity,sfx:'shot',kick:2,desc:'Надёжный стартовый ствол'},
-  sheriff:{name:'Шериф',price:250,rate:.42,dmg:48,spd:820,spread:.02,pellets:1,life:.8,ammo:Infinity,sfx:'shot',kick:3.5,desc:'Медленный, но бьёт вдвое сильнее'},
-  millet:{name:'Пшеномёт',price:450,rate:.11,dmg:14,spd:680,spread:.15,pellets:1,life:.6,ammo:Infinity,sfx:'smg',kick:1.2,desc:'Поливает двор очередями'},
-  sawed:{name:'Обрез',price:650,rate:.6,dmg:14,spd:540,spread:.42,pellets:5,life:.38,ammo:Infinity,sfx:'shotgun',kick:5,desc:'Разносит всё вблизи'},
-  popcorn:{name:'Попкорн-бластер',price:1000,rate:.2,dmg:22,spd:620,spread:.05,pellets:1,life:.8,ammo:Infinity,sfx:'pop',kick:2,pierce:2,desc:'Зерно прошивает сразу трёх врагов'},
-  freeze:{name:'Морозилка',price:1200,rate:.1,dmg:10,spd:720,spread:.06,pellets:1,life:.6,ammo:Infinity,sfx:'ice',kick:.8,special:'ice',desc:'Ледяные иглы замедляют врагов вдвое',meta:'Урон 10 · 10 выстр/с · замедление 50%'},
-  flame:{name:'Огнемёт «Жар-птица»',price:1400,rate:.05,dmg:5,spd:450,spread:.34,pellets:1,life:.6,ammo:Infinity,sfx:'flame',kick:.3,special:'flame',desc:'Струя огня поджигает всех врагов перед тобой',meta:'Урон 5 × 20/с + горение 9/с · дальность средняя'},
-  minigun:{name:'Миниган «Молотилка»',price:1800,rate:.045,dmg:11,spd:760,spread:.17,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,special:'mini',desc:'Раскручивается до бешеного темпа, но на бегу тормозит',meta:'Урон 11 · до 22 выстр/с после раскрутки'},
-  mortar:{name:'Яйцемёт',price:2000,rate:.85,dmg:65,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'throw',kick:3,special:'mortar',desc:'Навесом кидает взрывные яйца — достаёт даже за укрытием',meta:'Взрыв 65 по площади · раз в 0,85 с'},
-  rail:{name:'Рельсотрон',eggs:120,rate:1.05,dmg:130,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'rail',kick:7,special:'rail',desc:'Луч прошивает всех врагов и даже укрытия на линии',meta:'Урон 130 всем на линии · раз в секунду'},
+  pistol:{cls:'assault',name:'Пугач',price:0,rate:.26,dmg:24,spd:640,spread:.05,pellets:1,life:.75,ammo:Infinity,sfx:'shot',kick:2,desc:'Надёжный стартовый ствол'},
+  sheriff:{cls:'sniper',name:'Шериф',price:250,rate:.42,dmg:48,spd:820,spread:.02,pellets:1,life:.8,ammo:Infinity,sfx:'shot',kick:3.5,desc:'Медленный, но бьёт вдвое сильнее'},
+  millet:{cls:'assault',name:'Пшеномёт',price:450,rate:.11,dmg:14,spd:680,spread:.15,pellets:1,life:.6,ammo:Infinity,sfx:'smg',kick:1.2,desc:'Поливает двор очередями'},
+  sawed:{cls:'tank',name:'Обрез',price:650,rate:.6,dmg:14,spd:540,spread:.42,pellets:5,life:.38,ammo:Infinity,sfx:'shotgun',kick:5,desc:'Разносит всё вблизи'},
+  popcorn:{cls:'assault',name:'Попкорн-бластер',price:1000,rate:.2,dmg:22,spd:620,spread:.05,pellets:1,life:.8,ammo:Infinity,sfx:'pop',kick:2,pierce:2,desc:'Зерно прошивает сразу трёх врагов'},
+  freeze:{cls:'tank',name:'Морозилка',price:1200,rate:.1,dmg:10,spd:720,spread:.06,pellets:1,life:.6,ammo:Infinity,sfx:'ice',kick:.8,special:'ice',desc:'Ледяные иглы замедляют врагов вдвое',meta:'Урон 10 · 10 выстр/с · замедление 50%'},
+  flame:{cls:'tank',name:'Огнемёт «Жар-птица»',price:1400,rate:.05,dmg:5,spd:450,spread:.34,pellets:1,life:.6,ammo:Infinity,sfx:'flame',kick:.3,special:'flame',desc:'Струя огня поджигает всех врагов перед тобой',meta:'Урон 5 × 20/с + горение 9/с · дальность средняя'},
+  minigun:{cls:'assault',name:'Миниган «Молотилка»',price:1800,rate:.045,dmg:11,spd:760,spread:.17,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,special:'mini',desc:'Раскручивается до бешеного темпа, но на бегу тормозит',meta:'Урон 11 · до 22 выстр/с после раскрутки'},
+  mortar:{cls:'medic',name:'Яйцемёт',price:2000,rate:.85,dmg:65,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'throw',kick:3,special:'mortar',heal:4,desc:'Навесом кидает взрывные яйца, каждый задетый враг лечит своих',meta:'Взрыв 65 по площади · +4 здоровья за врага'},
+  granny:{cls:'tank',name:'Бабушкин дробовик',price:0,rate:.75,dmg:13,spd:540,spread:.4,pellets:4,life:.42,ammo:Infinity,sfx:'shotgun',kick:4,desc:'Старый, но надёжный дробовик танка'},
+  cornrifle:{cls:'sniper',name:'Кукурузная винтовка',price:0,rate:.75,dmg:58,spd:980,spread:.01,pellets:1,life:.9,ammo:Infinity,sfx:'shot',kick:3,pierce:1,desc:'Меткий дальний выстрел, прошивает двоих'},
+  crossbow:{cls:'sniper',name:'Арбалет «Клюв»',price:900,rate:.85,dmg:85,spd:1000,spread:.01,pellets:1,life:1,ammo:Infinity,sfx:'shot',kick:2.5,pierce:3,desc:'Тяжёлый болт пробивает четверых подряд'},
+  syringe:{cls:'medic',name:'Шприцемёт',price:0,rate:.24,dmg:17,spd:700,spread:.04,pellets:1,life:.7,ammo:Infinity,sfx:'pop',kick:1,heal:2,desc:'Каждое попадание лечит тебя и бойца рядом',meta:'Урон 17 · 4 выстр/с · +2 здоровья за попадание'},
+  vitamin:{cls:'medic',name:'Витаминный пулемёт',price:800,rate:.1,dmg:10,spd:720,spread:.12,pellets:1,life:.62,ammo:Infinity,sfx:'smg',kick:.8,heal:1,desc:'Очереди витаминок: бьют врагов и лечат своих',meta:'Урон 10 · 10 выстр/с · +1 здоровья за попадание'},
+  rail:{cls:'sniper',name:'Рельсотрон',eggs:120,rate:1.05,dmg:130,spd:0,spread:0,pellets:1,life:0,ammo:Infinity,sfx:'rail',kick:7,special:'rail',desc:'Луч прошивает всех врагов и даже укрытия на линии',meta:'Урон 130 всем на линии · раз в секунду'},
   shotgun:{name:'Дробовик',rate:.68,dmg:15,spd:560,spread:.36,pellets:6,life:.42,ammo:14,sfx:'shotgun',kick:6},
   smg:{name:'Тарахтелка',rate:.085,dmg:13,spd:720,spread:.13,pellets:1,life:.62,ammo:80,sfx:'smg',kick:1.2}
 };
-const PRIMARY=['pistol','sheriff','millet','sawed','popcorn','freeze','flame','minigun','mortar','rail'];
+const CLASSES={
+  assault:{name:'Штурмовик',c:'#e8742a',desc:'+10% скорости и темпа стрельбы',start:'pistol'},
+  tank:{name:'Танк',c:'#6f7782',desc:'+25% здоровья и −10% входящего урона, но на 8% медленнее',start:'granny'},
+  sniper:{name:'Снайпер',c:'#2f95d0',desc:'+20% урона и пули летят на 35% дальше, но −10% здоровья',start:'cornrifle'},
+  medic:{name:'Медик',c:'#4fae36',desc:'Лечится на 2 в секунду и лечит отряд рядом',start:'syringe'}
+};
+const CLASS_ORDER=['assault','tank','sniper','medic'];
+const PRIMARY=['pistol','millet','popcorn','minigun','granny','sawed','freeze','flame','cornrifle','sheriff','crossbow','rail','syringe','vitamin','mortar'];
+const clsOf=heroId=>HEROES[heroId].cls;
 const NIGHT_R=250;
 const ETYPE={
   hen:{name:'Несушка',hp:45,r:15,spd:95,score:100,coin:3,tok:1,cd:[1.3,2.3],dmg:8,bspd:290,range:440,keep:220,cols:[['#a8632f','#7d4520'],['#4b4744','#2e2b29'],['#dba948','#b8862c']]},
