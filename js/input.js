@@ -29,6 +29,7 @@ addEventListener('keydown',e=>{input.keys[e.code]=true;
   if(S.mode==='play'){if(e.code==='KeyQ'||e.code==='KeyE'||e.code==='Space'){throwNade();e.preventDefault();} if(e.code==='KeyR')useUlt();}
   if(e.code==='KeyT')toggleAuto();
   if(e.code==='Escape'&&!$('bgOv').hidden){$('bgOv').hidden=true;return;}
+  if(e.code==='Escape'&&!$('chestInfoOv').hidden){$('chestInfoOv').hidden=true;return;}
   if(e.code==='Escape'){if(anyPanel()){closePanels();refreshMenu();return;}}
   if(e.code==='Escape'||e.code==='KeyP'){if(S.mode==='play')pauseGame();else if(S.mode==='paused')resumeGame();}});
 addEventListener('keyup',e=>{input.keys[e.code]=false;});

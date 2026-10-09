@@ -3,7 +3,7 @@
 function mk(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 function preview(w,h,fn){const cvs=document.createElement('canvas');const d=Math.min(2,devicePixelRatio||1);cvs.width=w*d;cvs.height=h*d;cvs.style.width=w+'px';cvs.style.height=h+'px';
   const c=cvs.getContext('2d');c.scale(d,d);fn(c,w,h);return cvs;}
-function birdPv(look,gun,w=140,h=100,k=1.55){return preview(w,h,(c)=>{c.translate(w/2-6,h-14);c.scale(k,k);drawBird(c,{x:0,y:0,face:1,ang:-.18,phase:0,moving:false,flash:0,kind:'player',gun,...look});});}
+function birdPv(look,gun,w=140,h=100,k=1.55){if(look.sp==='goose')k*=.86;return preview(w,h,(c)=>{c.translate(w/2-6,h-14);c.scale(k,k);drawBird(c,{x:0,y:0,face:1,ang:-.18,phase:0,moving:false,flash:0,kind:'player',gun,...look});});}
 function heroPv(id,w,h,k){return birdPv(lookFor(id,SAVE.hat,SAVE.color),gunOf(id),w,h,k);}
 function clsBadge(c){const C=CLASSES[c];const b=mk('span','rar',C.name);b.style.setProperty('--c',C.c);return b;}
 function coinTag(n){return '<i class="coin"></i>'+fmt(n);}
@@ -243,9 +243,12 @@ $('briefBack').addEventListener('click',()=>{$('brief').hidden=true;});
 /* ---------- chests ---------- */
 // Три сундука: 0 обычный (корзинка), 1 большой (золотое яйцо), 2 сверхбольшой (аметистовое яйцо)
 const CHESTS=[
-  {name:'Обычный сундук',sub:'корзинка несушки',coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3]},
-  {name:'Большой сундук',sub:'золотое яйцо',coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5]},
-  {name:'Сверхбольшой сундук',sub:'аметистовое яйцо',coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true}
+  {name:'Обычный сундук',sub:'корзинка несушки',coins:[25,50],hpacks:2,wpacks:1,hcard:[3,6],wcard:[3,6],egg:[.08,1,3],
+    hb:{common:1,rare:1,epic:.8,legendary:.6},wb:{common:1,rare:.6,legendary:.25}},
+  {name:'Большой сундук',sub:'золотое яйцо',coins:[150,250],hpacks:4,wpacks:2,hcard:[8,14],wcard:[8,14],egg:[.3,2,5],
+    hb:{common:1,rare:1,epic:1,legendary:1},wb:{common:1,rare:.8,legendary:.45}},
+  {name:'Сверхбольшой сундук',sub:'аметистовое яйцо',coins:[500,800],hpacks:6,wpacks:4,hcard:[14,22],wcard:[15,25],egg:[1,5,12],sure:true,
+    hb:{common:.8,rare:1,epic:1.2,legendary:1.5},wb:{common:1,rare:1,legendary:.8}}
 ];
 const EGG_PRICE=80, SUPER_PRICE=200;
 function pickW(pool,wf){let tot=0;pool.forEach(x=>tot+=wf(x));let r=Math.random()*tot;for(const x of pool){r-=wf(x);if(r<=0)return x;}return pool[pool.length-1];}
@@ -260,13 +263,13 @@ function rollChest(tier){
   for(let i=0;i<C.hpacks;i++){
     const pool=Object.keys(SAVE.heroes).filter(id=>SAVE.heroes[id].lv<10);
     if(!pool.length){res.coins+=10*(tier+1);continue;}
-    const pick=pickW(pool,id=>RAR[HEROES[id].rar].w);
+    const pick=pickW(pool,id=>RAR[HEROES[id].rar].w*C.hb[HEROES[id].rar]);
     res.cards[pick]=(res.cards[pick]||0)+Math.max(1,Math.round(rand(C.hcard[0],C.hcard[1])*RAR[HEROES[pick].rar].card));
   }
   for(let i=0;i<C.wpacks;i++){
     const pool=PRIMARY.filter(id=>SAVE.guns.includes(id)&&wLv(id)<10);
     if(!pool.length){res.coins+=10*(tier+1);continue;}
-    const pick=pickW(pool,id=>WRAR[WEAP[id].rar].w);
+    const pick=pickW(pool,id=>WRAR[WEAP[id].rar].w*C.wb[WEAP[id].rar]);
     res.wcards[pick]=(res.wcards[pick]||0)+Math.max(1,Math.round(rand(C.wcard[0],C.wcard[1])*WRAR[WEAP[pick].rar].card));
   }
   SAVE.coins+=res.coins; SAVE.eggs+=res.eggs;
@@ -278,7 +281,8 @@ function rollChest(tier){
 const pct=v=>String(v).replace('.',',')+'%';
 function chestCard(tier){
   const C=CHESTS[tier], card=mk('div','item chest t'+tier);
-  const pv=mk('div','pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(220,150,(c,w,h)=>{c.translate(w/2,h-12);c.scale(.9,.9);drawChest(c,tier,0,0);}));card.appendChild(pv);
+  const pv=mk('div','pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(220,150,(c,w,h)=>{c.translate(w/2,h-12);c.scale(.9,.9);drawChest(c,tier,0,0);}));
+  const ib=mk('button','propbtn','<b>i</b>Свойства');ib.setAttribute('aria-label','Свойства: '+C.name);ib.onclick=()=>openChestInfo(tier);pv.appendChild(ib);card.appendChild(pv);
   card.appendChild(mk('h4','',C.name));
   const eggTxt=C.egg[0]>=1?C.egg[1]+'–'+C.egg[2]+' золотых яиц':'шанс золотых яиц';
   card.appendChild(mk('p','',C.coins[0]+'–'+C.coins[1]+' зёрен · '+C.hpacks+' пачки карт героев · '+C.wpacks+(C.wpacks>1?' пачки':' пачка')+' карт оружия · '+eggTxt+(C.sure?' · <b>гарантированный новый герой</b>, пока есть закрытые':'')));
@@ -315,19 +319,50 @@ function renderChests(){
   const g=mk('div','grid wide chests');
   [0,1,2].forEach(t=>g.appendChild(chestCard(t)));
   body.appendChild(g);
-  body.appendChild(mk('div','sect','Шансы выпадения героя'));
-  const wrap=mk('div','tblwrap');const t=mk('table','tbl');
-  t.innerHTML='<thead><tr><th>Редкость</th><th class="n">Обычный</th><th class="n">Большой</th><th class="n">Сверхбольшой</th><th class="n">Открыто</th></tr></thead>';
-  const tb=mk('tbody');
-  ['common','rare','epic','legendary'].forEach(rk=>{const R=RAR[rk];
-    const all=HERO_IDS.filter(id=>HEROES[id].rar===rk&&HEROES[id].chance), got=all.filter(id=>SAVE.heroes[id]).length;
-    const tr=mk('tr');tr.innerHTML='<td><span class="rar" style="--c:'+R.c+'">'+R.name+'</span></td><td class="n">'+pct(R.chance[0])+'</td><td class="n">'+pct(R.chance[1])+'</td><td class="n">'+pct(R.chance[2])+'</td><td class="n">'+got+' / '+all.length+'</td>';tb.appendChild(tr);});
-  t.appendChild(tb);wrap.appendChild(t);body.appendChild(wrap);
-  body.appendChild(mk('p','note','Герои выпадают только из сундуков. Сначала проверяется самая высокая редкость; если все герои этой редкости уже открыты, она не выпадает. В сверхбольшом сундуке новый герой будет всегда, пока есть закрытые. Карты героев падают только для открытых героев, карты оружия — только для купленных стволов: чем выше редкость, тем меньше карт в пачке.'));
+  body.appendChild(mk('p','note','У каждого сундука свои шансы — нажми «Свойства» на картинке сундука. Герои выпадают только из сундуков. Карты героев падают только для открытых героев, карты оружия — только для купленных стволов.'));
   body.appendChild(mk('div','sect','Золотые яйца'));
   body.appendChild(mk('p','note','Редкая валюта: у тебя <b>'+SAVE.eggs+'</b>. Большой сундук стоит '+EGG_PRICE+', сверхбольшой — '+SUPER_PRICE+'. Где взять: первое прохождение уровней сюжета (3–15 за уровень), волны 10, 15 и 20 в бесконечном бою (один раз), 5-й и 10-й уровень героя, сундуки. Ещё за яйца продаются Нимб, Платиновый окрас и Рельсотрон.'));
   body.scrollTop=st;
 }
+/* «Свойства» сундука: что внутри и с каким шансом — считается от текущего прогресса */
+function chestOdds(tier){
+  const C=CHESTS[tier], o={hero:{},anyHero:0,hcards:{},wcards:{}};
+  let miss=1;
+  for(const rk of RAR_ORDER){const left=HERO_IDS.filter(id=>!SAVE.heroes[id]&&HEROES[id].chance&&HEROES[id].rar===rk).length;
+    const p=left?RAR[rk].chance[tier]/100:0; o.hero[rk]={p:miss*p,left}; miss*=1-p;}
+  const lockedAny=HERO_IDS.some(id=>!SAVE.heroes[id]&&HEROES[id].chance);
+  if(C.sure&&lockedAny){const tot=RAR_ORDER.reduce((s,rk)=>s+HERO_IDS.filter(id=>!SAVE.heroes[id]&&HEROES[id].chance&&HEROES[id].rar===rk).length*RAR[rk].w,0);
+    for(const rk of RAR_ORDER){const n=HERO_IDS.filter(id=>!SAVE.heroes[id]&&HEROES[id].chance&&HEROES[id].rar===rk).length;o.hero[rk].p+=miss*n*RAR[rk].w/tot;} miss=0;}
+  o.anyHero=lockedAny?1-miss:0;
+  const share=(ids,wf,keys,key)=>{const t=ids.reduce((s,id)=>s+wf(id),0);const r={};keys.forEach(k=>r[k]=0);ids.forEach(id=>r[key(id)]+=t?wf(id)/t:0);return r;};
+  const hp=Object.keys(SAVE.heroes).filter(id=>SAVE.heroes[id].lv<10), wp=PRIMARY.filter(id=>SAVE.guns.includes(id)&&wLv(id)<10);
+  o.hcards=share(hp,id=>RAR[HEROES[id].rar].w*C.hb[HEROES[id].rar],['common','rare','epic','legendary'],id=>HEROES[id].rar);
+  o.wcards=share(wp,id=>WRAR[WEAP[id].rar].w*C.wb[WEAP[id].rar],WRAR_ORDER,id=>WEAP[id].rar);
+  return o;
+}
+const pc=v=>{const x=v*100;return (x===0?'0':x>=10?Math.round(x):x>=1?x.toFixed(1):x.toFixed(2)).toString().replace('.',',')+'%';};
+function openChestInfo(tier){
+  initAudio(); SFX.pick();
+  const C=CHESTS[tier], o=chestOdds(tier), B=$('ciBody'); B.innerHTML='';
+  $('ciName').textContent=C.name; $('ciSub').textContent=C.sub[0].toUpperCase()+C.sub.slice(1);
+  const pv=mk('div','ci-pv '+['nest','gold','amet'][tier]);pv.appendChild(preview(200,128,(c,w,h)=>{c.translate(w/2,h-10);c.scale(.78,.78);drawChest(c,tier,0,0);}));B.appendChild(pv);
+  const tbl=(head,rows)=>{const w=mk('div','tblwrap');const t=mk('table','tbl');t.innerHTML='<thead><tr>'+head.map((h,i)=>'<th'+(i?' class="n"':'')+'>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((x,i)=>'<td'+(i?' class="n"':'')+'>'+x+'</td>').join('')+'</tr>').join('')+'</tbody>';w.appendChild(t);return w;};
+  const rb=(R)=>'<span class="rar" style="--c:'+R.c+'">'+R.name+'</span>';
+  B.appendChild(mk('h3','ci-h','Всегда внутри'));
+  B.appendChild(tbl(['Награда','Сколько'],[
+    ['<i class="coin"></i>Зёрна',C.coins[0]+'–'+C.coins[1]],
+    ['Пачки карт героев',C.hpacks+' × '+C.hcard[0]+'–'+C.hcard[1]+' карт*'],
+    ['Пачки карт оружия',C.wpacks+' × '+C.wcard[0]+'–'+C.wcard[1]+' карт*'],
+    ['<i class="gegg"></i>Золотые яйца',(C.egg[0]>=1?'всегда':'шанс '+pc(C.egg[0]))+' · '+C.egg[1]+'–'+C.egg[2]]]));
+  B.appendChild(mk('h3','ci-h','Новый герой'+(C.sure?' · гарантирован':'')));
+  B.appendChild(tbl(['Редкость','Шанс','Ещё закрыто'],['legendary','epic','rare','common'].map(rk=>[rb(RAR[rk]),pc(o.hero[rk].p),String(o.hero[rk].left)]).concat([['<b>Хоть какой-то герой</b>','<b>'+pc(o.anyHero)+'</b>','']])));
+  B.appendChild(mk('h3','ci-h','Кому достанется пачка карт'));
+  B.appendChild(tbl(['Карты героя','Шанс пачки','Карт в пачке'],['common','rare','epic','legendary'].map(rk=>[rb(RAR[rk]),pc(o.hcards[rk]),Math.max(1,Math.round(C.hcard[0]*RAR[rk].card))+'–'+Math.max(1,Math.round(C.hcard[1]*RAR[rk].card))])));
+  B.appendChild(tbl(['Карты оружия','Шанс пачки','Карт в пачке'],WRAR_ORDER.map(rk=>[rb(WRAR[rk]),pc(o.wcards[rk]),Math.max(1,Math.round(C.wcard[0]*WRAR[rk].card))+'–'+Math.max(1,Math.round(C.wcard[1]*WRAR[rk].card))])));
+  B.appendChild(mk('p','ci-note','Шансы считаются от твоего прогресса: уже открытые герои и стволы на максимальном уровне не выпадают. Сначала проверяется самая высокая редкость героя. * Чем выше редкость, тем меньше карт в пачке.'));
+  $('chestInfoOv').hidden=false;
+}
+$('ciClose').addEventListener('click',()=>{$('chestInfoOv').hidden=true;});
 let chestAnim=null;
 function openChest(tier,pay){
   initAudio();
@@ -385,10 +420,15 @@ function mapPv(key,w,h){return preview(w,h,(c)=>{
   const M=MAPS[key],R=seeded(M.seed);c.fillStyle=M.grass;c.fillRect(0,0,w,h);
   for(let i=0;i<5;i++){c.fillStyle=M.patch;c.beginPath();c.ellipse(R()*w,R()*h,10+R()*18,6+R()*10,R()*3,0,TAU);c.fill();}
   for(let i=0;i<40;i++){c.fillStyle=M.tuft[i%2];c.fillRect(R()*w,R()*h,2,3);}
-  const vert=M.river.axis==='v', L=vert?h:w, base=vert?w*.68:h*.38;
+  const vert=M.river.axis==='v', L=vert?h:w, base=(vert?w:h)*M.river.base/WW;
   const pt=t=>{const v=base+Math.sin(t/L*TAU*1.2+M.river.phase)*(vert?w:h)*.07;return vert?[v,t]:[t,v];};
   const path=()=>{c.beginPath();for(let t=-4;t<=L+4;t+=4){const [x,y]=pt(t);t<0?c.moveTo(x,y):c.lineTo(x,y);}};
-  c.lineCap='round';path();c.strokeStyle=M.bank;c.lineWidth=20;c.stroke();path();c.strokeStyle=M.water;c.lineWidth=13;c.stroke();path();c.strokeStyle=M.deep;c.lineWidth=5;c.stroke();
+  const B=M.branch, bpath=()=>{if(!B)return;const bv=B.axis==='v',bL=bv?h:w,bb=(bv?w:h)*B.base/WW,j=bv?pt(bb*w/w)[1]:pt(bb)[0];c.beginPath();
+    for(let t=0;t<=1.0001;t+=.05){const u=B.end==='hi'?j+(bL+4-j)*t:j*(1-t)-4*t,v=bb+Math.sin(u/bL*TAU+B.phase)*(bv?w:h)*.04;const [x,y]=bv?[v,u]:[u,v];t?c.lineTo(x,y):c.moveTo(x,y);}};
+  c.lineCap='round';
+  path();c.strokeStyle=M.bank;c.lineWidth=20;c.stroke();bpath();c.lineWidth=16;c.stroke();
+  bpath();c.strokeStyle=M.water;c.lineWidth=10;c.stroke();path();c.lineWidth=13;c.stroke();
+  bpath();c.strokeStyle=M.deep;c.lineWidth=3.5;c.stroke();path();c.lineWidth=5;c.stroke();
   const [bx,by]=pt(L*.42);c.save();c.translate(bx,by);if(!vert)c.rotate(Math.PI/2);c.fillStyle='#a8743d';c.strokeStyle=INK;c.lineWidth=1.5;rr(c,-14,-6,28,12,2);c.fill();c.stroke();
   c.strokeStyle='rgba(43,29,20,.5)';c.lineWidth=1;for(let x=-10;x<=10;x+=5)seg(c,x,-6,x,6);c.restore();
   const spots=vert?[[w*.2,h*.3],[w*.38,h*.75],[w*.9,h*.2]]:[[w*.2,h*.78],[w*.62,h*.72],[w*.86,h*.12]];

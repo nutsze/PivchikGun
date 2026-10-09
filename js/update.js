@@ -148,10 +148,11 @@ function updateEnemies(dt){
       if(e.dashT<=0){e.st='walk';e.cd=T.cd?rand(T.cd[0],T.cd[1]):rand(2,3);if(T.boss&&e.dashes>0){e.dashes--;startDash(e,.45,.55);}}
       collideWorld(e,T.fly); e.face=e.dx>=0?1:-1; continue;
     }
-    else if(e.type==='fox'||e.type==='rat'||e.type==='wolf'){
-      vx=dx/d;vy=dy/d; const z=Math.sin(S.t*5+e.phase)*(e.type==='rat'?.25:.45); vx+=-dy/d*z; vy+=dx/d*z;
+    else if(e.type==='fox'||e.type==='rat'||e.type==='wolf'||e.type==='bigrat'){
+      vx=dx/d;vy=dy/d; const z=Math.sin(S.t*5+e.phase)*(e.type==='rat'||e.type==='bigrat'?.25:.45); vx+=-dy/d*z; vy+=dx/d*z;
       if(e.type==='wolf'){e.cd-=dt;if(d<170&&d>50&&e.cd<=0&&see)startDash(e,.32,.3);}
-      if(d<e.r+tg.r+5)bite(e,T.melee,e.type==='rat'?.6:.75);
+      if(e.type==='bigrat'){e.cd-=dt;if(d<160&&d>40&&e.cd<=0&&see){startDash(e,.22,.22);SFX.squeak();}} // крыса прыгает и кусает
+      if(d<e.r+tg.r+5)bite(e,T.melee,e.type==='rat'?.6:e.type==='bigrat'?.5:.75);
     } else if(e.type==='hen'||e.type==='ferret'||e.type==='robohen'||e.type==='owl'||e.type==='mole'){
       if(e.type==='mole'&&d<e.r+tg.r+5)bite(e,T.melee,.8);
       const keep=(enemies.length<=3&&S.toSpawn===0)||(S.night&&d>NIGHT_R)?Math.min(T.keep,S.night?NIGHT_R-60:150):T.keep; // stragglers come to you
@@ -193,13 +194,13 @@ function updateEnemies(dt){
       if(T.fly)noSep=true;
     }
     const straggle=enemies.length<=3&&S.toSpawn===0;
-    if(!T.fly&&alive&&RIVER&&e.st!=='dash'&&e.st!=='tell'&&e.st!=='aim'&&(straggle||!(T.bul&&!T.boss&&d<(T.range||400)*.85))){
+    if(!T.fly&&!e.hop&&alive&&RIVER&&e.st!=='dash'&&e.st!=='tell'&&e.st!=='aim'&&(straggle||!(T.bul&&!T.boss&&d<(T.range||400)*.85))){
       const nt=navTarget(e,tg.x,tg.y,e.navAlt||0);
       if(nt){const nx=nt[0]-e.x,ny=nt[1]-e.y,nd=Math.hypot(nx,ny)||1;vx=nx/nd;vy=ny/nd;
         // защита от застревания: другой мост, а потом обход на нужный берег
         e.navT=(e.navT||0)+dt; if(e.navBest===undefined||d<e.navBest-25){e.navBest=d;e.navT=0;}
         if(e.navT>7){e.navT=0;e.navBest=undefined;e.navAlt=(e.navAlt||0)+1;
-          if(e.navAlt>2){const p=sidePoint(sideOf(tg.x,tg.y));if(p){puff(e.x,e.y,'#e9dcc0',6,1);e.x=p[0];e.y=p[1];e._px=e.x;e._py=e.y;}e.navAlt=0;}}
+          if(e.navAlt>2){const p=sidePoint(regionOf(tg.x,tg.y));if(p){puff(e.x,e.y,'#e9dcc0',6,1);e.x=p[0];e.y=p[1];e._px=e.x;e._py=e.y;}e.navAlt=0;}}
       } else {e.navT=0;e.navBest=undefined;}
     }
     if(gooseSlow&&d<110)spdMul*=.7;
@@ -207,9 +208,10 @@ function updateEnemies(dt){
     curTg=null;
     if(!noSep)for(const f of enemies){if(f===e||f.dead||ETYPE[f.type].fly)continue;const fx=e.x-f.x,fy=e.y-f.y,fd=Math.hypot(fx,fy)||1;if(fd<e.r+f.r+6){vx+=fx/fd*.8;vy+=fy/fd*.8;}}
     const l=Math.hypot(vx,vy); const spd=T.spd*(1+(S.diff-1)*.025)*spdMul;
-    if(l>.05&&spd>0){const m=Math.min(1,l);vx=vx/l*spd*(T.fly?Math.max(.5,m):1);vy=vy/l*spd*(T.fly?Math.max(.5,m):1);e.moving=true;e.phase+=dt*(e.type==='fox'||e.type==='rat'||e.type==='wolf'?18:13);}else{vx=vy=0;e.moving=false;}
+    if(l>.05&&spd>0){const m=Math.min(1,l);vx=vx/l*spd*(T.fly?Math.max(.5,m):1);vy=vy/l*spd*(T.fly?Math.max(.5,m):1);e.moving=true;e.phase+=dt*(e.type==='fox'||e.type==='rat'||e.type==='wolf'||e.type==='bigrat'?18:13);}else{vx=vy=0;e.moving=false;}
     if(T.fly)e.phase+=dt*10;
     e.x+=(vx+e.kx)*dt; e.y+=(vy+e.ky)*dt; e.kx*=Math.pow(.002,dt); e.ky*=Math.pow(.002,dt);
+    if(!T.fly&&alive){const ox=e.x-tg.x,oy=e.y-tg.y,od=Math.hypot(ox,oy)||1,m=e.r+tg.r-2;if(od<m){e.x=tg.x+ox/od*m;e.y=tg.y+oy/od*m;}} // не залезать внутрь бойца
     if(e.st!=='tell'&&e.st!=='aim')e.face=dx>=0?1:-1; else if(e.st==='aim')e.face=e.dx>=0?1:-1;
     if(e.type!=='fox'&&e.st!=='aim'&&e.cd>.25)e.ang=Math.atan2(dy,dx);
     if(e.st==='aim')e.ang=Math.atan2(e.dy,e.dx);

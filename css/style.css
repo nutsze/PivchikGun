@@ -355,3 +355,16 @@ button.lb-ver{padding:5px 9px;font-size:12px}
 @media (orientation:landscape) and (max-height:500px){.bggrid{grid-template-columns:repeat(5,1fr)}.bgcard{width:min(760px,100%)}}
 .phead h2{flex:1 0 auto}
 .item.gun .brow{grid-template-columns:1fr}
+/* v0.4: свойства сундука */
+.propbtn{position:absolute;right:8px;top:8px;display:flex;align-items:center;gap:6px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 11px 6px 6px;font:800 12.5px/1 var(--body);cursor:pointer;box-shadow:0 2px 0 var(--ink)}
+.propbtn b{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--yolk);font:900 12px/1 var(--body);font-style:italic}
+.propbtn:active{transform:translateY(2px);box-shadow:none}
+.propbtn:focus-visible{outline:3px solid var(--barn);outline-offset:2px}
+.cinfo{width:min(560px,100%);text-align:left}
+.cinfo .eyebrow,.cinfo .logo,.cinfo .best{text-align:center}
+.ci-pv{display:grid;place-items:center;border:2px solid var(--ink);border-radius:14px;margin:4px 0 6px}
+.ci-pv.nest{background:linear-gradient(#ffeab0,#f0c56a)}.ci-pv.gold{background:radial-gradient(circle at 50% 62%,#fff3c0,#f1b545 62%,#c47a1f)}.ci-pv.amet{background:radial-gradient(circle at 50% 60%,#f3e2ff,#b88ae8 60%,#6a3fb5)}
+.ci-h{margin:10px 0 2px;font:900 13px/1.2 var(--body);text-transform:uppercase;letter-spacing:.08em}
+.cinfo .tblwrap + .tblwrap{margin-top:8px}
+.ci-note{margin:10px 0 4px;font:600 12px/1.35 var(--body);opacity:.75}
+@media (orientation:landscape) and (max-height:500px){.ci-pv{display:none}}

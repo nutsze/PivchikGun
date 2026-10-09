@@ -15,7 +15,7 @@ let allies=[], curTg=null;
 function squadIds(){return SAVE.squad.filter(id=>SAVE.heroes[id]&&id!==SAVE.hero).slice(0,SAVE.slots);}
 function gunForAlly(id){const g=SAVE.squadGun[id],c=clsOf(id);return (g&&WEAP[g]&&WEAP[g].cls===c&&SAVE.guns.includes(g))?g:gunOf(id);}
 function allyRange(a){const W=WEAP[a.gun];if(W.special==='rail')return 520;if(W.special==='mortar')return 380;return Math.min(470,Math.max(200,W.spd*W.life*(a.cls==='sniper'?1.35:1)));}
-let zones=[];
+let zones=[], strikes=[]; // strikes — зона яичного дождя (одна на ульту)
 function makeAllies(){
   const ids=squadIds();
   allies=ids.map((id,i)=>{const H=HEROES[id],L=heroLv(id),C=H.cls;

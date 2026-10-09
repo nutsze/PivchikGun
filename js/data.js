@@ -10,7 +10,7 @@ const RAR_ORDER=['legendary','epic','rare','common'];
 const HEROES={
   hen:{cls:'assault',name:'Пеструшка',rar:'common',chance:null,sp:'hen',hp:100,spd:205,r:15,dmg:1,rate:1,armor:0,regen:0,nade:1,body:'#fbfbf4',wing:'#e6e3d6',
     perk:'Сбалансированная, берёт в бой лишнее яйцо',
-    ult:['Яичный дождь','С неба падают 8 яиц-бомб прямо на врагов'],
+    ult:['Яичный дождь','Одна зона там, где врагов гуще всего: в неё падают 8 яиц-бомб'],
     p5:['Запасливая','Каждая новая волна даёт +1 яйцо-гранату'],
     p10:['Наседка','Кукуруза лечит вдвое сильнее и падает в полтора раза чаще']},
   chick:{cls:'sniper',name:'Цыпа Шустрик',rar:'common',chance:[12,30],sp:'chick',hp:75,spd:248,r:12,dmg:1,rate:1.25,armor:0,regen:0,nade:0,body:'#ffd84a',wing:'#f0b628',
@@ -28,7 +28,7 @@ const HEROES={
     ult:['Кря-волна','Лечит половину здоровья, сбивает яйца и отталкивает врагов'],
     p5:['Непромокаемая','Получает на 10% меньше урона'],
     p10:['Второе дыхание','Один раз за бой встаёт с 50% здоровья']},
-  goose:{cls:'tank',name:'Гусь Бронебой',rar:'epic',chance:[2,7],sp:'goose',hp:160,spd:178,r:17,dmg:1.05,rate:1,armor:.25,regen:0,nade:0,body:'#ecebe4',wing:'#c9c7bd',
+  goose:{cls:'tank',name:'Гусь Бронебой',rar:'epic',chance:[2,7],sp:'goose',special:'armor',hp:160,spd:178,r:17,dmg:1.05,rate:1,armor:.25,regen:0,nade:0,body:'#a9aba3',wing:'#7b7d76',head:'#45474b',
     perk:'Толстые перья: на 25% меньше урона',
     ult:['Гусиная крепость','5 секунд неуязвимости, вражеские яйца отлетают обратно'],
     p5:['Шипение','Враги рядом с гусём двигаются на 30% медленнее'],
@@ -112,29 +112,30 @@ const wCost=(id,l)=>Math.round(WCOST[l]*WRAR[WEAP[id].rar].cost/5)*5;
 const W_STEP=.06;
 const NIGHT_R=250;
 const ETYPE={
-  hen:{name:'Несушка',hp:45,r:15,spd:95,score:100,coin:3,tok:1,cd:[1.3,2.3],dmg:8,bspd:290,range:440,keep:220,cols:[['#a8632f','#7d4520'],['#4b4744','#2e2b29'],['#dba948','#b8862c']]},
+  hen:{name:'Несушка',hop:true,hp:45,r:15,spd:95,score:100,coin:3,tok:1,cd:[1.3,2.3],dmg:8,bspd:290,range:440,keep:220,cols:[['#a8632f','#7d4520'],['#4b4744','#2e2b29'],['#dba948','#b8862c']]},
   fox:{name:'Лиса',hp:55,r:15,spd:168,score:120,coin:4,tok:1,melee:13},
   turkey:{name:'Индюк',hp:150,r:22,spd:68,score:250,coin:9,tok:2,cd:[2,2.8],dmg:7,bspd:250,range:400,melee:15},
   crow:{name:'Ворона',hp:35,r:13,spd:150,score:130,coin:4,tok:1,cd:[2.4,3.4],dmg:15,fly:true},
   raccoon:{name:'Енот',hp:70,r:15,spd:115,score:160,coin:6,tok:2,dash:520,melee:18},
-  rat:{name:'Крыса',hp:18,r:10,spd:178,score:40,coin:1,tok:0,melee:6},
+  rat:{name:'Мышь',hp:18,r:10,spd:178,score:40,coin:1,tok:0,melee:6},
+  bigrat:{name:'Крыса',hp:55,r:14,spd:228,score:140,coin:5,tok:1,melee:15,dash:620,cd:[1.6,2.4]},
   wolf:{name:'Волк',hp:75,r:16,spd:185,score:170,coin:5,tok:1,melee:14,dash:470},
   owl:{name:'Сова',hp:55,r:14,spd:85,score:180,coin:5,tok:1,cd:[2.6,3.6],dmg:16,bspd:640,bul:'feather',keep:320,range:560},
   ferret:{name:'Хорёк',hp:60,r:14,spd:120,score:150,coin:5,tok:1,cd:[1.6,2.4],dmg:6,bspd:420,bul:'pellet',keep:210,range:440},
-  robohen:{name:'Робо-несушка',hp:110,r:15,spd:85,score:220,coin:7,tok:2,cd:[2,2.8],dmg:14,bspd:720,bul:'bolt',keep:240,range:520},
+  robohen:{name:'Робо-несушка',hop:true,hp:110,r:15,spd:85,score:220,coin:7,tok:2,cd:[2,2.8],dmg:14,bspd:720,bul:'bolt',keep:240,range:520},
   mole:{name:'Крот',hp:50,r:13,spd:105,score:140,coin:4,tok:1,cd:[2.2,3.2],dmg:9,bspd:300,bul:'dirt',melee:10,keep:160,range:420},
   eagle:{name:'Орёл',hp:80,r:16,spd:170,score:220,coin:7,tok:2,fly:true,dash:580,melee:20,s:1.35,cd:[2.6,3.6]},
-  gturkey:{name:'Индюк-генерал',hp:1100,r:34,spd:62,score:3000,coin:60,tok:25,boss:true,melee:25,bspd:240,dmg:9,s:1.6,pats:['fan','burst','summon','dash'],summon:['hen','turkey'],dash:400,bul:'egg',taunt:'Ко мне, солдаты!'},
+  gturkey:{name:'Индюк-генерал',hop:true,hp:1100,r:34,spd:62,score:3000,coin:60,tok:25,boss:true,melee:25,bspd:240,dmg:9,s:1.6,pats:['fan','burst','summon','dash'],summon:['hen','turkey'],dash:400,bul:'egg',taunt:'Ко мне, солдаты!'},
   ataman:{name:'Лис-атаман',hp:2300,r:30,spd:120,score:6000,coin:120,tok:40,boss:true,melee:28,bspd:270,dmg:10,s:1.75,pats:['spiral','dash','summon','ring'],summon:['fox','raccoon'],dash:520,bul:'fire',taunt:'Банда, за мной!'},
   badger:{name:'Барсук-Бульдозер',hp:3000,r:30,spd:80,score:7000,coin:150,tok:45,boss:true,melee:30,bspd:250,dmg:11,s:1.7,pats:['dash','fan','summon','dash','ring'],summon:['wolf','raccoon'],dash:480,bul:'rock',taunt:'Разойдись — снесу!'},
   wolfboss:{name:'Вожак Серый Хвост',hp:4200,r:30,spd:140,score:9000,coin:180,tok:50,boss:true,melee:32,bspd:280,dmg:12,s:1.8,pats:['dash','summon','ring','dash','spiral'],summon:['wolf'],dash:600,bul:'fire',taunt:'Ау-у-у! Стая, ко мне!'},
-  steelturkey:{name:'Стальной Индюк',hp:5500,r:34,spd:62,score:11000,coin:210,tok:55,boss:true,melee:34,bspd:300,dmg:13,s:1.7,pats:['rain','fan','summon','burst','ring'],summon:['robohen','ferret'],dash:380,bul:'bolt',taunt:'ПРОТОКОЛ «ОЩИПАТЬ» ЗАПУЩЕН'},
+  steelturkey:{name:'Стальной Индюк',hop:true,hp:5500,r:34,spd:62,score:11000,coin:210,tok:55,boss:true,melee:34,bspd:300,dmg:13,s:1.7,pats:['rain','fan','summon','burst','ring'],summon:['robohen','ferret'],dash:380,bul:'bolt',taunt:'ПРОТОКОЛ «ОЩИПАТЬ» ЗАПУЩЕН'},
   drferret:{name:'Доктор Хорёк',hp:7000,r:30,spd:115,score:14000,coin:250,tok:60,boss:true,melee:34,bspd:300,dmg:14,s:1.9,pats:['spiral','rain','summon','ring','dash'],summon:['ferret','robohen'],dash:520,bul:'bolt',taunt:'Мои творения, в атаку!'},
   eagleboss:{name:'Орёл Буревестник',hp:8000,r:28,spd:165,score:17000,coin:290,tok:65,boss:true,fly:true,melee:36,bspd:320,dmg:15,s:2,pats:['dash','fan','summon','dash','rain'],summon:['crow','eagle'],dash:640,bul:'feather',taunt:'С неба не уйдёшь!'},
   emperor:{name:'Император Ворон',hp:10000,r:30,spd:130,score:25000,coin:400,tok:80,boss:true,fly:true,melee:38,bspd:300,dmg:16,s:2.3,pats:['spiral','rain','summon','ring','dash','fan'],summon:['crow','owl','eagle'],dash:560,bul:'fire',taunt:'Склонитесь перед Императором!'}
 };
-const KILLN={mole:'Кроты',any:'Враги',fox:'Лисы',crow:'Вороны',turkey:'Индюки',wolf:'Волки',owl:'Совы',robohen:'Робо-несушки',rat:'Крысы',ferret:'Хорьки',eagle:'Орлы',raccoon:'Еноты',hen:'Несушки'};
-const CH_MIX=[{hen:1,fox:.7,turkey:.35,crow:.4,raccoon:.4,rat:.4},{wolf:1,owl:.5,fox:.6,raccoon:.5,crow:.3},{ferret:1,robohen:.6,rat:.5,raccoon:.3},{crow:1,eagle:.6,owl:.5,wolf:.4,ferret:.3,robohen:.3}];
+const KILLN={mole:'Кроты',any:'Враги',fox:'Лисы',crow:'Вороны',turkey:'Индюки',wolf:'Волки',owl:'Совы',robohen:'Робо-несушки',rat:'Мыши',bigrat:'Крысы',ferret:'Хорьки',eagle:'Орлы',raccoon:'Еноты',hen:'Несушки'};
+const CH_MIX=[{hen:1,fox:.7,turkey:.35,crow:.4,raccoon:.4,rat:.4},{wolf:1,owl:.5,fox:.6,raccoon:.5,crow:.3,bigrat:.25},{ferret:1,robohen:.6,rat:.5,raccoon:.3,bigrat:.45},{crow:1,eagle:.6,owl:.5,wolf:.4,ferret:.3,robohen:.3,bigrat:.3}];
 const CHAPTERS=[
  {name:'Курятник в беде',
   intro:'Тихое утро на ферме кончилось: банда Лиса-атамана решила забрать наш курятник. Сначала он шлёт мелочь — но за ней придут и другие.',
@@ -174,7 +175,7 @@ const CHAPTERS=[
   ['Волчья тропа','w3','wolf,fox:.5','Волки идут по твоему следу. Отбей три волны.'],
   ['Туманное болото','k:any:30','','На болоте туман и темень. Победи 30 врагов и не увязни.',1],
   ['Барсук-Бульдозер','b:badger','wolf,raccoon:.5','Барсук сносит деревья, как спички. Останови его!'],
-  ['Сломанная плотина','w3','wolf,raccoon,rat:.5','Барсук сломал бобровую плотину — вода гонит врагов прямо на тебя.'],
+  ['Сломанная плотина','w3','wolf,raccoon,bigrat:.5','Барсук сломал бобровую плотину — вода гонит врагов прямо на тебя.'],
   ['Совиный совет','k:owl:10','owl,crow:.4','Совы собрались на тайный совет. Сорви его — сбей десять сов.'],
   ['Гнилой мост','s60','wolf,owl:.6','Мост скрипит под лапами. Продержись минуту, пока цыплята переходят.',1],
   ['Лисья нора','k:fox:20','fox,wolf:.3','Здесь прячутся последние лисы атамана. Найди двадцать.'],
@@ -195,10 +196,10 @@ const CHAPTERS=[
   ['Аварийный свет','s60','ferret,rat:.6','Доктор вырубил свет на всём заводе. Держись минуту в темноте.',1],
   ['Лаборатория','k:any:30','','В колбах — формула роботов. Победи 30 врагов и забери её.'],
   ['Полигон','w3','robohen,ferret:.6','На полигоне испытывают новых роботов. На тебе.'],
-  ['Вентиляция','k:rat:25','rat,ferret:.3','Крысы-шпионы бегают по трубам. Поймай 25.'],
+  ['Вентиляция','k:bigrat:12','bigrat,rat:.6,ferret:.3','Крысы-шпионы бегают по трубам — они крупнее мышей, быстрее и кусаются больно. Поймай 12.'],
   ['Котельная','s75','','Жарко и шумно. Продержись 75 секунд у котлов.'],
   ['Стальной Индюк','b:steelturkey','robohen,ferret:.6','Первый боевой робот фабрики. Разбери его на винтики!'],
-  ['Склад запчастей','w3','robohen,ferret,rat:.5','Из запчастей собирают новых роботов. Помешай сборке.'],
+  ['Склад запчастей','w3','robohen,ferret,bigrat:.4','Из запчастей собирают новых роботов. Помешай сборке.'],
   ['Ночная смена','k:ferret:20','ferret,rat:.4','Заступила ночная смена хорьков. Прогони двадцать.',1],
   ['Сборочный цех','s75','robohen,ferret:.4','Роботы сходят с ленты потоком. Держись 75 секунд.'],
   ['Пульт управления','k:robohen:15','robohen,ferret:.5','Сломай 15 роботов, чтобы пробиться к пульту.'],
@@ -246,6 +247,16 @@ CHAPTERS.forEach((C,ch)=>{C.levels=[];C.lv.forEach((t,i)=>{
 
 /* патчноуты: показываются в окне «Об игре» (новые сверху) */
 const PATCH_NOTES=[
+  {v:'0.4',tag:'бета',items:[
+    'У рек появились притоки: на каждой карте от основного русла отходит рукав со своими мостами, в том числе гнилыми',
+    'Враги ищут дорогу через мосты по всей сети рек, обходят изгибы берега и скользят вдоль воды, а не застревают',
+    'Враги больше не появляются в реке',
+    'Несушки, Робо-несушки и куриные боссы (Индюк-генерал, Стальной Индюк) перелетают воду — герой по-прежнему не может',
+    'Новый враг — Крыса: крупнее мыши, быстрее, прыгает и больно кусает. Старые мелкие крысы теперь Мыши',
+    'Яичный дождь (ульта Пеструшки и её же в отряде) больше не бьёт по каждому врагу: одна зона там, где врагов гуще всего',
+    'Гуси больше не одинаковые: Бронебой — серый, со стальным нагрудником и наплечником; Медсестра — белая, с красным крестом на крыле, румянцем и ресницами',
+    'Сундуки: кнопка «Свойства» — у каждого сундука свои шансы на героев, карты героев и карты оружия по редкостям',
+    'Враги не залезают внутрь бойца — выстрел в упор больше не пролетает мимо']},
   {v:'0.3',items:[
     'Камикадзе: раненый враг иногда поджигает фитиль, бежит к тебе и взрывается. Если добить его пулями — он просто взорвётся на месте',
     'Пеньки — новое препятствие на картах',

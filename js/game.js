@@ -3,7 +3,7 @@
 function collideWorld(e,noObs){
   if(!noObs)for(const o of OBS){const dx=e.x-o.x,dy=e.y-o.y,d=Math.hypot(dx,dy)||1,m=o.r+e.r*.85;if(d<m){e.x=o.x+dx/d*m;e.y=o.y+dy/d*m;}}
   e.x=clamp(e.x,FENCE+e.r+6,WW-FENCE-e.r-6); e.y=clamp(e.y,FENCE+e.r+12,WH-FENCE-e.r-4);
-  if(!noObs&&RIVER&&e._px!==undefined)waterBlock(e,e._px,e._py);
+  if(!noObs&&RIVER&&e._px!==undefined&&!e.hop)waterBlock(e,e._px,e._py); // курицы и куриные боссы перелетают воду
 }
 function onScreen(e,m=24){const vw=VW/SC,vh=VH/SC;return e.x>camX+m&&e.x<camX+vw-m&&e.y>camY+m+30&&e.y<camY+vh-m+10;}
 function nearestTarget(){let bt=null,bd=1e9;for(const e of enemies){if(e.dead||!onScreen(e,0))continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(S.night&&d>NIGHT_R+20)continue;if(d<bd&&(ETYPE[e.type].fly||los(P.x,P.y,e.x,e.y))){bd=d;bt=e;}}return bt;}
@@ -23,7 +23,7 @@ function ftext(x,y,txt,col='#fff',size=15){texts.push({x,y,txt,col,size,t:0,max:
 /* ---------- game flow ---------- */
 function startGame(kind='endless',idx=0){
   const mk2=kind==='story'?MAP_OF_CH[STORY[idx].ch]:'yard'; buildWorld(mk2); lastBridge=null;
-  P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];holes=[];zones=[];S.holeT=rand(8,12);
+  P=newPlayer(); makeAllies(); enemies=[];bullets=[];parts=[];pickups=[];nades=[];bombs=[];texts=[];holes=[];zones=[];strikes=[];S.holeT=rand(8,12);
   const L=kind==='story'?STORY[idx]:null;
   Object.assign(S,{mode:'play',kind,lvIdx:idx,L,diff:L?L.diff:1,night:!!(L&&L.night),t:0,score:0,wave:0,toSpawn:0,spawnT:0,between:1.2,running:false,kills:0,goalKills:0,
     survT:L&&L.goal.type==='survive'?L.goal.t:0,boss:null,shake:0,combo:0,comboT:0,deadT:0,winT:0,coins:0,tokens:0,banked:false});
@@ -57,7 +57,7 @@ function pickFrom(mix){let tot=0;for(const k in mix)tot+=mix[k];let r=Math.rando
 function pickType(){
   if(S.kind==='story')return pickFrom(S.L.mix);
   const w=S.wave,mix={hen:1};
-  if(w>=2){mix.fox=.35+w*.05;mix.rat=.2+w*.03;} if(w>=3)mix.turkey=.12+w*.035; if(w>=4)mix.crow=.25+w*.03; if(w>=5)mix.raccoon=.2+w*.03;
+  if(w>=2){mix.fox=.35+w*.05;mix.rat=.2+w*.03;} if(w>=4)mix.bigrat=.12+w*.02; if(w>=3)mix.turkey=.12+w*.035; if(w>=4)mix.crow=.25+w*.03; if(w>=5)mix.raccoon=.2+w*.03;
   if(w>=6)mix.wolf=.2+w*.03; if(w>=7)mix.owl=.15+w*.02; if(w>=8)mix.ferret=.2+w*.02; if(w>=9)mix.robohen=.15+w*.02; if(w>=10)mix.eagle=.12+w*.02;
   return pickFrom(mix);
 }
@@ -68,19 +68,20 @@ function edgePoint(r){
     x=side<2?rand(m,WW-m):side===2?m:WW-m; y=side>=2?rand(m,WH-m):side===0?m+10:WH-m;
     if(Math.hypot(x-P.x,y-P.y)>430&&!OBS.some(o=>Math.hypot(o.x-x,o.y-y)<o.r+r)&&!nearWater(x,y,r+16))break;
   }
-  return [x,y];
+  return nearWater(x,y,r+16)?dryPoint(x,y,r+24):[x,y];
 }
 function makeEnemy(type,x,y){
   const T=ETYPE[type], hpMul=T.boss?1:1+(S.diff-1)*.07;
+  if(!T.fly&&nearWater(x,y,T.r+6))[x,y]=dryPoint(x,y,T.r+14); // никто не появляется в реке
   const e={type,x,y,r:T.r,hp:T.hp*hpMul,max:T.hp*hpMul,cd:rand(1.2,2.2),face:1,ang:0,phase:rand(0,6),moving:false,flash:0,
     strafe:Math.random()<.5?1:-1,strafeT:rand(1,3),bite:0,kx:0,ky:0,id:Math.random(),stun:0,burn:0,chill:0,burnDps:0,st:'walk',tellT:0,dashT:0,dx:0,dy:0,atkT:2.5,pat:-1,spin:0,spinA:0,burst:0,burstT:0,dashes:0};
   if(type==='hen'){const c=T.cols[Math.floor(Math.random()*T.cols.length)];e.body=c[0];e.wing=c[1];}
-  if(T.s)e.s=T.s;
+  if(T.s)e.s=T.s; if(T.hop)e.hop=true;
   enemies.push(e); puff(x,y,'#e9dcc0',8,T.boss?2:1.2); return e;
 }
 function spawnEnemy(type){
   const T=ETYPE[type]; const [x,y]=edgePoint(T.r);
-  if(type==='rat'){const n=3+Math.floor(Math.random()*2);for(let i=0;i<n;i++)makeEnemy('rat',clamp(x+rand(-30,30),FENCE+20,WW-FENCE-20),clamp(y+rand(-30,30),FENCE+20,WH-FENCE-20));}
+  if(type==='rat'||type==='bigrat'){const n=type==='rat'?3+Math.floor(Math.random()*2):2;for(let i=0;i<n;i++)makeEnemy(type,clamp(x+rand(-30,30),FENCE+20,WW-FENCE-20),clamp(y+rand(-30,30),FENCE+20,WH-FENCE-20));}
   else makeEnemy(type,x,y);
 }
 function spawnBoss(type){
@@ -167,7 +168,7 @@ function hitEnemy(e,d,vx,vy,fromP=true,kbMul=1,quiet=false){
   if(!quiet&&!e.kami&&!e.kamiRolled&&e.hp<e.max*.3){e.kamiRolled=true;const T=ETYPE[e.type];
     if(!T.boss&&!T.fly&&!e.emerge&&S.t>(S.kamiNext||0)&&!enemies.some(f=>f.kami&&!f.dead)&&Math.random()<.05){S.kamiNext=S.t+12;e.kami=true;e.kamiT=4.5;e.st='walk';e.burst=0;ftext(e.x,e.y-60*(e.s||1),'КАМИКАДЗЕ!','#ff5a3c',14);SFX.fuse();}}
 }
-function featherCol(e){return {hen:e.body,fox:'#e8742a',turkey:'#6b4428',gturkey:'#6b4428',ataman:'#e8742a',crow:'#2e2a33',raccoon:'#8b8f98',rat:'#7d746c',wolf:'#7f8794',wolfboss:'#5d6470',owl:'#8a6a45',ferret:'#d8b48a',drferret:'#d8b48a',robohen:'#9aa3ad',steelturkey:'#9aa3ad',eagle:'#6b4a2b',eagleboss:'#5a3a1e',emperor:'#2a2238',badger:'#8d8f94',mole:'#6b5a52'}[e.type]||'#fff';}
+function featherCol(e){return {hen:e.body,fox:'#e8742a',turkey:'#6b4428',gturkey:'#6b4428',ataman:'#e8742a',crow:'#2e2a33',raccoon:'#8b8f98',rat:'#a8a097',bigrat:'#5b4f47',wolf:'#7f8794',wolfboss:'#5d6470',owl:'#8a6a45',ferret:'#d8b48a',drferret:'#d8b48a',robohen:'#9aa3ad',steelturkey:'#9aa3ad',eagle:'#6b4a2b',eagleboss:'#5a3a1e',emperor:'#2a2238',badger:'#8d8f94',mole:'#6b5a52'}[e.type]||'#fff';}
 function kamiBoom(e,contact){
   blast(e.x,e.y,78,eDmg(contact?24:18),false,false);
   for(const f of enemies){if(f===e||f.dead)continue;const d=Math.hypot(f.x-e.x,f.y-e.y);if(d<78+f.r*.5)hitEnemy(f,40*(1-d/110),f.x-e.x,f.y-e.y,true);}
@@ -185,7 +186,7 @@ function killEnemy(e,force){
   if(P.hid==='quail'&&hasP(10)&&Math.hypot(e.x-P.x,e.y-P.y)>250)P.ult=Math.min(100,P.ult+10);
   const tp=e.type;
   if(['fox','ataman','wolf','wolfboss'].includes(tp)){puff(e.x,e.y,tp.startsWith('wolf')?'#b9bfc8':'#f09a55',14,T.boss?2.4:1.3);feathers(e.x,e.y,featherCol(e),6,1);SFX.yelp();}
-  else if(['raccoon','rat','ferret','drferret','badger','mole'].includes(tp)){puff(e.x,e.y,'#c9c4bb',tp==='rat'?6:T.boss?24:12,T.boss?2.2:1);SFX.squeak();}
+  else if(['raccoon','rat','bigrat','ferret','drferret','badger','mole'].includes(tp)){puff(e.x,e.y,'#c9c4bb',tp==='rat'?6:T.boss?24:12,T.boss?2.2:1);SFX.squeak();}
   else if(tp==='robohen'||tp==='steelturkey'){puff(e.x,e.y,'#c9d0d8',T.boss?26:12,T.boss?2.2:1.1);puff(e.x,e.y,'#ffc93a',6,.8);SFX.zap();}
   else{feathers(e.x,e.y,featherCol(e),T.boss?50:tp==='turkey'?26:18,T.boss?1.8:1.2);puff(e.x,e.y,'#ffffff',8,1.1);
     (tp==='crow'||tp==='eagle'||tp==='eagleboss'||tp==='emperor')?SFX.caw():tp==='owl'?SFX.hoot():(tp==='turkey'||tp==='gturkey')?SFX.gobble():SFX.cluck();}
@@ -305,10 +306,8 @@ function useUlt(){
   const id=P.hid, U=HEROES[id].ult[0];
   ftext(P.x,P.y-62,U.toUpperCase(),'#ffc93a',16);
   if(id==='hen'){
-    const tg=enemies.filter(e=>!e.dead&&onScreen(e,0)).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y)).slice(0,8);
-    for(let i=0;i<8;i++){let x,y;const e=tg[i%Math.max(1,tg.length)];
-      if(e&&i<Math.max(tg.length,4)){x=e.x+rand(-20,20);y=e.y+rand(-20,20);}else{const a=rand(0,TAU),d=rand(110,260);x=P.x+Math.cos(a)*d;y=P.y+Math.sin(a)*d;}
-      const tt=.55+i*.12; bombs.push({x:clamp(x,FENCE+10,WW-FENCE-10),y:clamp(y,FENCE+10,WH-FENCE-10),t:tt,max:tt,r:85,dmg:70*P.dmgMul,from:'p'});}
+    const [cx,cy]=strikeCenter(P,enemies.filter(e=>!e.dead&&onScreen(e,0)));
+    eggStrike(cx,cy,8,70*P.dmgMul,72);
   } else if(id==='chick'){P.buff='turbo';P.buffT=4;ring(P.x,P.y,'#ffe066',120,.4);}
   else if(id==='rooster'){
     showBanner('КУКАРЕКУ!',''); SFX.crow(); S.shake+=10;
@@ -345,7 +344,23 @@ function stormAt(c,dt,R,dmgMul,fromP){
   for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.from==='e'&&Math.hypot(b.x-c.x,b.y-c.y)<rad){puff(b.x,b.y,'#ffffff',1,.5);bullets.splice(i,1);}}
   if(Math.random()<dt*30){const a=rand(0,TAU);parts.push({k:'feather',x:c.x+Math.cos(a)*rad*.8,y:c.y+Math.sin(a)*rad*.4,z:rand(10,40),vx:-Math.sin(a)*160,vy:Math.cos(a)*70,vz:40,rot:rand(0,TAU),vr:10,t:0,max:.6,col:'#fff'});}
 }
+/* Яичный дождь: одна зона там, где врагов гуще всего, яйца падают только внутри неё */
+const STRIKE_R=135;
+function strikeCenter(from,list){
+  let best=null,bn=0,bd=1e9;
+  for(const e of list){let n=0;for(const f of list)if(Math.hypot(f.x-e.x,f.y-e.y)<STRIKE_R)n++;const d=Math.hypot(e.x-from.x,e.y-from.y);if(n>bn||(n===bn&&d<bd)){bn=n;bd=d;best=e;}}
+  if(!best){const a=from===P?P.ang:rand(0,TAU);return [clamp(from.x+Math.cos(a)*220,FENCE+60,WW-FENCE-60),clamp(from.y+Math.sin(a)*220,FENCE+60,WH-FENCE-60)];}
+  let sx=0,sy=0,k=0;for(const f of list)if(Math.hypot(f.x-best.x,f.y-best.y)<STRIKE_R){sx+=f.x;sy+=f.y;k++;}
+  return [clamp(sx/k,FENCE+40,WW-FENCE-40),clamp(sy/k,FENCE+40,WH-FENCE-40)];
+}
+function eggStrike(cx,cy,n,dmg,r){
+  const last=.6+(n-1)*.11;
+  strikes.push({x:cx,y:cy,r:STRIKE_R,t:last+.25,max:last+.25});
+  for(let i=0;i<n;i++){const a=rand(0,TAU),d=Math.sqrt(Math.random())*STRIKE_R*.78,tt=.6+i*.11;
+    bombs.push({x:clamp(cx+Math.cos(a)*d,FENCE+10,WW-FENCE-10),y:clamp(cy+Math.sin(a)*d,FENCE+10,WH-FENCE-10),t:tt,max:tt,r,dmg,from:'p',quiet:true});}
+}
 function updateZones(dt){
+  for(let i=strikes.length-1;i>=0;i--){strikes[i].t-=dt;if(strikes[i].t<=0)strikes.splice(i,1);}
   for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;
     const heal=25*dt*(P.medMul||1);
     if(P.alive&&Math.hypot(P.x-z.x,P.y-z.y)<z.r)P.hp=Math.min(P.max,P.hp+heal);
@@ -374,7 +389,7 @@ function allyUlt(a){
   a.ult=0; const H=HEROES[a.id], m=a.dmgMul;
   ftext(a.x,a.y-64,H.ult[0].toUpperCase(),'#ffc93a',13); SFX.ult();
   const near=enemies.filter(e=>!e.dead&&Math.hypot(e.x-a.x,e.y-a.y)<300);
-  if(a.id==='hen'){near.slice(0,5).forEach((e,i)=>{const tt=.5+i*.12;bombs.push({x:e.x,y:e.y,t:tt,max:tt,r:75,dmg:55*m,from:'p'});});}
+  if(a.id==='hen'){const [cx,cy]=strikeCenter(a,near);eggStrike(cx,cy,5,55*m,66);}
   else if(a.id==='chick'){a.buff='turbo';a.buffT=4;}
   else if(a.id==='rooster'){SFX.crow();ring(a.x,a.y,'#ff6b4a',220,.5);for(const e of near){if(Math.hypot(e.x-a.x,e.y-a.y)<220){hitEnemy(e,35*m,e.x-a.x,e.y-a.y,false);e.stun=ETYPE[e.type].boss?.6:2;}}}
   else if(a.id==='duck'){ring(a.x,a.y,'#7fd4ff',240,.5);if(Math.hypot(P.x-a.x,P.y-a.y)<240)P.hp=Math.min(P.max,P.hp+P.max*.4);for(const b of allies)if(b.down<=0&&Math.hypot(b.x-a.x,b.y-a.y)<240)b.hp=Math.min(b.max,b.hp+b.max*.4);
