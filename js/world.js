@@ -6,19 +6,19 @@ let OBS=[], ground=null, RIVER=null, MAP='yard';
 // river: axis 'h' — река течёт слева направо, 'v' — сверху вниз; bridges: [позиция вдоль реки, 1 = гнилой]
 const MAPS={
   yard:{name:'Двор',grass:'#7cc451',tuft:['#5fa63b','#9ad866'],patch:'rgba(200,160,95,.55)',flowers:140,out:'#5f9e3c',seed:20261009,
-    obs:['hay','hay','barrel','bush','rock','hay','bush','barrel'],bank:'#d8c38a',water:'#4aa8d8',deep:'#3a8fc2',
+    obs:['hay','stump','barrel','bush','rock','hay','stump','barrel'],bank:'#d8c38a',water:'#4aa8d8',deep:'#3a8fc2',
     river:{axis:'h',base:420,amp:55,freq:.0055,phase:.4,hw:40,bridges:[[230,0],[600,1],[960,0],[1290,1]]}},
   farm:{name:'Ферма',grass:'#82c653',tuft:['#63aa3c','#a2dc6c'],patch:'rgba(200,160,95,.6)',flowers:180,out:'#62a23e',seed:777101,
-    obs:['hay','hay','hay','barrel','bush','rock','hay','barrel'],bank:'#dcc58c',water:'#4aa8d8',deep:'#3a8fc2',
+    obs:['hay','hay','stump','barrel','bush','rock','hay','stump'],bank:'#dcc58c',water:'#4aa8d8',deep:'#3a8fc2',
     river:{axis:'v',base:1110,amp:70,freq:.005,phase:1.2,hw:42,bridges:[[260,1],[620,0],[980,1],[1300,0]]}},
   forest:{name:'Тёмный лес',grass:'#5e9e3e',tuft:['#4a8a30','#78b850'],patch:'rgba(90,70,40,.45)',flowers:60,out:'#3f7a2a',seed:555202,
-    obs:['bush','bush','rock','bush','hay','bush','rock'],bank:'#a89060',water:'#3d8fb8',deep:'#2f7aa0',
+    obs:['bush','stump','rock','bush','stump','bush','stump'],bank:'#a89060',water:'#3d8fb8',deep:'#2f7aa0',
     river:{axis:'h',base:1120,amp:90,freq:.006,phase:2.1,hw:44,bridges:[[200,0],[520,1],[860,1],[1180,0],[1380,1]]}},
   factory:{name:'Птицефабрика',grass:'#b9b5aa',tuft:['#a29e93','#cfcbc0'],patch:'rgba(50,50,50,.22)',flowers:0,out:'#8a867b',seed:333303,
     obs:['barrel','barrel','rock','barrel','hay','barrel'],bank:'#8f8b80',water:'#5f8f8a',deep:'#4d7a74',
     river:{axis:'v',base:400,amp:14,freq:.004,phase:.2,hw:38,bridges:[[300,0],[700,1],[1100,0],[1350,1]]}},
   mountain:{name:'Горы',grass:'#cfe0c2',tuft:['#b2c8a6','#eef6ea'],patch:'rgba(255,255,255,.65)',flowers:40,out:'#a7bd9f',seed:111404,
-    obs:['rock','rock','bush','rock','rock','hay'],bank:'#b9b2a2',water:'#7cc8ea',deep:'#5fb2dc',
+    obs:['rock','stump','bush','rock','rock','stump'],bank:'#b9b2a2',water:'#7cc8ea',deep:'#5fb2dc',
     river:{axis:'h',base:1010,amp:110,freq:.0045,phase:3.3,hw:36,bridges:[[240,1],[560,0],[900,1],[1230,0]]}}
 };
 const MAP_OF_CH=['farm','forest','factory','mountain'];
@@ -76,7 +76,7 @@ function buildWorld(key='yard'){
   while(OBS.length<18&&tries<1400){
     tries++;
     const k=kinds[OBS.length%kinds.length];
-    const r=k==='hay'?rand2(R,32,40):k==='barrel'?rand2(R,20,24):k==='bush'?rand2(R,26,34):rand2(R,22,30);
+    const r=k==='hay'?rand2(R,32,40):k==='barrel'?rand2(R,20,24):k==='bush'?rand2(R,26,34):k==='stump'?rand2(R,19,26):rand2(R,22,30);
     const x=FENCE+90+R()*(WW-2*FENCE-180), y=FENCE+90+R()*(WH-2*FENCE-180);
     if(Math.hypot(x-sx,y-sy)<190)continue;
     if(nearWater(x,y,r+34))continue;

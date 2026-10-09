@@ -11,7 +11,7 @@ function menuAnchor(){
 function update(dt){
   S.t+=dt;
   if(S.mode==='play'||S.mode==='dying'||S.mode==='won'){
-    if(S.mode==='play'){updatePlayer(dt);updateBuff(dt);updateAllies(dt);}
+    if(S.mode==='play'){updatePlayer(dt);updateBuff(dt);updateAllies(dt);updateZones(dt);}
     if(S.mode!=='won')updateEnemies(dt);
     updateBullets(dt); updateNades(dt); updateBombs(dt);
     if(S.cleanup){S.cleanup=false;enemies=enemies.filter(e=>!e.dead);bullets=bullets.filter(b=>b.from==='p');bombs=bombs.filter(b=>b.from==='p');}
@@ -87,9 +87,10 @@ function updatePlayer(dt){
   for(const e of enemies){if(ETYPE[e.type].fly)continue;const dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy)||1,m=P.r+e.r;if(d<m){P.x+=dx/d*(m-d)*.5;P.y+=dy/d*(m-d)*.5;}}
   collideWorld(P);
   P.vx=(P.x-ox)/Math.max(dt,.001); P.vy=(P.y-oy)/Math.max(dt,.001);
+  {const k=Math.min(1,dt*3);P.svx=(P.svx||0)+(P.vx-(P.svx||0))*k;P.svy=(P.svy||0)+(P.vy-(P.svy||0))*k;}
   P.cd-=dt; if(P.inv>0)P.inv-=dt; if(P.flash>0)P.flash-=dt;
-  if(P.medic&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+2*dt);for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt);}
-  else if(P.medic)for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt);
+  if(P.medic&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+2*dt*P.medMul);for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt*P.medMul);}
+  else if(P.medic)for(const a of allies)if(a.down<=0&&Math.hypot(a.x-P.x,a.y-P.y)<200)a.hp=Math.min(a.max,a.hp+3*dt*P.medMul);
   if(P.regen&&S.t-P.lastHit>3&&P.hp<P.max){P.hp=Math.min(P.max,P.hp+P.regen*dt);regenTick+=dt;if(regenTick>.5){regenTick=0;updateHUD();if(Math.random()<.5)parts.push({k:'puff',x:P.x+rand(-10,10),y:P.y,z:rand(20,40),vx:0,vy:0,vz:30,t:0,max:.5,r:3,col:'#9cf27a'});}}
   if(firing&&P.cd<=0)shoot();
   if(!firing||P.w!=='minigun')P.spin=Math.max(0,(P.spin||0)-dt*1.4);
@@ -128,6 +129,12 @@ function updateEnemies(dt){
     let vx=0,vy=0;
     const see=alive&&(T.fly||los(e.x,e.y,tg.x,tg.y));
     if(!alive){vx=-dx/d*.4;vy=-dy/d*.4;}
+    else if(e.kami){
+      vx=dx/d;vy=dy/d;spdMul*=1.55;noSep=true;e.kamiT-=dt;
+      if(Math.random()<dt*25)parts.push({k:'puff',x:e.x+rand(-4,4),y:e.y,z:rand(30,44)*(e.s||1),vx:rand(-20,20),vy:0,vz:60,t:0,max:.25,r:2,col:Math.random()<.5?'#ffd23a':'#ff7a1a'});
+      if(Math.floor(e.kamiT*(e.kamiT<1.2?8:4))!==Math.floor((e.kamiT+dt)*(e.kamiT<1.2?8:4)))SFX.beep();
+      if(d<e.r+tg.r+8||e.kamiT<=0){e.dead=true;kamiBoom(e,true);killEnemy(e,true);continue;}
+    }
     else if(e.st==='tell'){e.tellT-=dt*(e.chill>0?.6:1);spdMul=0;if(e.tellT<=0){e.st='dash';e.dashT=e.dashLen;}}
     else if(e.st==='aim'){
       spdMul=0;e.tellT-=dt;
@@ -170,7 +177,7 @@ function updateEnemies(dt){
       e.cd-=dt;
       if(e.cd<=0){
         if(!onScreen(e,0))e.cd=.4;
-        else if(e.type==='crow'){const tx=P.x+P.vx*.5,ty=P.y+P.vy*.5;bombs.push({x:clamp(tx,FENCE+10,WW-FENCE-10),y:clamp(ty,FENCE+10,WH-FENCE-10),t:1.1,max:1.1,r:58,dmg:eDmg(T.dmg),from:'e'});SFX.caw();e.cd=rand(T.cd[0],T.cd[1])*Math.max(.6,1-(S.diff-1)*.03);}
+        else if(e.type==='crow'){dropBombs(T,1.1,58,eDmg(T.dmg));SFX.caw();e.cd=rand(T.cd[0],T.cd[1])*Math.max(.6,1-(S.diff-1)*.03);}
         else{startDash(e,.55,.5);SFX.caw();}
       }
       noSep=true;
@@ -212,6 +219,25 @@ function updateEnemies(dt){
   for(let i=enemies.length-1;i>=0;i--)if(enemies[i].dead)enemies.splice(i,1);
   curTg=null;
 }
+function predictP(t){ // куда игрок придёт через t секунд: сглаженная скорость, не дальше 150, только по суше
+  let px=(P.svx||0)*t*.8, py=(P.svy||0)*t*.8; const l=Math.hypot(px,py); if(l>150){px*=150/l;py*=150/l;}
+  let x=clamp(P.x+px,FENCE+10,WW-FENCE-10), y=clamp(P.y+py,FENCE+10,WH-FENCE-10);
+  if(inWater(x,y)){x=P.x;y=P.y;} return [x,y];
+}
+function addBomb(x,y,t,r,dmg){bombs.push({x:clamp(x,FENCE+10,WW-FENCE-10),y:clamp(y,FENCE+10,WH-FENCE-10),t,max:t,r,dmg,from:'e'});}
+function dropBombs(T,t,r,dmg){
+  const mv=Math.hypot(P.svx||0,P.svy||0), m=Math.random();
+  if(mv<40||m<.35){addBomb(P.x+rand(-18,18),P.y+rand(-18,18),t,r,dmg);}            // стоишь — бьют по месту
+  else if(m<.7){const [x,y]=predictP(t);addBomb(x,y,t,r,dmg);}                      // бежишь — на упреждение
+  else{const [x,y]=predictP(t);for(let i=0;i<3;i++){const k=i/2;addBomb(P.x+(x-P.x)*k,P.y+(y-P.y)*k,t+i*.15,r*.85,dmg);}} // ковровая цепочка
+}
+function bossRain(T){
+  const t0=.9, dmg=eDmg(T.dmg*1.5), [px,py]=predictP(t0+.2);
+  addBomb(P.x,P.y,t0,62,dmg); addBomb(px,py,t0+.2,62,dmg);
+  const side=Math.atan2(P.svy||0,P.svx||1)+Math.PI/2;
+  for(const k of [-1,1])addBomb(px+Math.cos(side)*k*95,py+Math.sin(side)*k*95,t0+.4,58,dmg);
+  addBomb(P.x+rand(-140,140),P.y+rand(-140,140),t0+.6,58,dmg);
+}
 function bossAI(e,T,dt,d){
   const enr=e.hp<e.max*.5?.72:1, bul=T.bul||'egg';
   if(e.spin>0){e.spin-=dt;e.burstT-=dt;if(e.burstT<=0){e.burstT=.07;e.spinA+=.38;for(let k=0;k<2;k++){const a=e.spinA+k*Math.PI;eBullet(e.x+Math.cos(a)*30,e.y+Math.sin(a)*30,a,T.bspd*.85,eDmg(T.dmg),bul);}}return;}
@@ -225,7 +251,7 @@ function bossAI(e,T,dt,d){
   else if(p==='dash'){e.dashes=1;startDash(e,.75,.55);}
   else if(p==='spiral'){e.spin=1.5;e.burstT=0;e.spinA=rand(0,TAU);}
   else if(p==='ring'){const off=rand(0,TAU);for(let i=0;i<18;i++){const a=off+i/18*TAU;eBullet(e.x+Math.cos(a)*30,e.y+Math.sin(a)*30,a,T.bspd*.9,eDmg(T.dmg),bul);}SFX.boom();}
-  else if(p==='rain'){for(let i=0;i<5;i++){const a=rand(0,TAU),r=i===0?0:rand(50,140),tt=.9+i*.18;bombs.push({x:clamp(P.x+Math.cos(a)*r,FENCE+10,WW-FENCE-10),y:clamp(P.y+Math.sin(a)*r,FENCE+10,WH-FENCE-10),t:tt,max:tt,r:62,dmg:eDmg(T.dmg*1.5),from:'e'});}ftext(e.x,e.y-90,'Берегись неба!','#ffc93a',13);}
+  else if(p==='rain'){bossRain(T);ftext(e.x,e.y-90,'Берегись неба!','#ffc93a',13);}
 }
 function updateBullets(dt){
   for(let i=bullets.length-1;i>=0;i--){
@@ -239,13 +265,16 @@ function updateBullets(dt){
         if((b.x-e.x)**2+(b.y-e.y)**2<(er+b.r)**2){const k=b.kind;hitEnemy(e,b.dmg,b.vx,b.vy,!b.ally,k==='flame'?.06:k==='ice'?.4:1,k==='flame');
           if(k==='flame'){e.burn=2.2;e.burnDps=9*P.dmgMul;}else if(k==='ice')e.chill=1.6;
           if(!b.ally&&WEAP[k]&&WEAP[k].heal)healHit(WEAP[k].heal);
+          if(b.owner){b.owner.ult=Math.min(100,b.owner.ult+b.dmg*.14);if(WEAP[k]&&WEAP[k].heal){b.owner.hp=Math.min(b.owner.max,b.owner.hp+WEAP[k].heal);if(P.alive)P.hp=Math.min(P.max,P.hp+WEAP[k].heal*.5);}}
           if(b.pierce>0){b.pierce--;b.hits.push(e.id);}else{dead=true;}break;}}}
       else if(P.alive){
         const d2=(b.x-P.x)**2+(b.y-P.y)**2;
         if(P.buff==='fort'&&d2<(P.r+34)**2){b.from='p';b.vx*=-1.15;b.vy*=-1.15;b.dmg=30*P.dmgMul;b.life=1.2;b.kind='refl';b.pierce=0;b.hits=null;puff(b.x,b.y,'#cfe8ff',2,.6);continue;}
         if(d2<(P.r+b.r-2)**2){hurtPlayer(b.dmg,'egg');splat(b.x,b.y,.8);dead=true;}
       }
-      if(!dead&&b.from==='e')for(const a of allies){if(a.down>0)continue;if((b.x-a.x)**2+(b.y-a.y)**2<(a.r+b.r-2)**2){hurtAlly(a,b.dmg);splat(b.x,b.y,.6);dead=true;break;}}
+      if(!dead&&b.from==='e')for(const a of allies){if(a.down>0)continue;const dd=(b.x-a.x)**2+(b.y-a.y)**2;
+        if(a.buff==='fort'&&dd<(a.r+30)**2){b.from='p';b.vx*=-1.15;b.vy*=-1.15;b.dmg=24*a.dmgMul;b.life=1.2;b.kind='refl';b.pierce=0;b.hits=null;b.ally=true;break;}
+        if(dd<(a.r+b.r-2)**2){hurtAlly(a,b.dmg);splat(b.x,b.y,.6);dead=true;break;}}
     }
     if(dead)bullets.splice(i,1);
   }

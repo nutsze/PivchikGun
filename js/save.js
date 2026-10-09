@@ -1,7 +1,7 @@
 /* Сохранение прогресса и настроек в localStorage */
 /* ---------- save ---------- */
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]}};
+const DEF={v:2,coins:100,tokens:0,btokens:0,eggs:0,eggMs:{},slots:0,squad:[],squadGun:{},bigDay:'',hero:'hen',heroes:{hen:{lv:1,cards:0}},hat:'bandana',hats:['none','bandana'],color:'native',colors:['native'],loadout:{assault:'pistol',tank:'granny',sniper:'cornrifle',medic:'syringe'},guns:['pistol','granny','cornrifle','syringe'],best:{score:0,wave:0},story:{done:[]}};
 function loadSave(){
   let s=null; try{s=JSON.parse(localStorage.getItem('kur_save')||'null');}catch(e){}
   const o=JSON.parse(JSON.stringify(DEF));
@@ -18,6 +18,7 @@ function loadSave(){
   ['coins','tokens','btokens','eggs'].forEach(k=>{if(typeof o[k]!=='number'||!isFinite(o[k]))o[k]=DEF[k];});
   if(!o.eggMs||typeof o.eggMs!=='object')o.eggMs={};
   o.slots=clamp(o.slots|0,0,3); if(!Array.isArray(o.squad))o.squad=[];
+  if(!o.squadGun||typeof o.squadGun!=='object')o.squadGun={};
   o.squad=o.squad.filter((id,i,a)=>HEROES[id]&&a.indexOf(id)===i).slice(0,o.slots);
   if(!o.heroes||typeof o.heroes!=='object'||Array.isArray(o.heroes))o.heroes={hen:{lv:1,cards:0}};
   for(const id in o.heroes){if(!HEROES[id])delete o.heroes[id];else{const h=o.heroes[id];h.lv=clamp(h.lv|0||1,1,10);h.cards=Math.max(0,h.cards|0);}}

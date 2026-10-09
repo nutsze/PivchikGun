@@ -31,6 +31,8 @@ const SFX={
   crow(){tone(500,.12,'square',.07,900);tone(700,.3,'square',.07,1400,.12);},
   dead(){tone(500,.5,'sawtooth',.07,90);},
   throw(){tone(400,.12,'triangle',.06,800);},
+  fuse(){noise(.4,.12,5000);tone(900,.12,'square',.04,1400);},
+  beep(){tone(1500,.05,'square',.04);},
   creak(){tone(190,.45,'sawtooth',.05,105);tone(260,.3,'square',.025,150,.15);},
   crack(){noise(.45,.35,900);tone(130,.4,'sawtooth',.07,45);noise(.6,.22,2600);},
   hoot(){tone(380,.12,'sine',.07,300);tone(330,.18,'sine',.07,260,.14);},

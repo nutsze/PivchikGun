@@ -90,16 +90,23 @@ function renderHeroes(){
   const body=$('heroBody'), st=body.scrollTop; body.innerHTML='';
   body.appendChild(mk('p','note','Новых героев выбивают из сундуков. Карты героя из сундуков вместе с зёрнами повышают его уровень: +6% здоровья и +5% урона за уровень. На 5-м уровне открывается первая пассивка, на 10-м вторая.'));
   body.appendChild(mk('div','sect','Отряд'));
-  body.appendChild(mk('p','note','Бойцы отряда в армейских касках идут рядом, сами стреляют по врагам и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается. Сила зависит от уровня героя.'));
+  body.appendChild(mk('p','note','Бойцы отряда в армейских касках идут рядом, стреляют из выбранного оружия, сами применяют ульту (жёлтая полоска под здоровьем) и принимают удары на себя. Если бойца выбили, через 18 секунд он возвращается. Сила зависит от уровня героя.'));
   const sg=mk('div','grid');
   for(let k=0;k<3;k++){
     const card=mk('div','item');
     if(k<SAVE.slots){
       const id=SAVE.squad[k];
       if(id&&SAVE.heroes[id]&&id!==SAVE.hero){
-        const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(id,'helmet','native'),gunOf(id),140,92,1.45));pv.appendChild(mk('span','lvl','Ур. '+heroLv(id)));card.appendChild(pv);
-        card.appendChild(mk('h4','',HEROES[id].name));card.appendChild(mk('p','','Место '+(k+1)));card.appendChild(mk('div','grow'));
-        const b=mk('button','pbtn eq','Убрать');b.onclick=()=>equip(()=>{SAVE.squad.splice(k,1);},'Боец ушёл из отряда');card.appendChild(b);
+        const pv=mk('div','pv');pv.appendChild(birdPv(lookFor(id,'helmet','native'),gunForAlly(id),140,92,1.45));pv.appendChild(mk('span','lvl','Ур. '+heroLv(id)));card.appendChild(pv);
+        card.appendChild(mk('h4','',HEROES[id].name));card.appendChild(mk('p','','Место '+(k+1)+' · '+CLASSES[clsOf(id)].name+' · ульта: '+HEROES[id].ult[0]));
+        const g0=gunForAlly(id), opts=PRIMARY.filter(w=>WEAP[w].cls===clsOf(id)&&SAVE.guns.includes(w));
+        card.appendChild(mk('div','meta','Оружие: <b>'+WEAP[g0].name+'</b>'+(opts.length>1?'':' · купи ещё стволы класса в магазине')));
+        card.appendChild(mk('div','grow'));
+        const row=mk('div','brow');
+        const wb=mk('button','pbtn '+(opts.length>1?'go':'poor'),'Сменить оружие');
+        wb.onclick=()=>{if(opts.length<2){toast('У класса «'+CLASSES[clsOf(id)].name+'» пока один ствол — купи ещё в магазине');return;}const nx=opts[(opts.indexOf(g0)+1)%opts.length];equip(()=>{SAVE.squadGun[id]=nx;},HEROES[id].name+': '+WEAP[nx].name);};
+        row.appendChild(wb);
+        const b=mk('button','pbtn eq','Убрать');b.onclick=()=>equip(()=>{SAVE.squad.splice(k,1);},'Боец ушёл из отряда');row.appendChild(b);card.appendChild(row);
       } else {
         const pv=mk('div','pv');pv.style.height='92px';pv.appendChild(mk('span','meta','Свободно'));card.appendChild(pv);
         card.appendChild(mk('h4','','Место '+(k+1)));card.appendChild(mk('p','','Нажми «В отряд» у героя ниже'));
